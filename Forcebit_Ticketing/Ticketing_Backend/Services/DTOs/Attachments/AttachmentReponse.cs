@@ -1,6 +1,4 @@
 ﻿
-using Microsoft.AspNetCore.Http;
-
 namespace Services.DTOs.Attachments
 {
     public class AttachmentResponse
@@ -15,6 +13,6 @@ namespace Services.DTOs.Attachments
 
         public DateTime UploadedAt { get; set; }
 
-        public IFormFile File { get; set; }
+        public FileUploadRequest File { get; set; }
     }
 }

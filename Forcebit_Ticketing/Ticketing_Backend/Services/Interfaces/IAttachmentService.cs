@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Services.DTOs.Attachments;
+﻿using Services.DTOs.Attachments;
 
 namespace Services.Interfaces
 {
@@ -9,13 +8,13 @@ namespace Services.Interfaces
             Guid ticketId,
             Guid uploadedById,
             string userRole,
-            IFormFile file);
+            FileUploadRequest file);
 
         Task<AttachmentResponse> UploadMessageAttachmentAsync(
             Guid ticketId,
             Guid messageId,
             Guid uploadedById,
             string userRole,
-            IFormFile file);
+            FileUploadRequest file);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.DTOs.Attachments;
+using Services.Interfaces;
 using System.Security.Claims;
 
 namespace Api.Controllers
@@ -25,11 +26,19 @@ namespace Api.Controllers
             var userId = GetUserId();
             var role = GetUserRole();
 
+            var fileRequest = new FileUploadRequest
+            {
+                FileName = file.FileName,
+                ContentType = file.ContentType,
+                Content = file.OpenReadStream(),
+                Length = file.Length
+            };
+
             var attachment = await _attachmentService.UploadTicketAttachmentAsync(
                 ticketId,
                 userId,
                 role,
-                file);
+                fileRequest);
 
             return Ok(attachment);
         }
@@ -43,12 +52,20 @@ namespace Api.Controllers
             var userId = GetUserId();
             var role = GetUserRole();
 
+            var fileRequest = new FileUploadRequest
+            {
+                FileName = file.FileName,
+                ContentType = file.ContentType,
+                Content = file.OpenReadStream(),
+                Length = file.Length
+            };
+
             var attachment = await _attachmentService.UploadMessageAttachmentAsync(
                 ticketId,
                 messageId,
                 userId,
                 role,
-                file);
+                fileRequest);
 
             return Ok(attachment);
         }

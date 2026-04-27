@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Services.DTOs.Attachments;
 
 namespace Services.Interfaces
 {
     public interface IFileStorageService
     {
-        Task<string> SaveFileAsync(IFormFile file);
+        Task<string> SaveFileAsync(FileUploadRequest file);
     }
 }

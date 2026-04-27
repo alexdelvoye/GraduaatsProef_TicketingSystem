@@ -1,6 +1,5 @@
 ﻿
 using Domain.Entities;
-using Microsoft.AspNetCore.Http;
 using Services.DTOs.Attachments;
 using Services.Interfaces;
 
@@ -26,7 +25,7 @@ namespace Services.Services
             Guid ticketId,
             Guid uploadedById,
             string userRole,
-            IFormFile file)
+            FileUploadRequest file)
         {
             var ticket = await _ticketRepository.GetDetailByIdAsync(ticketId);
 
@@ -61,7 +60,7 @@ namespace Services.Services
             Guid messageId,
             Guid uploadedById,
             string userRole,
-            IFormFile file)
+            FileUploadRequest file)
         {
             var ticket = await _ticketRepository.GetDetailByIdAsync(ticketId);
 
@@ -82,7 +81,7 @@ namespace Services.Services
             {
                 Id = Guid.NewGuid(),
                 TicketId = ticketId,
-                MessageId = messageId,
+                MessageId = null,
                 UploadedById = uploadedById,
                 FileName = file.FileName,
                 FilePath = filePath,
