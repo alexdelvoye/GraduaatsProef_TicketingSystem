@@ -1,4 +1,6 @@
 ﻿
+using Microsoft.AspNetCore.Http;
+
 namespace Services.DTOs.Attachments
 {
     public class AttachmentResponse
@@ -12,5 +14,7 @@ namespace Services.DTOs.Attachments
         public string ContentType { get; set; } = string.Empty;
 
         public DateTime UploadedAt { get; set; }
+
+        public IFormFile File { get; set; }
     }
 }
