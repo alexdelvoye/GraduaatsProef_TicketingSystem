@@ -1,10 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Microsoft.AspNetCore.Http;
+using Services.DTOs.Attachments;
 
-namespace 2_Services.Interfaces
+namespace Services.Interfaces
 {
-    internal interface IAttachmentService
-{
-}
+    public interface IAttachmentService
+    {
+        Task<AttachmentResponse> UploadTicketAttachmentAsync(
+            Guid ticketId,
+            Guid uploadedById,
+            string userRole,
+            IFormFile file);
+
+        Task<AttachmentResponse> UploadMessageAttachmentAsync(
+            Guid ticketId,
+            Guid messageId,
+            Guid uploadedById,
+            string userRole,
+            IFormFile file);
+    }
 }

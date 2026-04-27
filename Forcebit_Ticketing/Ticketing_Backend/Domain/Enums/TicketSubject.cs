@@ -1,10 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 namespace Domain.Enums
 {
-    internal class TicketSubject
+    public enum TicketSubject
     {
+        Gateway,
+        Sensors,
+        Software,
+        Dashboard,
+        Connectivity,
+        Account,
+        Other
     }
 }

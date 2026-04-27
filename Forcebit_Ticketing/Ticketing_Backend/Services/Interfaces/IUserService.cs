@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Services.DTOs.Users;
 
-namespace 2_Services.Interfaces
+namespace Services.Interfaces
 {
-    internal class IUserService
-{
-}
+    public interface IUserService
+    {
+        Task<List<ClientListItemResponse>> GetClientsAsync();
+    }
 }

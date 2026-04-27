@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 namespace Domain.Enums
 {
-    internal class TicketCategory
+    public enum TicketCategory
     {
+        Sales,
+        TechnicalProblem,
+        Question,
+        Installation,
+        Other
     }
 }

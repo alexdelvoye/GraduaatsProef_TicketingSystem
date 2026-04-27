@@ -1,10 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Domain.Entities;
 
 namespace Services.Interfaces
 {
-    internal interface IUserRepository
+    public interface IUserRepository
     {
+        Task<User?> GetByIdAsync(Guid id);
+        Task<User?> GetByEmailAsync(string email);
+        Task<List<User>> GetClientsAsync();
+        Task AddAsync(User user);
+        Task<bool> EmailExistsAsync(string email);
+        Task SaveChangesAsync();
     }
 }
