@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Api/1_Api.csproj" />
+  <Project Path="Domain/4_Domain.csproj" />
+  <Project Path="Persistence/3_Persistence.csproj" />
+  <Project Path="Services/2_Services.csproj" />
+</Solution>
