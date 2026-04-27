@@ -4,7 +4,10 @@ using System.Text;
 
 namespace Domain.Enums
 {
-    internal class TicketStatus
+    public enum TicketStatus
     {
+        Open,
+        InProgress,
+        Closed
     }
 }

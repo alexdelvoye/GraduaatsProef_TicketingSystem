@@ -7,9 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\Auth\" />
-    <Folder Include="DTOs\Users\" />
-    <Folder Include="DTOs\Tickets\" />
     <Folder Include="Validators\" />
   </ItemGroup>
 
