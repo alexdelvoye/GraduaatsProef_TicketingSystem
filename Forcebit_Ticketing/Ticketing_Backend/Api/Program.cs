@@ -53,8 +53,8 @@ builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 
 // These still need implementations later
 builder.Services.AddScoped<ITokenService, TokenService>();
-// builder.Services.AddScoped<IEmailService, EmailService>();
-// builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"];
