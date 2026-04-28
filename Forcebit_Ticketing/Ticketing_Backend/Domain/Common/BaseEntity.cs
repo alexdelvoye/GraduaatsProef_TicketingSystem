@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace 4_Domain.Common
+﻿
+namespace Domain.Common
 {
-    internal class BaseEntity
-{
-}
+    public abstract class BaseEntity
+    {
+        public Guid Id { get; set; }
+    }
 }

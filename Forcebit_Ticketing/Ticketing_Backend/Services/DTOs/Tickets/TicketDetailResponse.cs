@@ -1,4 +1,6 @@
-﻿
+﻿using Services.DTOs.Attachments;
+using Services.DTOs.Messages;
+
 namespace Services.DTOs.Tickets
 {
     public class TicketDetailResponse

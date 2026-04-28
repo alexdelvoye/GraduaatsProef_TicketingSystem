@@ -3,10 +3,10 @@ namespace Domain.Enums
 {
     public enum TicketCategory
     {
-        Sales,
-        TechnicalProblem,
-        Question,
-        Installation,
-        Other
+        Sales = 1,
+        TechnicalProblem = 2,
+        Question = 3,
+        Installation = 4,
+        Other = 5
     }
 }

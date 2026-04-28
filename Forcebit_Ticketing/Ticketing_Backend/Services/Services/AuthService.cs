@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Enums;
 using Services.DTOs.Auth;
 using Services.DTOs.Users;
 using Services.Interfaces;
