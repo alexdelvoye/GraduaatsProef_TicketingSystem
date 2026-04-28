@@ -52,7 +52,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 
 // These still need implementations later
-// builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 // builder.Services.AddScoped<IEmailService, EmailService>();
 // builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
