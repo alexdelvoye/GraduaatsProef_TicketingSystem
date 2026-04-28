@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 namespace Services.DTOs.Tickets
 {
     public class UpdateTicketRequest
