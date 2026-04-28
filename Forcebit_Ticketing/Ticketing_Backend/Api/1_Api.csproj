@@ -17,10 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Extensions\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Persistence\3_Persistence.csproj" />
     <ProjectReference Include="..\Services\2_Services.csproj" />
   </ItemGroup>

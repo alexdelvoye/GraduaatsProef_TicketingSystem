@@ -1,5 +1,6 @@
 ﻿using Domain.Entities;
 using Services.DTOs.Attachments;
+using Services.Exceptions;
 using Services.Interfaces;
 
 namespace Services.Services
@@ -29,10 +30,10 @@ namespace Services.Services
             var ticket = await _ticketRepository.GetDetailByIdAsync(ticketId);
 
             if (ticket == null)
-                throw new Exception("Ticket not found.");
+                throw new NotFoundException("Ticket not found.");
 
             if (userRole == "Client" && ticket.ClientId != uploadedById)
-                throw new Exception("You are not allowed to upload to this ticket.");
+                throw new ForbiddenException("You are not allowed to upload to this ticket.");
 
             var filePath = await _fileStorageService.SaveFileAsync(file);
 
@@ -64,15 +65,15 @@ namespace Services.Services
             var ticket = await _ticketRepository.GetDetailByIdAsync(ticketId);
 
             if (ticket == null)
-                throw new Exception("Ticket not found.");
+                throw new NotFoundException("Ticket not found.");
 
             if (userRole == "Client" && ticket.ClientId != uploadedById)
-                throw new Exception("You are not allowed to upload to this ticket.");
+                throw new ForbiddenException("You are not allowed to upload to this ticket.");
 
             var messageExists = ticket.Messages.Any(m => m.Id == messageId);
 
             if (!messageExists)
-                throw new Exception("Message not found on this ticket.");
+                throw new NotFoundException("Message not found on this ticket.");
 
             var filePath = await _fileStorageService.SaveFileAsync(file);
 
@@ -80,7 +81,7 @@ namespace Services.Services
             {
                 Id = Guid.NewGuid(),
                 TicketId = ticketId,
-                MessageId = null,
+                MessageId = messageId,
                 UploadedById = uploadedById,
                 FileName = file.FileName,
                 FilePath = filePath,

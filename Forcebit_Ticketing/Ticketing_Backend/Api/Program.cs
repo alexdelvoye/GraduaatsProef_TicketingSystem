@@ -1,24 +1,13 @@
-using System.Text;
+using Api.Extensions;
+using Api.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Persistence.Data;
-using Persistence.Repositories;
-using Services.Interfaces;
-using Services.Services;
+using Services.Options;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure database connection
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    options.UseMySql(
-        connectionString,
-        ServerVersion.AutoDetect(connectionString)
-    );
-});
+builder.Services.AddPersistenceServices(builder.Configuration);
 
 // Add controllers to the container.
 builder.Services.AddControllers();
@@ -40,28 +29,28 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add repositories to the container
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ITicketRepository, TicketRepository>();
-builder.Services.AddScoped<IAttachmentRepository, AttachmentRepository>();
+// Configure options from appsettings.json
+builder.Services.Configure<JwtOptions>(
+    builder.Configuration.GetSection("Jwt"));
 
-// Add services to the container
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ITicketService, TicketService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IAttachmentService, AttachmentService>();
+builder.Services.Configure<EmailOptions>(
+    builder.Configuration.GetSection("Email"));
 
-// TODO: These still need implementations later
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.Configure<FileStorageOptions>(
+    builder.Configuration.GetSection("FileStorage"));
 
-// JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"];
+// Register application services
+builder.Services.AddApplicationServices();
+builder.Services.AddPersistenceServices(builder.Configuration);
 
-if (string.IsNullOrWhiteSpace(jwtKey))
+// Configure JWT authentication
+var jwtOptions = builder.Configuration
+    .GetSection("Jwt")
+    .Get<JwtOptions>();
+
+if (jwtOptions == null || string.IsNullOrWhiteSpace(jwtOptions.Key))
 {
-    throw new Exception("JWT key is missing in appsettings.json");
+    throw new InvalidOperationException("JWT key is missing in appsettings.json");
 }
 
 builder.Services
@@ -74,10 +63,8 @@ builder.Services
             ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtKey)
-            )
+                Encoding.UTF8.GetBytes(jwtOptions.Key))
         };
     });
 
@@ -85,7 +72,8 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Development tools
+app.UseMiddleware<ExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -94,7 +82,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Middleware pipeline
 app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");

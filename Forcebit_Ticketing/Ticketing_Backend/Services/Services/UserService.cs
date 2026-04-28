@@ -27,14 +27,17 @@ namespace Services.Services
             {
                 var tickets = await _ticketRepository.GetTicketsByClientIdAsync(client.Id);
 
+                var openCount = tickets.Count(t => t.Status != TicketStatus.Closed);
+                var closedCount = tickets.Count(t => t.Status == TicketStatus.Closed);
+
                 result.Add(new ClientListItemResponse
                 {
                     Id = client.Id,
                     Name = client.Name,
                     CompanyName = client.CompanyName,
                     Email = client.Email,
-                    OpenTicketCount = tickets.Count(t => t.Status != TicketStatus.Closed),
-                    ClosedTicketCount = tickets.Count(t => t.Status == TicketStatus.Closed)
+                    OpenTicketCount = openCount,
+                    ClosedTicketCount = closedCount
                 });
             }
 

@@ -2,6 +2,7 @@
 using Domain.Enums;
 using Services.DTOs.Auth;
 using Services.DTOs.Users;
+using Services.Exceptions;
 using Services.Interfaces;
 
 namespace Services.Services
@@ -22,10 +23,10 @@ namespace Services.Services
         public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
         {
             if (request.Password != request.ConfirmPassword)
-                throw new Exception("Passwords do not match.");
+                throw new BadRequestException("Passwords do not match.");
 
-            if (await _userRepository.EmailExistsAsync(request.Email))
-                throw new Exception("Email is already in use.");
+            if (await _userRepository.EmailExistsAsync(request.Email.ToLower()))
+                throw new BadRequestException("Email is already in use.");
 
             var user = new User
             {
@@ -60,17 +61,19 @@ namespace Services.Services
 
         public async Task<AuthResponse> LoginAsync(LoginRequest request)
         {
-            var user = await _userRepository.GetByEmailAsync(request.Email.ToLower());
+            var email = request.Email.ToLower();
+
+            var user = await _userRepository.GetByEmailAsync(email);
 
             if (user == null)
-                throw new Exception("Invalid email or password.");
+                throw new UnauthorizedException("Invalid email or password.");
 
             var passwordValid = BCrypt.Net.BCrypt.Verify(
                 request.Password,
                 user.PasswordHash);
 
             if (!passwordValid)
-                throw new Exception("Invalid email or password.");
+                throw new UnauthorizedException("Invalid email or password.");
 
             var token = _tokenService.CreateToken(user);
 

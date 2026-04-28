@@ -3,6 +3,7 @@ using Domain.Enums;
 using Services.DTOs.Attachments;
 using Services.DTOs.Messages;
 using Services.DTOs.Tickets;
+using Services.Exceptions;
 using Services.Interfaces;
 
 namespace Services.Services
@@ -63,10 +64,10 @@ namespace Services.Services
             var ticket = await _ticketRepository.GetDetailByIdAsync(ticketId);
 
             if (ticket == null)
-                throw new Exception("Ticket not found.");
+                throw new NotFoundException("Ticket not found.");
 
             if (currentUserRole == "Client" && ticket.ClientId != currentUserId)
-                throw new Exception("You are not allowed to view this ticket.");
+                throw new ForbiddenException("You are not allowed to view this ticket.");
 
             return MapToTicketDetailResponse(ticket);
         }
@@ -78,15 +79,21 @@ namespace Services.Services
             var client = await _userRepository.GetByIdAsync(clientId);
 
             if (client == null)
-                throw new Exception("Client not found.");
+                throw new NotFoundException("Client not found.");
+
+            if (!Enum.TryParse<TicketCategory>(request.Category, true, out var category))
+                throw new BadRequestException("Invalid ticket category.");
+
+            if (!Enum.TryParse<TicketSubject>(request.Subject, true, out var subject))
+                throw new BadRequestException("Invalid ticket subject.");
 
             var ticket = new Ticket
             {
                 Id = Guid.NewGuid(),
                 ClientId = clientId,
                 Title = request.Title,
-                Category = Enum.Parse<TicketCategory>(request.Category),
-                Subject = Enum.Parse<TicketSubject>(request.Subject),
+                Category = category,
+                Subject = subject,
                 Description = request.Description,
                 Status = TicketStatus.Open,
                 CreatedAt = DateTime.UtcNow,
@@ -110,9 +117,12 @@ namespace Services.Services
             var ticket = await _ticketRepository.GetDetailByIdAsync(ticketId);
 
             if (ticket == null)
-                throw new Exception("Ticket not found.");
+                throw new NotFoundException("Ticket not found.");
 
-            ticket.Status = Enum.Parse<TicketStatus>(request.Status);
+            if (!Enum.TryParse<TicketStatus>(request.Status, true, out var status))
+                throw new BadRequestException("Invalid ticket status.");
+
+            ticket.Status = status;
             ticket.UpdatedAt = DateTime.UtcNow;
 
             if (ticket.Status == TicketStatus.Closed)
@@ -137,18 +147,18 @@ namespace Services.Services
             var ticket = await _ticketRepository.GetDetailByIdAsync(ticketId);
 
             if (ticket == null)
-                throw new Exception("Ticket not found.");
+                throw new NotFoundException("Ticket not found.");
 
             if (senderRole == "Client" && ticket.ClientId != senderId)
-                throw new Exception("You are not allowed to reply to this ticket.");
+                throw new ForbiddenException("You are not allowed to reply to this ticket.");
 
             if (ticket.Status == TicketStatus.Closed)
-                throw new Exception("You cannot reply to a closed ticket.");
+                throw new BadRequestException("You cannot reply to a closed ticket.");
 
             var sender = await _userRepository.GetByIdAsync(senderId);
 
             if (sender == null)
-                throw new Exception("Sender not found.");
+                throw new NotFoundException("Sender not found.");
 
             var message = new TicketMessage
             {
