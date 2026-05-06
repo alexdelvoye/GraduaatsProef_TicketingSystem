@@ -55,7 +55,9 @@ namespace Api.Middleware
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)statusCode;
 
-            var json = JsonSerializer.Serialize(response);
+            var json = JsonSerializer.Serialize(
+                response,
+                new JsonSerializerOptions(JsonSerializerDefaults.Web));
 
             await context.Response.WriteAsync(json);
         }

@@ -4,13 +4,13 @@ import {
   Text,
   TextInput,
   Pressable,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../App";
 import { useAuth } from "../context/AuthContext";
+import { useErrorHandler } from "../hooks/useErrorHandler";
 import { colors } from "../styles/theme";
 import { loginStyles as styles } from "../styles/loginStyles";
 
@@ -23,19 +23,21 @@ export default function LoginScreen({ navigation }: Props) {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleLogin() {
-    console.log("Login button pressed");
+  const { errorMessage, clearError, handleError } = useErrorHandler(
+    "Invalid email or password."
+  );
 
+  async function handleLogin() {
     try {
+      clearError();
       setIsSubmitting(true);
 
       await signIn({
         email,
         password,
       });
-    } catch (error: any) {
-      console.log("Login error:", error);
-      Alert.alert("Login failed", error.message);
+    } catch (error) {
+      handleError(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -69,6 +71,10 @@ export default function LoginScreen({ navigation }: Props) {
           onChangeText={setPassword}
           secureTextEntry
         />
+
+        {errorMessage ? (
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        ) : null}
 
         <Pressable
           style={[styles.button, isSubmitting && styles.buttonDisabled]}

@@ -55,4 +55,10 @@ export const loginStyles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
   },
+  errorText: {
+    color: colors.danger,
+    marginBottom: 12,
+    textAlign: "center",
+    fontWeight: "600",
+  },
 });

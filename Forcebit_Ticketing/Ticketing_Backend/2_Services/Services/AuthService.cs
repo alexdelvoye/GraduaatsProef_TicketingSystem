@@ -59,21 +59,21 @@ namespace Services.Services
             };
         }
 
-        public async Task<AuthResponse> LoginAsync(LoginRequest request)
+        public async Task<AuthResponse?> LoginAsync(LoginRequest request)
         {
             var email = request.Email.ToLower();
 
             var user = await _userRepository.GetByEmailAsync(email);
 
             if (user == null)
-                throw new UnauthorizedException("Invalid email or password.");
+                return null;
 
             var passwordValid = BCrypt.Net.BCrypt.Verify(
                 request.Password,
                 user.PasswordHash);
 
             if (!passwordValid)
-                throw new UnauthorizedException("Invalid email or password.");
+                return null;
 
             var token = _tokenService.CreateToken(user);
 

@@ -4,14 +4,15 @@ import {
   Text,
   TextInput,
   Pressable,
-  Alert,
   ScrollView,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../App";
 import { useAuth } from "../context/AuthContext";
+import { useErrorHandler } from "../hooks/useErrorHandler";
 import { colors } from "../styles/theme";
 import { registerStyles as styles } from "../styles/registerStyles";
+import { registerSchema } from "../validation/registerSchema";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Register">;
 
@@ -25,23 +26,31 @@ export default function RegisterScreen({ navigation }: Props) {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { errorMessage, clearError, handleError } =
+    useErrorHandler("Registration failed.");
 
   async function handleRegister() {
-    console.log("Register button pressed");
-
     try {
+      clearError();
       setIsSubmitting(true);
 
+      const formValues = await registerSchema.validate(
+        {
+          name,
+          companyName,
+          email,
+          password,
+          confirmPassword,
+        },
+        { abortEarly: true }
+      );
+
       await signUp({
-        name,
-        companyName,
-        email,
-        password,
-        confirmPassword,
+        ...formValues,
+        email: formValues.email.toLowerCase(),
       });
-    } catch (error: any) {
-      console.log("Register error:", error);
-      Alert.alert("Registration failed", error.message);
+    } catch (error) {
+      handleError(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -97,6 +106,10 @@ export default function RegisterScreen({ navigation }: Props) {
           onChangeText={setConfirmPassword}
           secureTextEntry
         />
+
+        {errorMessage ? (
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        ) : null}
 
         <Pressable
           style={[styles.button, isSubmitting && styles.buttonDisabled]}

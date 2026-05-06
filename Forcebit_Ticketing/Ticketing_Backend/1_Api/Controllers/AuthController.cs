@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Services.DTOs.Auth;
+using Services.DTOs.Common;
 using Services.Interfaces;
 
 namespace Api.Controllers
@@ -26,6 +27,16 @@ namespace Api.Controllers
         public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
         {
             var result = await _authService.LoginAsync(request);
+
+            if (result == null)
+            {
+                return Unauthorized(new ErrorResponse
+                {
+                    StatusCode = StatusCodes.Status401Unauthorized,
+                    Message = "Invalid email or password."
+                });
+            }
+
             return Ok(result);
         }
     }
