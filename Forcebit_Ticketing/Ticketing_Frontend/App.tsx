@@ -6,12 +6,18 @@ import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { colors } from "./src/styles/theme";
 import HomeScreen from "./src/screens/HomeScreen";
 import LoginScreen from "./src/screens/LoginScreen";
+import NewTicketScreen from "./src/screens/NewTicketScreen";
+import ProfileScreen from "./src/screens/ProfileScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
+import TicketDetailScreen from "./src/screens/TicketDetailScreen";
 
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
+  NewTicket: undefined;
+  Profile: undefined;
+  TicketDetail: { ticketId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -39,7 +45,12 @@ function Navigation() {
       <StatusBar style="light" />
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {token ? (
-          <Stack.Screen name="Home" component={HomeScreen} />
+          <>
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="NewTicket" component={NewTicketScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="TicketDetail" component={TicketDetailScreen} />
+          </>
         ) : (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />

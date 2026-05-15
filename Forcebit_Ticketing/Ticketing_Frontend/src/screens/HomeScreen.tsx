@@ -1,56 +1,218 @@
-import { View, Text, Pressable } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../App";
+import {
+  getAllTickets,
+  getMyTickets,
+  TicketListItem,
+  TicketStatus,
+} from "../api/ticketApi";
 import { useAuth } from "../context/AuthContext";
+import { useErrorHandler } from "../hooks/useErrorHandler";
 import { homeStyles as styles } from "../styles/homeStyles";
+import { colors } from "../styles/theme";
 
-export default function HomeScreen() {
+type Props = NativeStackScreenProps<RootStackParamList, "Home">;
+
+type TicketGroup = {
+  status: TicketStatus;
+  title: string;
+  description: string;
+};
+
+const ticketGroups: TicketGroup[] = [
+  {
+    status: "Open",
+    title: "Open",
+    description: "Waiting for a first response",
+  },
+  {
+    status: "InProgress",
+    title: "In progress",
+    description: "Being handled by Forcebit",
+  },
+  {
+    status: "Closed",
+    title: "Closed",
+    description: "Resolved tickets",
+  },
+];
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function groupTickets(tickets: TicketListItem[]) {
+  return ticketGroups.map((group) => ({
+    ...group,
+    tickets: tickets.filter((ticket) => ticket.status === group.status),
+  }));
+}
+
+export default function HomeScreen({ navigation }: Props) {
   const { user, signOut } = useAuth();
+  const [tickets, setTickets] = useState<TicketListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const { errorMessage, clearError, handleError } = useErrorHandler(
+    "Could not load your tickets.",
+  );
+
+  const groupedTickets = useMemo(() => groupTickets(tickets), [tickets]);
+  const activeTicketCount = tickets.filter(
+    (ticket) => ticket.status !== "Closed",
+  ).length;
+
+  const loadTickets = useCallback(
+    async (showRefreshing = false) => {
+      try {
+        clearError();
+        showRefreshing ? setIsRefreshing(true) : setIsLoading(true);
+        const data =
+          user?.role === "Admin" ? await getAllTickets() : await getMyTickets();
+        setTickets(data);
+      } catch (error) {
+        handleError(error);
+      } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
+    },
+    [clearError, handleError, user?.role],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        loadTickets();
+      } else {
+        setIsLoading(false);
+      }
+    }, [loadTickets, user]),
+  );
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={() => loadTickets(true)}
+          tintColor={colors.primary}
+        />
+      }
+    >
       <View style={styles.header}>
         <Text style={styles.logo}>FORCEBIT</Text>
 
-        <Pressable onPress={signOut} style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Log out</Text>
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            onPress={() => navigation.navigate("Profile")}
+            style={styles.secondaryButton}
+          >
+            <Text style={styles.secondaryButtonText}>Profile</Text>
+          </Pressable>
+
+          <Pressable onPress={signOut} style={styles.logoutButton}>
+            <Text style={styles.logoutText}>Log out</Text>
+          </Pressable>
+        </View>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.title}>Ticketing System</Text>
+      <View style={styles.hero}>
+        <View>
+          <Text style={styles.eyebrow}>{user?.companyName}</Text>
+          <Text style={styles.title}>Tickets</Text>
+          <Text style={styles.muted}>
+            {activeTicketCount} active ticket
+            {activeTicketCount === 1 ? "" : "s"}
+          </Text>
+        </View>
 
-        <Text style={styles.label}>Logged in as</Text>
-        <Text style={styles.value}>{user?.name}</Text>
-
-        <Text style={styles.label}>Company</Text>
-        <Text style={styles.value}>{user?.companyName}</Text>
-
-        <Text style={styles.label}>Role</Text>
-        <Text style={styles.role}>{user?.role}</Text>
+        {user?.role === "Client" ? (
+          <Pressable
+            style={styles.primaryButton}
+            onPress={() => navigation.navigate("NewTicket")}
+          >
+            <Text style={styles.primaryButtonText}>New ticket</Text>
+          </Pressable>
+        ) : null}
       </View>
 
-      <View style={styles.card}>
-        {user?.role === "Admin" ? (
-          <>
-            <Text style={styles.sectionTitle}>Admin dashboard</Text>
-            <Text style={styles.muted}>
-              Next: show client list and open tickets.
-            </Text>
-          </>
-        ) : (
-          <>
-            <Text style={styles.sectionTitle}>My tickets</Text>
-            <Text style={styles.muted}>
-              Next: show your ticket overview here.
-            </Text>
-          </>
-        )}
-      </View>
+      {errorMessage ? (
+        <Text style={styles.errorText}>{errorMessage}</Text>
+      ) : null}
 
-      <Pressable style={styles.primaryButton}>
-        <Text style={styles.primaryButtonText}>
-          {user?.role === "Admin" ? "View clients" : "Create new ticket"}
-        </Text>
-      </Pressable>
-    </View>
+      {isLoading ? (
+        <View style={styles.loadingState}>
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      ) : (
+        groupedTickets.map((group) => (
+          <View key={group.status} style={styles.ticketSection}>
+            <View style={styles.sectionHeader}>
+              <View>
+                <Text style={styles.sectionTitle}>{group.title}</Text>
+                <Text style={styles.muted}>{group.description}</Text>
+              </View>
+
+              <Text style={styles.countBadge}>{group.tickets.length}</Text>
+            </View>
+
+            {group.tickets.length === 0 ? (
+              <Text style={styles.emptyText}>
+                No tickets in this collection.
+              </Text>
+            ) : (
+              group.tickets.map((ticket) => (
+                <Pressable
+                  key={ticket.id}
+                  style={styles.ticketCard}
+                  onPress={() =>
+                    navigation.navigate("TicketDetail", { ticketId: ticket.id })
+                  }
+                >
+                  <View style={styles.ticketCardHeader}>
+                    <Text style={styles.ticketTitle}>{ticket.title}</Text>
+                    <Text
+                      style={[
+                        styles.statusPill,
+                        ticket.status === "Closed" && styles.statusPillClosed,
+                      ]}
+                    >
+                      {ticket.status === "InProgress"
+                        ? "In progress"
+                        : ticket.status}
+                    </Text>
+                  </View>
+
+                  <Text style={styles.ticketMeta}>
+                    {ticket.category} / {ticket.subject}
+                  </Text>
+                  <Text style={styles.ticketDate}>
+                    Updated {formatDate(ticket.updatedAt)}
+                  </Text>
+                </Pressable>
+              ))
+            )}
+          </View>
+        ))
+      )}
+    </ScrollView>
   );
 }

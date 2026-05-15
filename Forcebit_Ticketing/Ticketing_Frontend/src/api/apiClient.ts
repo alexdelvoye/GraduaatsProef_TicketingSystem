@@ -64,7 +64,10 @@ function getBackendErrorMessage(data: BackendErrorResponse | null) {
   return firstValidationError ?? "Request failed.";
 }
 
-export async function apiFetch(path: string, options: RequestInit = {}) {
+export async function apiFetch<T = unknown>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
   const token = await getAuthItem("token");
 
   const headers = {
@@ -97,5 +100,5 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     );
   }
 
-  return data;
+  return data as T;
 }
