@@ -1,17 +1,19 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { getAuthItem, setAuthItem, deleteAuthItem } from "../storage/authStorage";
-import { login, register, LoginRequest, RegisterRequest } from "../api/authApi";
-
-type User = {
-  id: string;
-  name: string;
-  companyName: string;
-  email: string;
-  role: string;
-};
+import {
+  getAuthItem,
+  setAuthItem,
+  deleteAuthItem,
+} from "../storage/authStorage";
+import { login, register } from "../api/authApi";
+import {
+  AuthResponse,
+  AuthUser,
+  LoginRequest,
+  RegisterRequest,
+} from "../types";
 
 type AuthContextType = {
-  user: User | null;
+  user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
   signIn: (request: LoginRequest) => Promise<void>;
@@ -22,14 +24,14 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadStoredAuth() {
       try {
-        const storedToken = await getAuthItem("token")
+        const storedToken = await getAuthItem("token");
         const storedUser = await getAuthItem("user");
 
         if (storedToken && storedUser) {
@@ -52,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadStoredAuth();
   }, []);
 
-  async function saveAuth(data: any) {
+  async function saveAuth(data: AuthResponse) {
     await setAuthItem("token", data.token);
     await setAuthItem("user", JSON.stringify(data.user));
 

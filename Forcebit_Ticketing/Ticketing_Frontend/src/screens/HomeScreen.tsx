@@ -9,17 +9,12 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../App";
-import {
-  getAllTickets,
-  getMyTickets,
-  TicketListItem,
-  TicketStatus,
-} from "../api/ticketApi";
+import { getMyTickets } from "../api/ticketApi";
 import { useAuth } from "../context/AuthContext";
 import { useErrorHandler } from "../hooks/useErrorHandler";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
+import { RootStackParamList, TicketListItem, TicketStatus } from "../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
@@ -82,8 +77,7 @@ export default function HomeScreen({ navigation }: Props) {
       try {
         clearError();
         showRefreshing ? setIsRefreshing(true) : setIsLoading(true);
-        const data =
-          user?.role === "Admin" ? await getAllTickets() : await getMyTickets();
+        const data = await getMyTickets();
         setTickets(data);
       } catch (error) {
         handleError(error);
@@ -92,7 +86,7 @@ export default function HomeScreen({ navigation }: Props) {
         setIsRefreshing(false);
       }
     },
-    [clearError, handleError, user?.role],
+    [clearError, handleError],
   );
 
   useFocusEffect(

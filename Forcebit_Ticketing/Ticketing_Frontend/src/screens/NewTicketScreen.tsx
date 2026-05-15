@@ -9,11 +9,11 @@ import {
   View,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../App";
 import { createTicket } from "../api/ticketApi";
 import { useErrorHandler } from "../hooks/useErrorHandler";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
+import { RootStackParamList } from "../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NewTicket">;
 
@@ -43,7 +43,7 @@ export default function NewTicketScreen({ navigation }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { errorMessage, clearError, handleError } = useErrorHandler(
-    "Could not create the ticket."
+    "Could not create the ticket.",
   );
 
   async function handleCreateTicket() {

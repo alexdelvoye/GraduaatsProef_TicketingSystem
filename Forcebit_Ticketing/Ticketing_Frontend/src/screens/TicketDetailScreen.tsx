@@ -11,18 +11,16 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../App";
 import {
   addTicketMessage,
   getTicketById,
-  TicketDetail,
-  TicketStatus,
   updateTicketStatus,
 } from "../api/ticketApi";
 import { useAuth } from "../context/AuthContext";
 import { useErrorHandler } from "../hooks/useErrorHandler";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
+import { RootStackParamList, TicketDetail, TicketStatus } from "../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TicketDetail">;
 

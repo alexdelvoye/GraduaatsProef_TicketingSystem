@@ -1,46 +1,13 @@
 import { apiFetch } from "./apiClient";
-
-export type TicketStatus = "Open" | "InProgress" | "Closed";
-
-export type TicketListItem = {
-  id: string;
-  title: string;
-  category: string;
-  subject: string;
-  status: TicketStatus;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type TicketMessage = {
-  id: string;
-  ticketId: string;
-  senderId: string;
-  senderName: string;
-  senderRole: string;
-  message: string;
-  createdAt: string;
-};
-
-export type TicketDetail = TicketListItem & {
-  clientId: string;
-  clientName: string;
-  companyName: string;
-  description: string;
-  closedAt?: string | null;
-  messages: TicketMessage[];
-};
-
-export type CreateTicketRequest = {
-  title: string;
-  category: string;
-  subject: string;
-  description: string;
-};
-
-export type CreateTicketMessageRequest = {
-  message: string;
-};
+import {
+  ClientListItem,
+  CreateTicketMessageRequest,
+  CreateTicketRequest,
+  TicketDetail,
+  TicketListItem,
+  TicketMessage,
+  TicketStatus,
+} from "../types";
 
 export function getMyTickets() {
   return apiFetch<TicketListItem[]>("/tickets");
@@ -48,6 +15,14 @@ export function getMyTickets() {
 
 export function getAllTickets() {
   return apiFetch<TicketListItem[]>("/admin/tickets");
+}
+
+export function getClients() {
+  return apiFetch<ClientListItem[]>("/admin/clients");
+}
+
+export function getClientTickets(clientId: string) {
+  return apiFetch<TicketListItem[]>(`/admin/clients/${clientId}/tickets`);
 }
 
 export function getTicketById(ticketId: string) {

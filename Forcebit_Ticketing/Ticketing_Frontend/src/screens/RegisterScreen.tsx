@@ -1,18 +1,12 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
-} from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../App";
 import { useAuth } from "../context/AuthContext";
 import { useErrorHandler } from "../hooks/useErrorHandler";
 import { colors } from "../styles/theme";
 import { registerStyles as styles } from "../styles/registerStyles";
 import { registerSchema } from "../validation/registerSchema";
+import { RootStackParamList } from "../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Register">;
 
@@ -26,8 +20,9 @@ export default function RegisterScreen({ navigation }: Props) {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { errorMessage, clearError, handleError } =
-    useErrorHandler("Registration failed.");
+  const { errorMessage, clearError, handleError } = useErrorHandler(
+    "Registration failed.",
+  );
 
   async function handleRegister() {
     try {
@@ -42,7 +37,7 @@ export default function RegisterScreen({ navigation }: Props) {
           password,
           confirmPassword,
         },
-        { abortEarly: true }
+        { abortEarly: true },
       );
 
       await signUp({

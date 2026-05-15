@@ -4,26 +4,19 @@ import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, View } from "react-native";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { colors } from "./src/styles/theme";
+import AdminScreen from "./src/screens/AdminScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import NewTicketScreen from "./src/screens/NewTicketScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
 import TicketDetailScreen from "./src/screens/TicketDetailScreen";
-
-export type RootStackParamList = {
-  Login: undefined;
-  Register: undefined;
-  Home: undefined;
-  NewTicket: undefined;
-  Profile: undefined;
-  TicketDetail: { ticketId: string };
-};
+import { RootStackParamList } from "./src/types";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function Navigation() {
-  const { token, isLoading } = useAuth();
+  const { token, user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -46,8 +39,14 @@ function Navigation() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {token ? (
           <>
-            <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="NewTicket" component={NewTicketScreen} />
+            {user?.role === "Admin" ? (
+              <Stack.Screen name="AdminHome" component={AdminScreen} />
+            ) : (
+              <>
+                <Stack.Screen name="Home" component={HomeScreen} />
+                <Stack.Screen name="NewTicket" component={NewTicketScreen} />
+              </>
+            )}
             <Stack.Screen name="Profile" component={ProfileScreen} />
             <Stack.Screen name="TicketDetail" component={TicketDetailScreen} />
           </>

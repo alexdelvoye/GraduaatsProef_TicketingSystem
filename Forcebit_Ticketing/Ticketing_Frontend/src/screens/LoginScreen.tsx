@@ -8,11 +8,11 @@ import {
   Platform,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../App";
 import { useAuth } from "../context/AuthContext";
 import { useErrorHandler } from "../hooks/useErrorHandler";
 import { colors } from "../styles/theme";
 import { loginStyles as styles } from "../styles/loginStyles";
+import { RootStackParamList } from "../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Login">;
 
@@ -24,7 +24,7 @@ export default function LoginScreen({ navigation }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { errorMessage, clearError, handleError } = useErrorHandler(
-    "Invalid email or password."
+    "Invalid email or password.",
   );
 
   async function handleLogin() {

@@ -1,8 +1,8 @@
 import { Pressable, Text, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../App";
 import { useAuth } from "../context/AuthContext";
 import { homeStyles as styles } from "../styles/homeStyles";
+import { RootStackParamList } from "../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Profile">;
 

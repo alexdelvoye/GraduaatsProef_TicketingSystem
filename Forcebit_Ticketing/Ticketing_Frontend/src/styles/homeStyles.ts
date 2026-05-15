@@ -257,6 +257,14 @@ export const homeStyles = StyleSheet.create({
   optionButtonTextSelected: {
     color: "#111236",
   },
+  optionSubtext: {
+    color: colors.muted,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  optionSubtextSelected: {
+    color: "#111236",
+  },
   errorText: {
     color: colors.danger,
     marginBottom: 12,
