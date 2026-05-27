@@ -1,16 +1,18 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 using Services.DTOs.Attachments;
 using Services.Exceptions;
 using Services.Interfaces;
-using System.Security.Claims;
 
 namespace Api.Controllers
 {
     [ApiController]
     [Route("api/tickets/{ticketId:guid}/attachments")]
+    // Attachment endpoints are protected because files belong to private ticket
+    // conversations.
     [Authorize]
-    public class AttachmentsController : ControllerBase
+    public class AttachmentsController : ApiControllerBase
     {
         private readonly IAttachmentService _attachmentService;
 
@@ -27,9 +29,13 @@ namespace Api.Controllers
             if (file == null)
                 throw new BadRequestException("A file is required.");
 
-            var userId = GetUserId();
-            var role = GetUserRole();
+            // The uploader is the authenticated user, not a value submitted in
+            // the multipart form.
+            var userId = CurrentUserId;
+            var role = CurrentUserRole;
 
+            // Convert ASP.NET's IFormFile into a service DTO. This keeps the
+            // service layer independent from ASP.NET-specific types.
             var fileRequest = new FileUploadRequest
             {
                 FileName = file.FileName,
@@ -56,9 +62,11 @@ namespace Api.Controllers
             if (file == null)
                 throw new BadRequestException("A file is required.");
 
-            var userId = GetUserId();
-            var role = GetUserRole();
+            var userId = CurrentUserId;
+            var role = CurrentUserRole;
 
+            // Message attachments use the same uploaded file shape, plus the
+            // message id from the nested route.
             var fileRequest = new FileUploadRequest
             {
                 FileName = file.FileName,
@@ -75,22 +83,6 @@ namespace Api.Controllers
                 fileRequest);
 
             return Ok(attachment);
-        }
-
-        private Guid GetUserId()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (!Guid.TryParse(userId, out var parsedUserId))
-                throw new UnauthorizedException("Invalid authentication token.");
-
-            return parsedUserId;
-        }
-
-        private string GetUserRole()
-        {
-            return User.FindFirstValue(ClaimTypes.Role)
-                ?? throw new UnauthorizedException("Invalid authentication token.");
         }
     }
 }

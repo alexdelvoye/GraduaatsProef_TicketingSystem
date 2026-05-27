@@ -1,6 +1,7 @@
-﻿
 namespace Services.DTOs.Common
 {
+    // Standard error body returned by exception middleware and auth failures.
+    // A consistent shape makes frontend error handling much simpler.
     public class ErrorResponse
     {
         public int StatusCode { get; set; }

@@ -5,9 +5,10 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
+
+import { TicketReplyForm } from "../forms/TicketReplyForm";
 import {
   ticketStatuses,
   useTicketDetailScreen,
@@ -24,17 +25,18 @@ export default function TicketDetailScreen({
   navigation,
   route,
 }: TicketDetailScreenProps) {
+  // ticketId comes from React Navigation route params. The typed route prevents
+  // opening this screen without an id.
   const { ticketId } = route.params;
+
   const {
     user,
     ticket,
-    reply,
-    setReply,
     isLoading,
-    isSubmitting,
     statusSubmitting,
     errorMessage,
-    replyDisabled,
+    isTicketClosed,
+    clientStatusAction,
     handleSendReply,
     handleUpdateStatus,
   } = useTicketDetailScreen(ticketId);
@@ -42,6 +44,7 @@ export default function TicketDetailScreen({
   return (
     <KeyboardAvoidingView
       style={styles.container}
+      // Reply form sits near the bottom, so keyboard avoidance matters here.
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView contentContainerStyle={styles.content}>
@@ -61,6 +64,8 @@ export default function TicketDetailScreen({
             <ActivityIndicator color={colors.primary} />
           </View>
         ) : ticket ? (
+          // Once loaded, render ticket information, optional admin controls,
+          // the conversation, and the reply form.
           <>
             <View style={styles.card}>
               <View style={styles.ticketCardHeader}>
@@ -85,14 +90,17 @@ export default function TicketDetailScreen({
               <Text style={styles.ticketDate}>
                 Created {formatTicketDateTime(ticket.createdAt)}
               </Text>
-              <Text style={styles.description}>{ticket.description}</Text>
             </View>
 
             {user?.role === "Admin" ? (
+              // Only admins can change status. The backend also enforces this,
+              // so the UI rule is for usability, not security.
               <View style={styles.card}>
                 <Text style={styles.sectionTitle}>Status</Text>
                 <View style={styles.optionGrid}>
                   {ticketStatuses.map((status) => (
+                    // statusSubmitting disables all status buttons while one
+                    // request is in flight, preventing double updates.
                     <Pressable
                       key={status}
                       style={[
@@ -119,6 +127,28 @@ export default function TicketDetailScreen({
               </View>
             ) : null}
 
+            {clientStatusAction ? (
+              // Clients get only the business actions they are allowed to take:
+              // close their own ticket, or reopen it if the issue is not fixed.
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Ticket action</Text>
+                <Pressable
+                  style={[
+                    styles.primaryButton,
+                    statusSubmitting && styles.buttonDisabled,
+                  ]}
+                  onPress={() => handleUpdateStatus(clientStatusAction.status)}
+                  disabled={Boolean(statusSubmitting)}
+                >
+                  <Text style={styles.primaryButtonText}>
+                    {statusSubmitting === clientStatusAction.status
+                      ? "Saving..."
+                      : clientStatusAction.label}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
+
             <View style={styles.ticketSection}>
               <Text style={styles.sectionTitle}>Conversation</Text>
 
@@ -126,6 +156,8 @@ export default function TicketDetailScreen({
                 <Text style={styles.emptyText}>No replies yet.</Text>
               ) : (
                 ticket.messages.map((message) => (
+                  // Admin messages use a different style so clients can quickly
+                  // distinguish support replies.
                   <View
                     key={message.id}
                     style={[
@@ -149,37 +181,12 @@ export default function TicketDetailScreen({
 
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Reply</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder={
-                  ticket.status === "Closed"
-                    ? "Closed tickets cannot receive replies"
-                    : "Write a reply"
-                }
-                placeholderTextColor={colors.muted}
-                value={reply}
-                onChangeText={setReply}
-                editable={ticket.status !== "Closed"}
-                multiline
-                textAlignVertical="top"
+              {/* Closed tickets pass disabled=true so the form becomes read-only. */}
+              <TicketReplyForm
+                disabled={isTicketClosed}
+                errorMessage={errorMessage}
+                onSubmit={handleSendReply}
               />
-
-              {errorMessage ? (
-                <Text style={styles.errorText}>{errorMessage}</Text>
-              ) : null}
-
-              <Pressable
-                style={[
-                  styles.primaryButton,
-                  replyDisabled && styles.buttonDisabled,
-                ]}
-                onPress={handleSendReply}
-                disabled={replyDisabled}
-              >
-                <Text style={styles.primaryButtonText}>
-                  {isSubmitting ? "Sending..." : "Send reply"}
-                </Text>
-              </Pressable>
             </View>
           </>
         ) : (

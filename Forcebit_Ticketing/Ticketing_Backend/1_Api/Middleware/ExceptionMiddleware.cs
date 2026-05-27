@@ -1,10 +1,15 @@
-﻿using Services.DTOs.Common;
-using Services.Exceptions;
+using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
 
+using Services.DTOs.Common;
+using Services.Exceptions;
+
 namespace Api.Middleware
 {
+    // Central exception middleware keeps controllers and services clean.
+    // Services can throw clear application exceptions; this middleware converts
+    // them into consistent HTTP status codes and JSON error bodies.
     public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;
@@ -29,13 +34,23 @@ namespace Api.Middleware
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, exception.Message);
+                var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
+
+                _logger.LogError(
+                    exception,
+                    "Unhandled exception for {Method} {Path}. TraceId: {TraceId}",
+                    context.Request.Method,
+                    context.Request.Path,
+                    traceId);
+
                 await HandleExceptionAsync(context, exception);
             }
         }
 
         private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
+            // Expected application exceptions map to expected HTTP status codes.
+            // Anything unknown becomes a 500 with a safe generic message.
             var statusCode = exception switch
             {
                 NotFoundException => HttpStatusCode.NotFound,
@@ -45,11 +60,16 @@ namespace Api.Middleware
                 _ => HttpStatusCode.InternalServerError
             };
 
+            var message = statusCode == HttpStatusCode.InternalServerError
+                ? "An unexpected error occurred. Please try again later."
+                : exception.Message;
+
             var response = new ErrorResponse
             {
                 StatusCode = (int)statusCode,
-                Message = exception.Message,
-                Details = _environment.IsDevelopment() ? exception.StackTrace : null
+                Message = message,
+                Details = _environment.IsDevelopment() ? exception.ToString() : null,
+                TraceId = Activity.Current?.Id ?? context.TraceIdentifier
             };
 
             context.Response.ContentType = "application/json";

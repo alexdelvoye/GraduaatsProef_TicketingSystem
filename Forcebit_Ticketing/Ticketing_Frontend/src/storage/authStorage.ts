@@ -1,7 +1,9 @@
 import { Platform } from "react-native";
+
 import * as SecureStore from "expo-secure-store";
 
-// Utility functions to manage authentication-related data in storage, using localStorage for web and SecureStore for native platforms
+// Expo SecureStore works on native devices, while localStorage is available in
+// the browser. These helpers hide that platform difference from AuthContext.
 export async function getAuthItem(key: string) {
   if (Platform.OS === "web") {
     return localStorage.getItem(key);
@@ -10,17 +12,17 @@ export async function getAuthItem(key: string) {
   return SecureStore.getItemAsync(key);
 }
 
-// Utility function to set an authentication-related item in storage, using localStorage for web and SecureStore for native platforms
 export async function setAuthItem(key: string, value: string) {
   if (Platform.OS === "web") {
+    // Web storage is synchronous, so we return after writing.
     localStorage.setItem(key, value);
     return;
   }
 
+  // SecureStore is asynchronous on native platforms.
   await SecureStore.setItemAsync(key, value);
 }
 
-// Utility function to delete an authentication-related item from storage, using localStorage for web and SecureStore for native platforms
 export async function deleteAuthItem(key: string) {
   if (Platform.OS === "web") {
     localStorage.removeItem(key);

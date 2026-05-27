@@ -22,5 +22,27 @@ namespace Domain.Entities
         public ICollection<TicketMessage> Messages { get; set; } = new List<TicketMessage>();
 
         public ICollection<TicketAttachment> Attachments { get; set; } = new List<TicketAttachment>();
+
+        // Factory method for normal client registration. Admin creation is done
+        // separately by the seed extension, because it is application startup
+        // behavior rather than normal user self-registration.
+        public static User CreateClient(
+            string name,
+            string companyName,
+            string email,
+            string passwordHash,
+            DateTime createdAt)
+        {
+            return new User
+            {
+                Id = Guid.NewGuid(),
+                Name = name.Trim(),
+                CompanyName = companyName.Trim(),
+                Email = email.Trim().ToLowerInvariant(),
+                PasswordHash = passwordHash,
+                Role = UserRole.Client,
+                CreatedAt = createdAt
+            };
+        }
     }
 }

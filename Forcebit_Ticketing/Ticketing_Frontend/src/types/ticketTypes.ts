@@ -1,5 +1,8 @@
+// Frontend version of the backend TicketStatus enum. Literal union types give
+// autocomplete and prevent typo values like "In progress".
 export type TicketStatus = "Open" | "InProgress" | "Closed";
 
+// These values mirror backend ticket categories.
 export type TicketCategory =
   | "Sales"
   | "TechnicalProblem"
@@ -7,6 +10,7 @@ export type TicketCategory =
   | "Installation"
   | "Other";
 
+// These values mirror backend ticket subjects.
 export type TicketSubject =
   | "Gateway"
   | "Sensors"
@@ -16,14 +20,17 @@ export type TicketSubject =
   | "Account"
   | "Other";
 
+// "All" exists only in the frontend as a filter choice.
 export type StatusFilter = "All" | TicketStatus;
 
+// UI grouping shape used by the home screen.
 export type TicketGroup = {
   status: TicketStatus;
   title: string;
   description: string;
 };
 
+// Arrays are used by forms/buttons when rendering selectable values.
 export const ticketStatuses: TicketStatus[] = ["Open", "InProgress", "Closed"];
 
 export const statusFilters: StatusFilter[] = [
@@ -51,6 +58,8 @@ export const ticketSubjects: TicketSubject[] = [
   "Other",
 ];
 
+// Compact ticket shape for lists. It deliberately excludes heavy detail data
+// such as messages.
 export type TicketListItem = {
   id: string;
   clientId: string;
@@ -64,6 +73,7 @@ export type TicketListItem = {
   updatedAt: string;
 };
 
+// Message shape returned inside ticket detail responses.
 export type TicketMessage = {
   id: string;
   ticketId: string;
@@ -74,23 +84,28 @@ export type TicketMessage = {
   createdAt: string;
 };
 
+// Detail extends list item with conversation data. The original create-ticket
+// description is represented as the first message, not as a ticket field.
 export type TicketDetail = TicketListItem & {
-  description: string;
   closedAt?: string | null;
   messages: TicketMessage[];
 };
 
+// Request body for creating a ticket. initialMessage is the first message in
+// the conversation.
 export type CreateTicketRequest = {
   title: string;
   category: TicketCategory;
   subject: TicketSubject;
-  description: string;
+  initialMessage: string;
 };
 
+// Request body for adding a message to an existing ticket.
 export type CreateTicketMessageRequest = {
   message: string;
 };
 
+// Admin dashboard client summary.
 export type ClientListItem = {
   id: string;
   name: string;

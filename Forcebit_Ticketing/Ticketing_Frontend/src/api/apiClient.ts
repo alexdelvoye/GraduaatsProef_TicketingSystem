@@ -1,20 +1,26 @@
 import { getAuthItem } from "../storage/authStorage";
 
+// Central API base URL. Keeping this in one file makes it easy to switch from
+// localhost to a LAN IP when testing on a physical device.
 const API_URL = "http://localhost:5047/api";
 
-// Type definition for the expected structure of error responses from the backend
+// Expected structure of backend errors. It supports both our custom exception
+// middleware response and ASP.NET validation responses.
 type BackendErrorResponse = {
   statusCode?: number;
   message?: string;
   details?: string;
+  traceId?: string;
   title?: string;
   errors?: Record<string, string[]>;
 };
 
-// Custom error class to represent API errors with additional context
+// Custom error class for API failures. Components can show message to the user,
+// while developers can still inspect statusCode/details/traceId when debugging.
 export class ApiError extends Error {
   statusCode?: number;
   details?: string;
+  traceId?: string;
   errors?: Record<string, string[]>;
 
   constructor(
@@ -22,35 +28,47 @@ export class ApiError extends Error {
     statusCode?: number,
     details?: string,
     errors?: Record<string, string[]>,
+    traceId?: string,
   ) {
+    // Error's base constructor stores the message and stack trace.
     super(message);
+
     this.name = "ApiError";
     this.statusCode = statusCode;
     this.details = details;
     this.errors = errors;
+    this.traceId = traceId;
   }
 }
 
-// Checks if the response has a JSON content type
+// Check the content type before reading JSON. Calling response.json() on a text
+// or empty response would throw.
 function isJsonResponse(response: Response) {
   return response.headers.get("content-type")?.includes("application/json");
 }
 
-// Reads the response body and returns it as JSON if possible, otherwise as text. Handles 204 No Content responses gracefully.
+// Read the response body in a safe way. Some successful endpoints may return
+// 204 No Content, and some errors may return plain text instead of JSON.
 async function readResponseBody(response: Response) {
   if (response.status === 204) {
     return null;
   }
 
   if (isJsonResponse(response)) {
-    return (await response.json()) as BackendErrorResponse;
+    try {
+      return (await response.json()) as BackendErrorResponse;
+    } catch {
+      // JSON content type was announced, but parsing failed. Return a readable
+      // message instead of crashing with a low-level JSON error.
+      return { message: "The server returned an invalid response." };
+    }
   }
 
   const text = await response.text();
   return text ? { message: text } : null;
 }
 
-// Extracts a user-friendly error message from the backend response
+// Choose the best user-facing message from the backend response.
 function getBackendErrorMessage(data: BackendErrorResponse | null) {
   if (!data) {
     return "Request failed.";
@@ -66,16 +84,23 @@ function getBackendErrorMessage(data: BackendErrorResponse | null) {
 
   const firstValidationError = Object.values(data.errors ?? {})[0]?.[0];
 
+  // ASP.NET validation errors are grouped by field name. Showing the first one
+  // gives the user a useful message without dumping the entire object.
   return firstValidationError ?? "Request failed.";
 }
 
-// Main function to perform API requests with proper error handling and authentication
+// Main API helper. Every API function goes through here so authentication,
+// response reading, and error handling stay consistent across the app.
 export async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  // The token is loaded at request time so newly logged-in users immediately
+  // get authenticated requests without recreating the API client.
   const token = await getAuthItem("token");
 
+  // Merge default headers with caller-provided headers. Caller headers come
+  // last so special requests can override defaults when needed.
   const headers = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -85,6 +110,8 @@ export async function apiFetch<T = unknown>(
   let response: Response;
 
   try {
+    // fetch only rejects for network-level problems. HTTP 400/500 responses are
+    // handled below with response.ok.
     response = await fetch(`${API_URL}${path}`, {
       ...options,
       headers,
@@ -98,13 +125,17 @@ export async function apiFetch<T = unknown>(
   const data = await readResponseBody(response);
 
   if (!response.ok) {
+    // Throw our ApiError so useErrorHandler can show a clean message and keep
+    // extra debugging fields available.
     throw new ApiError(
       getBackendErrorMessage(data),
       response.status,
       data?.details,
       data?.errors,
+      data?.traceId,
     );
   }
 
+  // For normal success responses, callers receive typed data.
   return data as T;
 }

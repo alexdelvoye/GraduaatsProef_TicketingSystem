@@ -1,10 +1,14 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Services.Interfaces;
 using Services.Options;
 
 namespace Services.Services
 {
+    // Placeholder email service. It keeps the rest of the application written
+    // as if email exists, while currently logging the email action instead of
+    // contacting a real SMTP/provider.
     public class EmailService : IEmailService
     {
         private readonly EmailOptions _emailOptions;
@@ -20,6 +24,8 @@ namespace Services.Services
 
         public Task SendTicketCreatedEmailAsync(string adminEmail, string ticketTitle)
         {
+            // Fall back to configured support email if no explicit admin email
+            // was passed by the caller.
             var receiver = string.IsNullOrWhiteSpace(adminEmail)
                 ? _emailOptions.SupportEmail
                 : adminEmail;

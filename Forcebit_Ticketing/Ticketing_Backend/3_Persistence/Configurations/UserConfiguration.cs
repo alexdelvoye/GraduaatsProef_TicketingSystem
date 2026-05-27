@@ -1,9 +1,12 @@
-﻿using Domain.Entities;
+using Domain.Entities;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Persistence.Configurations
 {
+    // Fluent API configuration for the User table. Keeping database mapping in
+    // separate configuration classes keeps AppDbContext small.
     public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         public void Configure(EntityTypeBuilder<User> builder)
@@ -21,6 +24,7 @@ namespace Persistence.Configurations
                 .IsRequired()
                 .HasMaxLength(200);
 
+            // Unique index enforces one account per email at database level.
             builder.HasIndex(u => u.Email)
                 .IsUnique();
 
@@ -29,6 +33,7 @@ namespace Persistence.Configurations
 
             builder.Property(u => u.Role)
                 .IsRequired()
+                // Store enum names as readable strings instead of numbers.
                 .HasConversion<string>()
                 .HasMaxLength(50);
 

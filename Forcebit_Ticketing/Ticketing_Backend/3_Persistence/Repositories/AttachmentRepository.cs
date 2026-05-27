@@ -1,9 +1,13 @@
-﻿using Domain.Entities;
+using Domain.Entities;
+
 using Persistence.Data;
+
 using Services.Interfaces;
 
 namespace Persistence.Repositories
 {
+    // Attachment repository stores metadata. The actual file bytes are handled
+    // by IFileStorageService, not by this repository.
     public class AttachmentRepository : IAttachmentRepository
     {
         private readonly AppDbContext _context;

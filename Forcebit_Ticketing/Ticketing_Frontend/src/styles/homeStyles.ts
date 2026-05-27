@@ -184,12 +184,6 @@ export const homeStyles = StyleSheet.create({
     color: colors.muted,
     fontSize: 13,
   },
-  description: {
-    color: colors.text,
-    fontSize: 16,
-    lineHeight: 24,
-    marginTop: 18,
-  },
   messageCard: {
     backgroundColor: colors.card,
     borderRadius: 14,
@@ -231,6 +225,10 @@ export const homeStyles = StyleSheet.create({
     borderRadius: 10,
     padding: 14,
   },
+  inputError: {
+    borderColor: colors.danger,
+    borderWidth: 1,
+  },
   textArea: {
     minHeight: 140,
     marginBottom: 16,
@@ -269,5 +267,12 @@ export const homeStyles = StyleSheet.create({
     color: colors.danger,
     marginBottom: 12,
     fontWeight: "600",
+  },
+  fieldErrorText: {
+    color: colors.danger,
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 6,
+    marginBottom: 8,
   },
 });

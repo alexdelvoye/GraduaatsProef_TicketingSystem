@@ -4,37 +4,26 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
-import {
-  ticketCategories,
-  ticketSubjects,
-  useNewTicketScreen,
-} from "../hooks/useNewTicketScreen";
+
+import { NewTicketForm } from "../forms/NewTicketForm";
+import { useNewTicketScreen } from "../hooks/useNewTicketScreen";
 import { homeStyles as styles } from "../styles/homeStyles";
-import { colors } from "../styles/theme";
 import { NewTicketScreenProps } from "../types";
 
 export default function NewTicketScreen({ navigation }: NewTicketScreenProps) {
-  const {
-    title,
-    setTitle,
-    category,
-    setCategory,
-    subject,
-    setSubject,
-    description,
-    setDescription,
-    isSubmitting,
-    isDisabled,
-    errorMessage,
-    handleCreateTicket,
-  } = useNewTicketScreen(() => navigation.navigate("Home"));
+  // After a ticket is created, return to Home so the user can see the updated
+  // ticket list. The hook receives this as a callback to avoid importing
+  // navigation inside the hook.
+  const { errorMessage, handleCreateTicket } = useNewTicketScreen(() =>
+    navigation.navigate("Home"),
+  );
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
+      // Keeps the multiline description input usable when the keyboard opens.
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView contentContainerStyle={styles.content}>
@@ -52,85 +41,12 @@ export default function NewTicketScreen({ navigation }: NewTicketScreenProps) {
         <View style={styles.card}>
           <Text style={styles.title}>New ticket</Text>
 
-          <Text style={styles.label}>Title</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Short summary"
-            placeholderTextColor={colors.muted}
-            value={title}
-            onChangeText={setTitle}
+          {/* NewTicketForm owns Formik/Yup details; this screen only places it
+             in the page layout. */}
+          <NewTicketForm
+            errorMessage={errorMessage}
+            onSubmit={handleCreateTicket}
           />
-
-          <Text style={styles.label}>Category</Text>
-          <View style={styles.optionGrid}>
-            {ticketCategories.map((item) => (
-              <Pressable
-                key={item}
-                style={[
-                  styles.optionButton,
-                  category === item && styles.optionButtonSelected,
-                ]}
-                onPress={() => setCategory(item)}
-              >
-                <Text
-                  style={[
-                    styles.optionButtonText,
-                    category === item && styles.optionButtonTextSelected,
-                  ]}
-                >
-                  {item === "TechnicalProblem" ? "Technical" : item}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <Text style={styles.label}>Subject</Text>
-          <View style={styles.optionGrid}>
-            {ticketSubjects.map((item) => (
-              <Pressable
-                key={item}
-                style={[
-                  styles.optionButton,
-                  subject === item && styles.optionButtonSelected,
-                ]}
-                onPress={() => setSubject(item)}
-              >
-                <Text
-                  style={[
-                    styles.optionButtonText,
-                    subject === item && styles.optionButtonTextSelected,
-                  ]}
-                >
-                  {item}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <Text style={styles.label}>Description</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="What happened?"
-            placeholderTextColor={colors.muted}
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            textAlignVertical="top"
-          />
-
-          {errorMessage ? (
-            <Text style={styles.errorText}>{errorMessage}</Text>
-          ) : null}
-
-          <Pressable
-            style={[styles.primaryButton, isDisabled && styles.buttonDisabled]}
-            onPress={handleCreateTicket}
-            disabled={isDisabled}
-          >
-            <Text style={styles.primaryButtonText}>
-              {isSubmitting ? "Creating..." : "Create ticket"}
-            </Text>
-          </Pressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

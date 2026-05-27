@@ -1,62 +1,41 @@
-import { useState } from "react";
 import { createTicket } from "../api/ticketApi";
-import { ticketCategories, ticketSubjects } from "../types";
+import { useNotifications } from "../context/NotificationContext";
+import { CreateTicketFormValues } from "../validation/ticketSchema";
+
 import { useErrorHandler } from "./useErrorHandler";
 
-export { ticketCategories, ticketSubjects };
-
-// useNewTicketScreen is a custom hook that manages the state and logic for creating a new ticket,
-// including form fields for title, category, subject, and description, as well as handling the submission process with error handling and loading state management
+// Screen hook for creating tickets. The screen passes onCreated so navigation
+// stays outside this hook and the hook remains reusable/testable.
 export function useNewTicketScreen(onCreated: () => void) {
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState(ticketCategories[0]);
-  const [subject, setSubject] = useState(ticketSubjects[0]);
-  const [description, setDescription] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showSuccess } = useNotifications();
 
   const { errorMessage, clearError, handleError } = useErrorHandler(
     "Could not create the ticket.",
   );
 
-  // Function to handle the creation of a new ticket when the user submits the form,
-  // including validation to ensure required fields are filled, error handling, and loading state management
-  async function handleCreateTicket() {
-    if (!title.trim() || !description.trim()) {
-      return;
-    }
-
+  async function handleCreateTicket(values: CreateTicketFormValues) {
     try {
       clearError();
-      setIsSubmitting(true);
 
+      // Yup guarantees required fields before this point. The description field
+      // from the form becomes the initial ticket message in the backend.
       await createTicket({
-        title: title.trim(),
-        category,
-        subject,
-        description: description.trim(),
+        title: values.title.trim(),
+        category: values.category,
+        subject: values.subject,
+        initialMessage: values.description.trim(),
       });
 
+      showSuccess("Ticket created", "Forcebit can now review your request.");
+
+      // Usually this navigates back to the home screen after successful create.
       onCreated();
     } catch (error) {
       handleError(error);
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
-  const isDisabled = isSubmitting || !title.trim() || !description.trim();
-
   return {
-    title,
-    setTitle,
-    category,
-    setCategory,
-    subject,
-    setSubject,
-    description,
-    setDescription,
-    isSubmitting,
-    isDisabled,
     errorMessage,
     handleCreateTicket,
   };

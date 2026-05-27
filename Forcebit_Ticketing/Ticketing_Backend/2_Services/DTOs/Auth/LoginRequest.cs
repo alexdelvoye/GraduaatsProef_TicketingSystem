@@ -1,8 +1,9 @@
-﻿
 using System.ComponentModel.DataAnnotations;
 
 namespace Services.DTOs.Auth
 {
+    // Request DTO for login. DataAnnotations are used by ASP.NET model
+    // validation before AuthService receives the request.
     public class LoginRequest
     {
         [Required]

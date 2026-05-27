@@ -6,6 +6,7 @@ import {
   Text,
   View,
 } from "react-native";
+
 import {
   getClientLabel,
   statusFilters,
@@ -39,6 +40,7 @@ export default function AdminScreen({ navigation }: AdminScreenProps) {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
+      // Admin can pull to refresh clients and tickets together.
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}
@@ -89,6 +91,7 @@ export default function AdminScreen({ navigation }: AdminScreenProps) {
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Clients</Text>
             <View style={styles.optionGrid}>
+              {/* "All" is a frontend-only filter option. */}
               <Pressable
                 style={[
                   styles.optionButton,
@@ -108,6 +111,8 @@ export default function AdminScreen({ navigation }: AdminScreenProps) {
               </Pressable>
 
               {clients.map((client) => (
+                // Client buttons filter the ticket queue without another API
+                // request because all admin tickets are already loaded.
                 <Pressable
                   key={client.id}
                   style={[
@@ -145,6 +150,8 @@ export default function AdminScreen({ navigation }: AdminScreenProps) {
             <Text style={styles.sectionTitle}>Status</Text>
             <View style={styles.optionGrid}>
               {statusFilters.map((status) => (
+                // Status filters reuse backend status values plus the "All"
+                // frontend value.
                 <Pressable
                   key={status}
                   style={[
@@ -184,6 +191,7 @@ export default function AdminScreen({ navigation }: AdminScreenProps) {
               </Text>
             ) : (
               filteredTickets.map((ticket) => (
+                // The same ticket detail screen is used by admin and client.
                 <Pressable
                   key={ticket.id}
                   style={styles.ticketCard}

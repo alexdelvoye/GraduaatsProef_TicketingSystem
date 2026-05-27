@@ -6,4 +6,6 @@ export const colors = {
   text: "#ffffff",
   muted: "#a6a8c8",
   danger: "#ff6b6b",
+  success: "#46d98d",
+  warning: "#ffcf5c",
 };

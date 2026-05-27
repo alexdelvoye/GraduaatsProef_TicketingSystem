@@ -6,6 +6,9 @@ using Services.Options;
 
 namespace Services.Services
 {
+    // Infrastructure-style service that stores uploaded files on disk.
+    // The options pattern controls folder, max size and allowed extensions from
+    // configuration instead of hard-coding them in the service.
     public class LocalFileStorageService : IFileStorageService
     {
         private readonly FileStorageOptions _options;

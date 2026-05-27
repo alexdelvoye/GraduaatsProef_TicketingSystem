@@ -1,9 +1,11 @@
-﻿using Domain.Entities;
+using Domain.Entities;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Persistence.Configurations
 {
+    // Database mapping for uploaded file metadata.
     public class TicketAttachmentConfiguration : IEntityTypeConfiguration<TicketAttachment>
     {
         public void Configure(EntityTypeBuilder<TicketAttachment> builder)
@@ -25,11 +27,14 @@ namespace Persistence.Configurations
             builder.HasOne(a => a.Ticket)
                 .WithMany(t => t.Attachments)
                 .HasForeignKey(a => a.TicketId)
+                // Ticket-level attachments are removed with the ticket.
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(a => a.Message)
                 .WithMany(m => m.Attachments)
                 .HasForeignKey(a => a.MessageId)
+                // If a message is removed, keep the attachment metadata linked
+                // to the ticket but clear the message reference.
                 .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasOne(a => a.UploadedBy)

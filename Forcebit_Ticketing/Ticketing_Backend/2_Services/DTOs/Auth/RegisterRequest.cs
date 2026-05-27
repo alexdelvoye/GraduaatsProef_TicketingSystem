@@ -1,8 +1,9 @@
-﻿
 using System.ComponentModel.DataAnnotations;
 
 namespace Services.DTOs.Auth
 {
+    // Request DTO for client registration. It describes what the API accepts,
+    // separately from the User entity stored in the database.
     public class RegisterRequest
     {
         [Required]
@@ -22,6 +23,7 @@ namespace Services.DTOs.Auth
         [MinLength(8)]
         public string Password { get; set; } = string.Empty;
 
+        // Compare validates that ConfirmPassword has the same value as Password.
         [Required]
         [Compare(nameof(Password))]
         public string ConfirmPassword { get; set; } = string.Empty;

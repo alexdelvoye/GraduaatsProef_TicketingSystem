@@ -42,11 +42,6 @@ namespace _3_Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(3000)
-                        .HasColumnType("varchar(3000)");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)

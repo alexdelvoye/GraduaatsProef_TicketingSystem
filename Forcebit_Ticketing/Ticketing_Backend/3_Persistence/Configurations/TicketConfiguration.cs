@@ -1,9 +1,11 @@
-﻿using Domain.Entities;
+using Domain.Entities;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Persistence.Configurations
 {
+    // Database mapping for tickets and their relationship to the client user.
     public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
     {
         public void Configure(EntityTypeBuilder<Ticket> builder)
@@ -24,10 +26,6 @@ namespace Persistence.Configurations
                 .HasConversion<string>()
                 .HasMaxLength(50);
 
-            builder.Property(t => t.Description)
-                .IsRequired()
-                .HasMaxLength(3000);
-
             builder.Property(t => t.Status)
                 .IsRequired()
                 .HasConversion<string>()
@@ -36,6 +34,8 @@ namespace Persistence.Configurations
             builder.HasOne(t => t.Client)
                 .WithMany(u => u.Tickets)
                 .HasForeignKey(t => t.ClientId)
+                // Restrict prevents deleting a user while tickets still point
+                // to that user, preserving ticket history.
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

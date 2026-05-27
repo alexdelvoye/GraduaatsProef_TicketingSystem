@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+
+import { login, register } from "../api/authApi";
 import {
+  deleteAuthItem,
   getAuthItem,
   setAuthItem,
-  deleteAuthItem,
 } from "../storage/authStorage";
-import { login, register } from "../api/authApi";
 import {
   AuthResponse,
   AuthUser,
@@ -12,8 +13,10 @@ import {
   RegisterRequest,
 } from "../types";
 
-// Type definition for the authentication context, including user information, token,
-// loading state, and functions for signing in, signing up, and signing out
+import { useNotifications } from "./NotificationContext";
+
+// Shape of the authentication context. Components do not need to know where the
+// token is stored; they only use these values and actions.
 type AuthContextType = {
   user: AuthUser | null;
   token: string | null;
@@ -23,18 +26,27 @@ type AuthContextType = {
   signOut: () => Promise<void>;
 };
 
-// Create a React context for authentication with an initial value of null
+// Null is used as the initial value so useAuth can detect missing providers and
+// throw a clear developer error.
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Provider component to wrap the app and provide authentication state and functions to its children
+// Provider component that wraps the app and exposes authentication state/actions
+// to every screen.
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { showInfo } = useNotifications();
+
+  // user/token are kept in React state for immediate UI updates.
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
+
+  // isLoading is true while restoring a saved login from device storage.
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadStoredAuth() {
       try {
+        // Restore previous login so the user does not have to sign in every
+        // time the app restarts.
         const storedToken = await getAuthItem("token");
         const storedUser = await getAuthItem("user");
 
@@ -43,6 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(JSON.parse(storedUser));
         }
       } catch (error) {
+        // If stored JSON is corrupted, clear it. A clean logout is better than
+        // leaving the app in a half-authenticated state.
         console.log("Failed to load auth:", error);
 
         await deleteAuthItem("token");
@@ -51,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(null);
         setUser(null);
       } finally {
+        // Always stop the loading screen, even if restoring auth failed.
         setIsLoading(false);
       }
     }
@@ -59,6 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function saveAuth(data: AuthResponse) {
+    // Save to persistent storage first, then update React state. This keeps the
+    // UI and storage in sync after login/register.
     await setAuthItem("token", data.token);
     await setAuthItem("user", JSON.stringify(data.user));
 
@@ -67,21 +84,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signIn(request: LoginRequest) {
+    // API-specific login details stay in authApi; the context only saves the
+    // successful auth result.
     const data = await login(request);
     await saveAuth(data);
   }
 
   async function signUp(request: RegisterRequest) {
+    // Register returns the same AuthResponse shape as login, so both flows can
+    // reuse saveAuth.
     const data = await register(request);
     await saveAuth(data);
   }
 
   async function signOut() {
+    // Remove both token and user data so future API calls are anonymous.
     await deleteAuthItem("token");
     await deleteAuthItem("user");
 
     setToken(null);
     setUser(null);
+    showInfo("Signed out", "Your session has ended.");
   }
 
   return (
@@ -93,7 +116,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Custom hook to access the authentication context, ensuring it is used within an AuthProvider
+// Custom hook to access the authentication context. Throwing here catches setup
+// mistakes quickly during development.
 export function useAuth() {
   const context = useContext(AuthContext);
 

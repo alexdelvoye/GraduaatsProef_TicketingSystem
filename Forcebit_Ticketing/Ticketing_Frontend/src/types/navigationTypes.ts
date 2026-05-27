@@ -1,5 +1,7 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 
+// Central list of all navigation routes and their params. undefined means the
+// screen does not require route parameters.
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -10,6 +12,7 @@ export type RootStackParamList = {
   TicketDetail: { ticketId: string };
 };
 
+// Screen prop aliases keep component signatures readable and type-safe.
 export type LoginScreenProps = NativeStackScreenProps<
   RootStackParamList,
   "Login"

@@ -1,40 +1,36 @@
-import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNotifications } from "../context/NotificationContext";
+import { LoginFormValues } from "../validation/loginSchema";
+
 import { useErrorHandler } from "./useErrorHandler";
 
+// Screen hook for login behavior. The form component owns validation and input
+// state; this hook owns what happens after the form submits.
 export function useLoginScreen() {
   const { signIn } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showSuccess } = useNotifications();
 
   const { errorMessage, clearError, handleError } = useErrorHandler(
     "Invalid email or password.",
   );
 
-  // Function to handle the login process when the user submits their credentials, including error handling and loading state management
-  async function handleLogin() {
+  async function handleLogin(values: LoginFormValues) {
     try {
       clearError();
-      setIsSubmitting(true);
 
+      // Normalize email the same way the backend does before sending it.
       await signIn({
-        email,
-        password,
+        email: values.email.trim().toLowerCase(),
+        password: values.password,
       });
+
+      showSuccess("Signed in", "Welcome back.");
     } catch (error) {
       handleError(error);
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
   return {
-    email,
-    setEmail,
-    password,
-    setPassword,
-    isSubmitting,
     errorMessage,
     handleLogin,
   };

@@ -1,9 +1,11 @@
-﻿using Domain.Enums;
+using Domain.Enums;
+
 using Services.DTOs.Users;
 using Services.Interfaces;
 
 namespace Services.Services
 {
+    // Application service for user/admin overview use cases.
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
@@ -21,6 +23,8 @@ namespace Services.Services
 
             foreach (var client in clients)
             {
+                // Count tickets in the service because these counts are part of
+                // the admin use case, not properties stored on the user table.
                 var openCount = client.Tickets.Count(t => t.Status != TicketStatus.Closed);
                 var closedCount = client.Tickets.Count(t => t.Status == TicketStatus.Closed);
 

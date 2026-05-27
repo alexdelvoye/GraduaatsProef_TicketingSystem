@@ -36,6 +36,10 @@ export const loginStyles = StyleSheet.create({
     padding: 14,
     marginBottom: 14,
   },
+  inputError: {
+    borderColor: colors.danger,
+    borderWidth: 1,
+  },
   button: {
     backgroundColor: colors.primary,
     padding: 14,
@@ -60,5 +64,12 @@ export const loginStyles = StyleSheet.create({
     marginBottom: 12,
     textAlign: "center",
     fontWeight: "600",
+  },
+  fieldErrorText: {
+    color: colors.danger,
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: -6,
+    marginBottom: 12,
   },
 });

@@ -1,6 +1,6 @@
 import { StatusFilter, TicketStatus } from "../types";
 
-// Function to format ticket dates for display, showing month, day, and year
+// Format a backend ISO date string for compact ticket cards.
 export function formatTicketDate(value: string) {
   return new Intl.DateTimeFormat("en", {
     month: "short",
@@ -9,7 +9,7 @@ export function formatTicketDate(value: string) {
   }).format(new Date(value));
 }
 
-// Function to format ticket dates and times for display, showing month, day, year, hour, and minute
+// Detail screens need the time as well as the date for conversation messages.
 export function formatTicketDateTime(value: string) {
   return new Intl.DateTimeFormat("en", {
     month: "short",
@@ -20,6 +20,8 @@ export function formatTicketDateTime(value: string) {
   }).format(new Date(value));
 }
 
+// The backend stores enum-style values. This lookup keeps user-facing labels in
+// one place so "InProgress" is consistently shown as "In Progress".
 const ticketStatusLabels: Record<StatusFilter | TicketStatus, string> = {
   All: "All",
   Open: "Open",
@@ -27,7 +29,6 @@ const ticketStatusLabels: Record<StatusFilter | TicketStatus, string> = {
   Closed: "Closed",
 };
 
-// Function to get a display label for a ticket status, converting API values to user-facing labels.
 export function formatTicketStatus(status: StatusFilter | TicketStatus) {
   return ticketStatusLabels[status];
 }

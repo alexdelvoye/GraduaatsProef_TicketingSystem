@@ -1,10 +1,15 @@
-﻿using Domain.Entities;
-using Persistence.Data;
-using Services.Interfaces;
+using Domain.Entities;
+
 using Microsoft.EntityFrameworkCore;
+
+using Persistence.Data;
+
+using Services.Interfaces;
 
 namespace Persistence.Repositories
 {
+    // Repository for ticket queries and ticket-related inserts. The service
+    // layer decides what should happen; this class decides how to query EF Core.
     public class TicketRepository : ITicketRepository
     {
         private readonly AppDbContext _context;
@@ -16,6 +21,7 @@ namespace Persistence.Repositories
 
         public async Task<Ticket?> GetByIdAsync(Guid id)
         {
+            // Lightweight lookup without related messages/attachments.
             return await _context.Tickets
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
@@ -23,6 +29,9 @@ namespace Persistence.Repositories
         public async Task<Ticket?> GetDetailByIdAsync(Guid id)
         {
             return await _context.Tickets
+                // Split queries avoid one very large join when loading several
+                // collections. This is clearer and often safer for detail pages.
+                .AsSplitQuery()
                 .Include(t => t.Client)
                 .Include(t => t.Messages)
                     .ThenInclude(m => m.Sender)
@@ -37,6 +46,7 @@ namespace Persistence.Repositories
             return await _context.Tickets
                 .Include(t => t.Client)
                 .Where(t => t.ClientId == clientId)
+                // UpdatedAt gives the most recently active tickets first.
                 .OrderByDescending(t => t.UpdatedAt)
                 .ToListAsync();
         }

@@ -1,9 +1,12 @@
 import { Pressable, Text, View } from "react-native";
+
 import { useAuth } from "../context/AuthContext";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { ProfileScreenProps } from "../types";
 
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
+  // Profile is read-only for now. AuthContext provides the saved user data and
+  // the signOut action.
   const { user, signOut } = useAuth();
 
   return (
@@ -22,6 +25,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
       <View style={styles.card}>
         <Text style={styles.title}>Profile</Text>
 
+        {/* Optional chaining avoids crashes during brief auth state transitions. */}
         <Text style={styles.label}>Name</Text>
         <Text style={styles.value}>{user?.name}</Text>
 

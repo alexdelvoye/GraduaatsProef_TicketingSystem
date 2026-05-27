@@ -20,6 +20,8 @@ namespace Services.Interfaces
 
         Task UpdateTicketStatusAsync(
             Guid ticketId,
+            Guid currentUserId,
+            string currentUserRole,
             UpdateTicketStatusRequest request);
 
         Task<TicketMessageResponse> AddMessageAsync(

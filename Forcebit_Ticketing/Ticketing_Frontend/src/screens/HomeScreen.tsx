@@ -6,6 +6,7 @@ import {
   Text,
   View,
 } from "react-native";
+
 import { useHomeScreen } from "../hooks/useHomeScreen";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
@@ -31,6 +32,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
+      // Pull-to-refresh reuses the same load function as initial loading, but
+      // asks the hook to show the refresh spinner instead.
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}
@@ -67,6 +70,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         </View>
 
         {user?.role === "Client" ? (
+          // Only clients can create tickets. Admins use the admin dashboard.
           <Pressable
             style={styles.primaryButton}
             onPress={() => navigation.navigate("NewTicket")}
@@ -85,6 +89,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           <ActivityIndicator color={colors.primary} />
         </View>
       ) : (
+        // groupedTickets is prepared by the hook so this screen only renders
+        // each section.
         groupedTickets.map((group) => (
           <View key={group.status} style={styles.ticketSection}>
             <View style={styles.sectionHeader}>
@@ -102,6 +108,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
               </Text>
             ) : (
               group.tickets.map((ticket) => (
+                // Pressing a ticket opens the shared detail screen.
                 <Pressable
                   key={ticket.id}
                   style={styles.ticketCard}
