@@ -52,8 +52,18 @@ Main responsibilities:
 - Configure Swagger.
 - Add middleware.
 - Expose HTTP endpoints through controllers.
+- Translate HTTP-specific request shapes into service DTOs.
 
 Controllers inherit from `ApiControllerBase`. This base controller centralizes repeated claim-reading logic such as `CurrentUserId` and `CurrentUserRole`. That keeps individual controllers smaller and easier to read.
+
+API-only request models live in `1_Api/Requests`. These models exist when the
+shape is caused by HTTP itself, for example multipart form-data binding with
+`[FromForm]`. They are kept out of `2_Services/DTOs` because the services should
+not know whether data arrived as JSON, form-data, or another transport later.
+
+`FormFileMapper` also lives in the API layer for the same reason. ASP.NET gives
+uploaded files to controllers as `IFormFile`, but the services receive
+`FileUploadRequest`, which contains only normal metadata and a `Stream`.
 
 ## Services Layer
 
@@ -76,6 +86,13 @@ Main responsibilities:
 Example:
 
 `TicketService` is responsible for creating tickets, loading ticket details, adding messages, and changing status. It does not directly decide how HTTP errors should look. It throws service exceptions, and the exception middleware converts them into HTTP responses.
+
+General use-case DTOs live in `2_Services/DTOs`. These are the contracts used by
+the service methods, such as `CreateTicketRequest`, `TicketDetailResponse`, and
+`TicketMessageResponse`. They are not EF entities and they are not HTTP-only
+form binding models. This is a practical 3-layer compromise: controllers and
+services share application DTOs, while domain entities and database models stay
+separate.
 
 ## Persistence Layer
 
@@ -222,11 +239,11 @@ Ticket messages are limited to 3000 characters. The frontend Yup schemas, backen
 
 The attachment workflow follows the same three-layer structure as the rest of the project:
 
-1. `TicketReplyForm` lets the user select files and sends multipart form data only when files are present. The picker appends new selections so several files can be attached to one reply.
+1. `NewTicketForm` and `TicketReplyForm` let the user select files and send multipart form data only when files are present. The picker appends new selections so several files can be attached to the first message or a later reply.
 2. `attachmentFormData` builds the multipart request differently per platform: web uploads are converted to Blob/File values, while native uploads use the React Native `{ uri, name, type }` file shape.
-3. `TicketMessagesController` reads `Request.Form.Files` and converts the uploaded files into `FileUploadRequest` DTOs so the service layer does not depend on ASP.NET types. Reading from `Request.Form.Files` is more reliable for React Native multipart uploads than depending on one exact action-parameter binding shape.
-4. `TicketService` creates the message, saves files through `IFileStorageService`, creates `TicketAttachment` metadata rows, and sends admin attachments through Brevo when the client should receive an email.
-5. `LocalFileStorageService` validates size and extension, writes the file to the configured upload folder, and returns the stored file path.
+3. The API controller uses an API request model for the text fields, reads `Request.Form.Files` for files, and uses `FormFileMapper` to convert uploaded files into `FileUploadRequest` DTOs. Reading from `Request.Form.Files` is more reliable for React Native multipart uploads than depending on one exact action-parameter binding shape.
+4. `TicketService` creates the message, saves files through `IFileStorageService`, creates `TicketAttachment` metadata rows, and sends admin attachments through Brevo when the client should receive an email. During ticket creation, selected files are attached to the initial message because the description is stored as the first conversation message.
+5. `LocalFileStorageService` validates size and extension, writes the file to the configured upload folder, and returns the stored file path. It also owns protected file opening/deletion path resolution, so path safety stays inside the storage implementation instead of being repeated in controllers or workflow services.
 6. Existing attachments are downloaded through a protected API endpoint. `attachmentApi` fetches the file with the JWT token and creates a temporary browser download link, so the upload folder does not need to be publicly exposed.
 
 The database stores attachment metadata, not the binary file. The metadata fields are `Id`, `TicketId`, `MessageId`, `UploadedById`, `FileName`, `FilePath`, `ContentType`, and `UploadedAt`.
@@ -235,7 +252,27 @@ Allowed local extensions are `.png`, `.jpg`, `.jpeg`, `.pdf`, and `.zip`. The co
 
 ## Frontend Form Structure
 
-The frontend now uses Formik and Yup for forms.
+The frontend separates page rendering, behavior, forms, reusable components,
+styles, and API calls.
+
+Main folders:
+
+- `src/navigation` contains the React Navigation stack. `App.tsx` only wires
+  providers and renders `AppNavigator`, so route decisions are not mixed with
+  provider setup.
+- `src/screens` contains page-level composition. Screens decide what appears on
+  a page, but data loading and submit behavior are moved into hooks.
+- `src/hooks` contains stateful behavior such as loading tickets, filtering the
+  admin dashboard, sending replies, profile actions, and attachment picking.
+- `src/forms` contains Formik form components and form-specific UI.
+- `src/components` contains reusable non-form UI, such as `AppHeader`.
+- `src/styles` contains React Native stylesheets split by UI responsibility and
+  shared theme values.
+- `src/api` contains endpoint calls and HTTP error normalization.
+- `src/utils` contains platform/data helpers such as date formatting and
+  multipart attachment conversion.
+
+The frontend uses Formik and Yup for forms.
 
 Form components live in:
 
@@ -257,6 +294,25 @@ Benefits:
 - Form errors are shown close to the relevant input.
 - Screens are easier to read.
 - Rules can be reused.
+
+Attachment picking follows the same separation. `useAttachmentPicker` owns the
+stateful behavior: opening Expo DocumentPicker, converting picked assets into
+`SelectedAttachment` objects, removing duplicate selections, checking the shared
+20 MB limit, and showing attachment-specific errors. `AttachmentPicker` is only
+a presentational component that renders the buttons, help text, selected file
+names, and validation message. `NewTicketForm` and `TicketReplyForm` can
+therefore reuse the same attachment behavior without duplicating picker logic in
+their JSX.
+
+The shared `AppHeader` component removes repeated FORCEBIT header JSX from the
+home, admin, profile, new-ticket, and ticket-detail screens. Screens still pass
+their own actions, such as profile navigation, logout, or back navigation. This
+keeps the component reusable without letting it know about specific screens.
+
+Import organization follows the same readability rule. Runtime imports and
+type-only imports are separated with blank lines, and type-only values use
+`import type`. This makes it easier to see which imports affect the JavaScript
+bundle and which imports only exist for TypeScript checking.
 
 ## Toast Notifications
 
@@ -282,9 +338,27 @@ inline text shows exactly which field needs attention.
 
 The frontend styling follows the Forcebit website direction: dark navy pages,
 rounded darker navigation/cards, white text, muted helper text, and lime action
-buttons. Shared screen styles live in `homeStyles`, while authentication screens
-use `loginStyles` and `registerStyles` because their centered form layout is
-different from the ticket dashboard layout.
+buttons. The shared tokens live in `theme.ts`, so colors and layout values do
+not have to be repeated across every stylesheet.
+
+The authenticated ticket area uses `homeStyles` as a small public import for
+screens and components, but `homeStyles` is now only an aggregator. The actual
+style definitions are split by responsibility:
+
+- `sharedStyles` for page layout, cards, section titles, empty states, loading
+  states, and common text.
+- `headerStyles` for the reusable `AppHeader`.
+- `buttonStyles` for primary, secondary, disabled, and logout buttons.
+- `formStyles` for labels, inputs, validation text, text areas, and option
+  buttons.
+- `ticketStyles` for ticket cards, status pills, and conversation messages.
+- `attachmentStyles` for selected files and attachment download buttons.
+- `profileStyles` for the profile details and account action area.
+
+Authentication styles are also separated. `loginStyles` and `registerStyles`
+keep their different container behavior because login uses `KeyboardAvoidingView`
+and register uses a scrollable layout. Their repeated card, input, link, error,
+and button styles come from `authSharedStyles`.
 
 The main content wrapper uses a maximum width and centered alignment. This keeps
 the app readable on wide desktop browsers while still allowing the same screens
@@ -371,6 +445,24 @@ Formik manages form state, while Yup defines validation rules. This keeps form s
 Why use repositories:
 
 Repositories keep Entity Framework queries out of services. This makes services more focused on use cases and less focused on database details.
+
+Why some request classes are in the API layer:
+
+Classes such as `CreateTicketWithAttachmentsFormRequest` and
+`CreateMessageWithAttachmentsFormRequest` only exist because ASP.NET needs a
+shape for multipart `[FromForm]` binding. They are not business concepts and
+they are not service use-case contracts. The controller maps them to service
+DTOs before calling the service. This keeps HTTP binding details in the API
+layer.
+
+Why most DTOs are in the Services layer:
+
+DTOs such as `TicketDetailResponse` and `CreateTicketRequest` are used by the
+application use cases themselves. They define what a service method needs or
+returns. Keeping those DTOs in the Services layer is acceptable for this
+3-layer project because the services own the application workflow. For a larger
+Clean Architecture project, the next step would be separate API contracts and
+service commands/results, but that would add extra boilerplate here.
 
 Why status rules are in the domain:
 

@@ -3,7 +3,8 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { RegisterForm } from "../forms/RegisterForm";
 import { useRegisterScreen } from "../hooks/useRegisterScreen";
 import { registerStyles as styles } from "../styles/registerStyles";
-import { RegisterScreenProps } from "../types";
+
+import type { RegisterScreenProps } from "../types";
 
 export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   const { errorMessage, handleRegister } = useRegisterScreen();

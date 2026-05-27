@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using Api.Mapping;
+
 using Services.DTOs.Attachments;
 using Services.Exceptions;
 using Services.Interfaces;
@@ -34,15 +36,7 @@ namespace Api.Controllers
             var userId = CurrentUserId;
             var role = CurrentUserRole;
 
-            // Convert ASP.NET's IFormFile into a service DTO. This keeps the
-            // service layer independent from ASP.NET-specific types.
-            var fileRequest = new FileUploadRequest
-            {
-                FileName = file.FileName,
-                ContentType = file.ContentType,
-                Content = file.OpenReadStream(),
-                Length = file.Length
-            };
+            var fileRequest = FormFileMapper.ToFileUploadRequest(file);
 
             var attachment = await _attachmentService.UploadTicketAttachmentAsync(
                 ticketId,
@@ -65,15 +59,7 @@ namespace Api.Controllers
             var userId = CurrentUserId;
             var role = CurrentUserRole;
 
-            // Message attachments use the same uploaded file shape, plus the
-            // message id from the nested route.
-            var fileRequest = new FileUploadRequest
-            {
-                FileName = file.FileName,
-                ContentType = file.ContentType,
-                Content = file.OpenReadStream(),
-                Length = file.Length
-            };
+            var fileRequest = FormFileMapper.ToFileUploadRequest(file);
 
             var attachment = await _attachmentService.UploadMessageAttachmentAsync(
                 ticketId,

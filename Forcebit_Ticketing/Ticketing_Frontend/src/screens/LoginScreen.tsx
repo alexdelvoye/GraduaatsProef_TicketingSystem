@@ -9,7 +9,8 @@ import {
 import { LoginForm } from "../forms/LoginForm";
 import { useLoginScreen } from "../hooks/useLoginScreen";
 import { loginStyles as styles } from "../styles/loginStyles";
-import { LoginScreenProps } from "../types";
+
+import type { LoginScreenProps } from "../types";
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
   const { errorMessage, handleLogin } = useLoginScreen();

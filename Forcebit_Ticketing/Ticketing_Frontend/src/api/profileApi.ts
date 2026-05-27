@@ -1,6 +1,6 @@
 import { apiFetch } from "./apiClient";
 
-import { AuthUser, UpdateProfileRequest } from "../types";
+import type { AuthUser, UpdateProfileRequest } from "../types";
 
 // Authenticated endpoint for editing only the current user's own profile.
 export function updateProfile(request: UpdateProfileRequest) {

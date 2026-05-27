@@ -1,21 +1,26 @@
 import { Formik } from "formik";
 import { Pressable, Text } from "react-native";
 
+import { AttachmentPicker } from "./AttachmentPicker";
 import { FormOptionGroup } from "./FormOptionGroup";
 import { FormTextInput } from "./FormTextInput";
 import { submitFormWithValidationToast } from "./formErrorHelpers";
 
 import { useNotifications } from "../context/NotificationContext";
+import { useAttachmentPicker } from "../hooks/useAttachmentPicker";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { ticketCategories, ticketSubjects } from "../types";
-import {
-  CreateTicketFormValues,
-  createTicketSchema,
-} from "../validation/ticketSchema";
+import { createTicketSchema } from "../validation/ticketSchema";
+
+import type { SelectedAttachment } from "../types";
+import type { CreateTicketFormValues } from "../validation/ticketSchema";
 
 type NewTicketFormProps = {
   errorMessage: string;
-  onSubmit: (values: CreateTicketFormValues) => Promise<void>;
+  onSubmit: (
+    values: CreateTicketFormValues,
+    attachments: SelectedAttachment[],
+  ) => Promise<void>;
 };
 
 const initialValues: CreateTicketFormValues = {
@@ -33,6 +38,8 @@ function formatCategory(category: string) {
 
 export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
   const { showError } = useNotifications();
+  const { attachments, attachmentError, pickAttachments, clearAttachments } =
+    useAttachmentPicker("per ticket");
 
   return (
     // Category and subject are enum-like choices, so this form uses option
@@ -40,7 +47,7 @@ export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
     <Formik
       initialValues={initialValues}
       validationSchema={createTicketSchema}
-      onSubmit={onSubmit}
+      onSubmit={(values) => onSubmit(values, attachments)}
     >
       {({
         values,
@@ -114,6 +121,14 @@ export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
             <Text style={styles.errorText}>{errorMessage}</Text>
           ) : null}
 
+          <AttachmentPicker
+            attachments={attachments}
+            attachmentError={attachmentError}
+            limitLabel="per ticket"
+            onPickAttachments={pickAttachments}
+            onClearAttachments={clearAttachments}
+          />
+
           <Pressable
             style={[
               styles.primaryButton,
@@ -124,7 +139,9 @@ export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
                 values,
                 validateForm,
                 setTouched,
-                submitForm: handleSubmit,
+                submitForm: () => {
+                  handleSubmit();
+                },
                 showError,
                 toastTitle: "Please check the ticket",
               });

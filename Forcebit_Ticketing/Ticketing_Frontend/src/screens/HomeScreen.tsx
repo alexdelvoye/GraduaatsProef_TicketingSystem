@@ -7,14 +7,16 @@ import {
   View,
 } from "react-native";
 
+import { AppHeader } from "../components/AppHeader";
 import { useHomeScreen } from "../hooks/useHomeScreen";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
-import { HomeScreenProps } from "../types";
 import {
   formatTicketDate,
   formatTicketStatus,
 } from "../utils/ticketFormatters";
+
+import type { HomeScreenProps } from "../types";
 
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const {
@@ -42,27 +44,12 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         />
       }
     >
-      <View style={styles.header}>
-        <Text style={styles.logo}>FORCEBIT</Text>
-
-        <View style={styles.headerActions}>
-          <Pressable
-            onPress={() => navigation.navigate("Profile")}
-            style={styles.secondaryButton}
-          >
-            <Text style={styles.secondaryButtonText}>Profile</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => {
-              void signOut();
-            }}
-            style={styles.logoutButton}
-          >
-            <Text style={styles.logoutText}>Log out</Text>
-          </Pressable>
-        </View>
-      </View>
+      <AppHeader
+        onProfile={() => navigation.navigate("Profile")}
+        onLogout={() => {
+          void signOut();
+        }}
+      />
 
       <View style={styles.hero}>
         <View>

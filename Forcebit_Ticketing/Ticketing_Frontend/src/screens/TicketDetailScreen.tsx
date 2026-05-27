@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 
+import { AppHeader } from "../components/AppHeader";
 import { TicketReplyForm } from "../forms/TicketReplyForm";
 import {
   ticketStatuses,
@@ -15,11 +16,12 @@ import {
 } from "../hooks/useTicketDetailScreen";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
-import { TicketDetailScreenProps } from "../types";
 import {
   formatTicketDateTime,
   formatTicketStatus,
 } from "../utils/ticketFormatters";
+
+import type { TicketDetailScreenProps } from "../types";
 
 export default function TicketDetailScreen({
   navigation,
@@ -49,16 +51,7 @@ export default function TicketDetailScreen({
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.logo}>FORCEBIT</Text>
-
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={styles.secondaryButton}
-          >
-            <Text style={styles.secondaryButtonText}>Back</Text>
-          </Pressable>
-        </View>
+        <AppHeader onBack={() => navigation.goBack()} />
 
         {isLoading ? (
           <View style={styles.loadingState}>

@@ -1,8 +1,9 @@
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
-import { RegisterFormValues } from "../validation/registerSchema";
 
 import { useErrorHandler } from "./useErrorHandler";
+
+import type { RegisterFormValues } from "../validation/registerSchema";
 
 // Screen hook for registration behavior. The RegisterForm handles field state
 // and Yup validation; this hook calls AuthContext and shows feedback.

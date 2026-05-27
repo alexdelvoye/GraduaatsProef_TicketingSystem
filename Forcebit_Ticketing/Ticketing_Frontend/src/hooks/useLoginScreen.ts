@@ -1,8 +1,9 @@
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
-import { LoginFormValues } from "../validation/loginSchema";
 
 import { useErrorHandler } from "./useErrorHandler";
+
+import type { LoginFormValues } from "../validation/loginSchema";
 
 // Screen hook for login behavior. The form component owns validation and input
 // state; this hook owns what happens after the form submits.

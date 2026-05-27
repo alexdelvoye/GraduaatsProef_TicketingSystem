@@ -48,6 +48,35 @@ Content-Type: application/json
   "initialMessage": "The printer software opens, but printing never starts."
 }
 
+### Client creates ticket with attachments
+# Replace the file path with a real local png, jpg, pdf, or zip file.
+POST {{Api_HostAddress}}/api/tickets/with-attachments
+Authorization: Bearer {{ClientToken}}
+Content-Type: multipart/form-data; boundary=createTicketBoundary
+
+--createTicketBoundary
+Content-Disposition: form-data; name="title"
+
+Printer does not work
+--createTicketBoundary
+Content-Disposition: form-data; name="category"
+
+Question
+--createTicketBoundary
+Content-Disposition: form-data; name="subject"
+
+Software
+--createTicketBoundary
+Content-Disposition: form-data; name="initialMessage"
+
+The printer software opens, but printing never starts.
+--createTicketBoundary
+Content-Disposition: form-data; name="files"; filename="example.pdf"
+Content-Type: application/pdf
+
+< ./example.pdf
+--createTicketBoundary--
+
 ### Client lists own tickets
 GET {{Api_HostAddress}}/api/tickets
 Authorization: Bearer {{ClientToken}}

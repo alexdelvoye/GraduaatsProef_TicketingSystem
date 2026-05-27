@@ -6,10 +6,9 @@ import { submitFormWithValidationToast } from "./formErrorHelpers";
 
 import { useNotifications } from "../context/NotificationContext";
 import { registerStyles as styles } from "../styles/registerStyles";
-import {
-  RegisterFormValues,
-  registerSchema,
-} from "../validation/registerSchema";
+import { registerSchema } from "../validation/registerSchema";
+
+import type { RegisterFormValues } from "../validation/registerSchema";
 
 type RegisterFormProps = {
   errorMessage: string;

@@ -1,16 +1,17 @@
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   Text,
   View,
 } from "react-native";
 
+import { AppHeader } from "../components/AppHeader";
 import { NewTicketForm } from "../forms/NewTicketForm";
 import { useNewTicketScreen } from "../hooks/useNewTicketScreen";
 import { homeStyles as styles } from "../styles/homeStyles";
-import { NewTicketScreenProps } from "../types";
+
+import type { NewTicketScreenProps } from "../types";
 
 export default function NewTicketScreen({ navigation }: NewTicketScreenProps) {
   // After a ticket is created, return to Home so the user can see the updated
@@ -27,16 +28,7 @@ export default function NewTicketScreen({ navigation }: NewTicketScreenProps) {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.logo}>FORCEBIT</Text>
-
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={styles.secondaryButton}
-          >
-            <Text style={styles.secondaryButtonText}>Back</Text>
-          </Pressable>
-        </View>
+        <AppHeader onBack={() => navigation.goBack()} />
 
         <View style={styles.card}>
           <Text style={styles.title}>New ticket</Text>

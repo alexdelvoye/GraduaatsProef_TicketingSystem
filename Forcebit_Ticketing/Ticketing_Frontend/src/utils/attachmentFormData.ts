@@ -1,9 +1,10 @@
 import { Platform } from "react-native";
 
 import { ApiError } from "../api/apiClient";
-import { SelectedAttachment } from "../types";
 
 import { getSingleAttachmentSizeError } from "./attachmentLimits";
+
+import type { SelectedAttachment } from "../types";
 
 // FormData file values differ between platforms:
 // - Expo web/browser wants a Blob or File.

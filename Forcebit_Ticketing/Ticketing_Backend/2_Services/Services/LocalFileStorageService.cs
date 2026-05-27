@@ -65,15 +65,27 @@ namespace Services.Services
             return $"/{_options.UploadFolder}/{storedFileName}";
         }
 
+        public Task<Stream> OpenReadAsync(string storedFilePath)
+        {
+            // Downloading uses the same path resolver as deletion. That keeps
+            // all local-file safety checks in one place instead of duplicating
+            // path logic in services/controllers.
+            var absolutePath = ResolveStoredFilePath(storedFilePath);
+
+            if (!File.Exists(absolutePath))
+                throw new NotFoundException("Attachment file not found on the server.");
+
+            return Task.FromResult<Stream>(File.OpenRead(absolutePath));
+        }
+
         public Task DeleteFileIfExistsAsync(string storedFilePath)
         {
             if (string.IsNullOrWhiteSpace(storedFilePath))
                 return Task.CompletedTask;
 
-            // Stored paths look like "/Uploads/file.ext". Only the file name is
-            // trusted here so a malicious path cannot escape the upload folder.
-            var fileName = Path.GetFileName(storedFilePath);
-            var absolutePath = Path.Combine(_uploadFolder, fileName);
+            // Missing files are not fatal during cleanup. The database row may
+            // still need to be deleted even if the local file was already gone.
+            var absolutePath = ResolveStoredFilePath(storedFilePath);
 
             if (File.Exists(absolutePath))
             {
@@ -81,6 +93,24 @@ namespace Services.Services
             }
 
             return Task.CompletedTask;
+        }
+
+        private string ResolveStoredFilePath(string storedFilePath)
+        {
+            if (string.IsNullOrWhiteSpace(storedFilePath))
+                throw new NotFoundException("Attachment file not found on the server.");
+
+            // Stored paths look like "/uploads/file.pdf". Convert only the file
+            // name back to a physical path. That prevents a crafted database
+            // value such as "../secret.txt" from escaping the upload folder.
+            var fileName = Path.GetFileName(storedFilePath);
+            var absolutePath = Path.GetFullPath(Path.Combine(_uploadFolder, fileName));
+            var uploadRoot = Path.GetFullPath(_uploadFolder);
+
+            if (!absolutePath.StartsWith(uploadRoot, StringComparison.OrdinalIgnoreCase))
+                throw new ForbiddenException("Invalid attachment path.");
+
+            return absolutePath;
         }
 
         private static string FormatBytes(long bytes)

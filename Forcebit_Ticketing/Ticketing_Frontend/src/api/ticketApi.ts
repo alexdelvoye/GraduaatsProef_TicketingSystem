@@ -1,6 +1,8 @@
 import { apiFetch } from "./apiClient";
 
-import {
+import { appendAttachmentToFormData } from "../utils/attachmentFormData";
+
+import type {
   ClientListItem,
   CreateTicketMessageRequest,
   CreateTicketRequest,
@@ -10,7 +12,6 @@ import {
   SelectedAttachment,
   TicketStatus,
 } from "../types";
-import { appendAttachmentToFormData } from "../utils/attachmentFormData";
 
 // Client endpoint: returns only the authenticated client's tickets.
 export function getMyTickets() {
@@ -42,6 +43,29 @@ export function createTicket(request: CreateTicketRequest) {
   return apiFetch<TicketDetail>("/tickets", {
     method: "POST",
     body: JSON.stringify(request),
+  });
+}
+
+// Multipart version of ticket creation. The description still becomes the
+// first message, and these files are attached to that first message.
+export async function createTicketWithAttachments(
+  request: CreateTicketRequest,
+  attachments: SelectedAttachment[],
+) {
+  const formData = new FormData();
+
+  formData.append("title", request.title);
+  formData.append("category", request.category);
+  formData.append("subject", request.subject);
+  formData.append("initialMessage", request.initialMessage);
+
+  for (const attachment of attachments) {
+    await appendAttachmentToFormData(formData, attachment);
+  }
+
+  return apiFetch<TicketDetail>("/tickets/with-attachments", {
+    method: "POST",
+    body: formData,
   });
 }
 

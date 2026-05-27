@@ -1,3 +1,5 @@
+// Central design tokens. Stylesheets import these instead of hard-coding the
+// same colors and layout numbers in many files.
 export const colors = {
   background: "#15163f",
   backgroundDeep: "#0f102f",

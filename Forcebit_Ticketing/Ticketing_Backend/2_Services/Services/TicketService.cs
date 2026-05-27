@@ -89,7 +89,8 @@ namespace Services.Services
 
         public async Task<TicketDetailResponse> CreateTicketAsync(
             Guid clientId,
-            CreateTicketRequest request)
+            CreateTicketRequest request,
+            IReadOnlyCollection<FileUploadRequest>? attachments = null)
         {
             // Verify the authenticated client still exists before creating a
             // ticket connected to that user id.
@@ -117,11 +118,44 @@ namespace Services.Services
             // The mentor's ticket concept treats the ticket as the whole
             // conversation. The create form's description is therefore saved as
             // the first message from the client, not as a field on Ticket.
-            ticket.AddMessage(
+            var initialMessage = ticket.AddMessage(
                 clientId,
                 request.InitialMessage,
                 moveToInProgress: false,
                 ticket.CreatedAt);
+
+            initialMessage.Sender = client;
+
+            // Attachments are optional. When they are present during ticket
+            // creation, they belong to the initial message rather than directly
+            // to the ticket, because all conversation text and files should
+            // appear together in chronological message order.
+            var savedAttachments = new List<TicketAttachment>();
+
+            foreach (var file in attachments ?? [])
+            {
+                // Files selected during ticket creation belong to the first
+                // message, because the create form's description is stored as
+                // the first conversation message.
+                var filePath = await _fileStorageService.SaveFileAsync(file);
+                var attachment = new TicketAttachment
+                {
+                    Id = Guid.NewGuid(),
+                    TicketId = ticket.Id,
+                    MessageId = initialMessage.Id,
+                    UploadedById = clientId,
+                    FileName = file.FileName,
+                    FilePath = filePath,
+                    ContentType = file.ContentType,
+                    UploadedAt = DateTime.UtcNow
+                };
+
+                savedAttachments.Add(attachment);
+                ticket.Attachments.Add(attachment);
+                initialMessage.Attachments.Add(attachment);
+
+                await _attachmentRepository.AddAsync(attachment);
+            }
 
             // Adding the ticket also saves the initial message because it is in
             // the ticket's Messages collection.
@@ -131,9 +165,10 @@ namespace Services.Services
             // Structured logging stores TicketId and ClientId as fields, which
             // is easier to filter than one long concatenated string.
             _logger.LogInformation(
-                "Ticket {TicketId} created by client {ClientId}.",
+                "Ticket {TicketId} created by client {ClientId} with {AttachmentCount} attachment(s).",
                 ticket.Id,
-                clientId);
+                clientId,
+                savedAttachments.Count);
 
             // No email is sent on ticket creation. Admins use the dashboard as
             // their work queue, which avoids flooding support users with email

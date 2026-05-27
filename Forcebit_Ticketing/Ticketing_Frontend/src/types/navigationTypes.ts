@@ -1,4 +1,4 @@
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 // Central list of all navigation routes and their params. undefined means the
 // screen does not require route parameters.

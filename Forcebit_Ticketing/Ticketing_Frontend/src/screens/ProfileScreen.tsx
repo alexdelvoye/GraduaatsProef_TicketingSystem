@@ -1,9 +1,11 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 
+import { AppHeader } from "../components/AppHeader";
 import { ProfileForm } from "../forms/ProfileForm";
 import { useProfileScreen } from "../hooks/useProfileScreen";
 import { homeStyles as styles } from "../styles/homeStyles";
-import { ProfileScreenProps } from "../types";
+
+import type { ProfileScreenProps } from "../types";
 
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const {
@@ -17,16 +19,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View>
-        <View style={styles.header}>
-          <Text style={styles.logo}>FORCEBIT</Text>
-
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={styles.secondaryButton}
-          >
-            <Text style={styles.secondaryButtonText}>Back</Text>
-          </Pressable>
-        </View>
+        <AppHeader onBack={() => navigation.goBack()} />
 
         {user ? (
           <>

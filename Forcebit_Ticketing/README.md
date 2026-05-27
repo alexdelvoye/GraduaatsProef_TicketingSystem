@@ -10,6 +10,26 @@ Forcebit Ticketing is a small support ticket system with a .NET backend and an E
 - `Ticketing_Backend/4_Domain` - domain entities, enums, and business rules.
 - `Ticketing_Frontend` - Expo React Native app.
 
+Frontend structure:
+
+- `src/navigation` - React Navigation stack setup and route guards.
+- `src/screens` - page-level components that compose hooks, forms, and UI components.
+- `src/forms` - reusable Formik/Yup form components.
+- `src/components` - reusable non-form UI components such as the shared app header.
+- `src/hooks` - screen behavior and reusable stateful logic.
+- `src/api` - API calls and HTTP error normalization.
+- `src/styles` - React Native stylesheets split by responsibility plus shared theme values.
+- `src/utils` - formatting, attachment, and helper functions.
+- `src/validation` - Yup validation schemas.
+- `src/types` - shared TypeScript request/response/navigation types.
+
+The style folder is intentionally split: `theme.ts` contains colors/layout
+tokens, `appStyles.ts` belongs to the navigation shell, `authSharedStyles.ts`
+contains repeated login/register card styles, and the ticket dashboard styles
+are grouped into header, button, form, ticket, attachment, profile, and shared
+definition files. `homeStyles.ts` combines those groups so screens can keep a
+simple import while the style code remains explainable.
+
 ## Requirements
 
 - .NET SDK 10 preview or the SDK version used by the project.
@@ -53,7 +73,7 @@ Ticket descriptions and replies are limited to 3000 characters so they fit the d
 
 ## Attachments
 
-Clients and admins can add one or more attachments to ticket replies. The picker can be opened multiple times before sending; each new selection is added to the reply. Attachments shown in the conversation can be clicked in the web app to download the stored file. The backend accepts:
+Clients can add one or more attachments while creating a ticket, and clients/admins can add attachments to replies. The picker can be opened multiple times before sending; each new selection is added to the message. Attachments shown in the conversation can be clicked in the web app to download the stored file. The backend accepts:
 
 ```text
 .png
@@ -62,7 +82,7 @@ Clients and admins can add one or more attachments to ticket replies. The picker
 .zip
 ```
 
-The local upload limit is `20 MB` per reply, matching Brevo's transactional email limit for the whole email including attachments and content. The frontend shows a clear error when the selected files exceed that limit, and the backend enforces the same rule. Attachment metadata is stored in the database, while the file itself is saved under the configured upload folder.
+The local upload limit is `20 MB` per ticket message, matching Brevo's transactional email limit for the whole email including attachments and content. The frontend shows a clear error when the selected files exceed that limit, and the backend enforces the same rule. Attachment metadata is stored in the database, while the file itself is saved under the configured upload folder.
 
 Stored metadata:
 
@@ -162,7 +182,7 @@ Frontend lint and TypeScript checks:
 ```powershell
 cd Ticketing_Frontend
 npm run lint
-npx tsc --noEmit
+npm run typecheck
 ```
 
 ## Practical Test Flow
@@ -188,6 +208,7 @@ Implemented:
 - Admin login with seeded account.
 - JWT authentication.
 - Client ticket creation, with the initial description saved as the first ticket message.
+- Ticket creation and replies with attachments.
 - Ticket list and ticket detail views.
 - Client and admin ticket messages.
 - Admin status updates.

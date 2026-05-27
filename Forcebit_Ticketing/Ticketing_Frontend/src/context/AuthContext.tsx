@@ -6,14 +6,15 @@ import {
   getAuthItem,
   setAuthItem,
 } from "../storage/authStorage";
-import {
+
+import { useNotifications } from "./NotificationContext";
+
+import type {
   AuthResponse,
   AuthUser,
   LoginRequest,
   RegisterRequest,
 } from "../types";
-
-import { useNotifications } from "./NotificationContext";
 
 // Shape of the authentication context. Components do not need to know where the
 // token is stored; they only use these values and actions.

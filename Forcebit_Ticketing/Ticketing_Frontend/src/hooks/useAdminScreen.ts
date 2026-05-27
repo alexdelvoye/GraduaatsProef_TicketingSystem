@@ -4,14 +4,11 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import { getAllTickets, getClients } from "../api/ticketApi";
 import { useAuth } from "../context/AuthContext";
-import {
-  ClientListItem,
-  statusFilters,
-  StatusFilter,
-  TicketListItem,
-} from "../types";
+import { statusFilters } from "../types";
 
 import { useErrorHandler } from "./useErrorHandler";
+
+import type { ClientListItem, StatusFilter, TicketListItem } from "../types";
 
 // Re-export so the screen can import the hook and available filter values from
 // one file.

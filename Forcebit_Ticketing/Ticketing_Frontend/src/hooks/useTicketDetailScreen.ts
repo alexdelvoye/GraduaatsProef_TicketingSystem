@@ -12,17 +12,18 @@ import {
 
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
-import {
-  ticketStatuses,
+import { ticketStatuses } from "../types";
+import { formatTicketStatus } from "../utils/ticketFormatters";
+
+import { useErrorHandler } from "./useErrorHandler";
+
+import type {
   SelectedAttachment,
   TicketAttachment,
   TicketDetail,
   TicketStatus,
 } from "../types";
-import { formatTicketStatus } from "../utils/ticketFormatters";
-import { TicketMessageFormValues } from "../validation/ticketSchema";
-
-import { useErrorHandler } from "./useErrorHandler";
+import type { TicketMessageFormValues } from "../validation/ticketSchema";
 
 export { ticketStatuses };
 

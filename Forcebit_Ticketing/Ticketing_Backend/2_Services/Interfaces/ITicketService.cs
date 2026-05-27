@@ -17,7 +17,8 @@ namespace Services.Interfaces
 
         Task<TicketDetailResponse> CreateTicketAsync(
             Guid clientId,
-            CreateTicketRequest request);
+            CreateTicketRequest request,
+            IReadOnlyCollection<FileUploadRequest>? attachments = null);
 
         Task UpdateTicketStatusAsync(
             Guid ticketId,

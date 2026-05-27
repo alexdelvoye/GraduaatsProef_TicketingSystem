@@ -6,8 +6,10 @@ import { submitFormWithValidationToast } from "./formErrorHelpers";
 
 import { useNotifications } from "../context/NotificationContext";
 import { homeStyles as styles } from "../styles/homeStyles";
-import { AuthUser } from "../types";
-import { ProfileFormValues, profileSchema } from "../validation/profileSchema";
+import { profileSchema } from "../validation/profileSchema";
+
+import type { AuthUser } from "../types";
+import type { ProfileFormValues } from "../validation/profileSchema";
 
 type ProfileFormProps = {
   user: AuthUser;

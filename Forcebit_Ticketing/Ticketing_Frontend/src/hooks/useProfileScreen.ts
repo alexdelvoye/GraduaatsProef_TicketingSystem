@@ -3,9 +3,10 @@ import { Alert, Platform } from "react-native";
 import { deleteProfile, updateProfile } from "../api/profileApi";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
-import { ProfileFormValues } from "../validation/profileSchema";
 
 import { useErrorHandler } from "./useErrorHandler";
+
+import type { ProfileFormValues } from "../validation/profileSchema";
 
 export function useProfileScreen() {
   const { user, signOut, updateUser } = useAuth();

@@ -6,7 +6,9 @@ import { submitFormWithValidationToast } from "./formErrorHelpers";
 
 import { useNotifications } from "../context/NotificationContext";
 import { loginStyles as styles } from "../styles/loginStyles";
-import { LoginFormValues, loginSchema } from "../validation/loginSchema";
+import { loginSchema } from "../validation/loginSchema";
+
+import type { LoginFormValues } from "../validation/loginSchema";
 
 type LoginFormProps = {
   errorMessage: string;

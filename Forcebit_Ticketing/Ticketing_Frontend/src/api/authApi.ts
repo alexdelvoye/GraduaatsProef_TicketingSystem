@@ -1,6 +1,6 @@
 import { apiFetch } from "./apiClient";
 
-import { AuthResponse, LoginRequest, RegisterRequest } from "../types";
+import type { AuthResponse, LoginRequest, RegisterRequest } from "../types";
 
 // Small API modules keep endpoint paths out of screens/hooks. Hooks call
 // login/register without needing to know exact URLs.

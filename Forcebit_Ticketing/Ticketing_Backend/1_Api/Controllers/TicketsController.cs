@@ -1,7 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using Api.Mapping;
+using Api.Requests;
+
 using Services.DTOs.Tickets;
+using Services.Exceptions;
 using Services.Interfaces;
 
 namespace Api.Controllers
@@ -56,6 +60,42 @@ namespace Api.Controllers
 
             // CreatedAtAction returns HTTP 201 and points clients to the route
             // where the newly created ticket can be fetched.
+            return CreatedAtAction(nameof(GetTicketById), new { ticketId = ticket.Id }, ticket);
+        }
+
+        [HttpPost("with-attachments")]
+        // Multipart create is used when the first ticket message has files.
+        [Authorize(Roles = "Client")]
+        public async Task<ActionResult<TicketDetailResponse>> CreateTicketWithAttachments(
+            [FromForm] CreateTicketWithAttachmentsFormRequest formRequest)
+        {
+            // Files are read directly from Request.Form.Files because React
+            // Native, Expo Web and browser clients can serialize multipart file
+            // fields slightly differently. The text fields still bind through
+            // formRequest so DataAnnotations can validate them normally.
+            var uploadedFiles = Request.Form.Files;
+
+            if (uploadedFiles.Count == 0)
+                throw new BadRequestException("At least one attachment is required.");
+
+            // Translate the API-specific form request to the service DTO. This
+            // keeps TicketService independent from ASP.NET attributes such as
+            // [FromForm] and from multipart naming details.
+            var request = new CreateTicketRequest
+            {
+                Title = formRequest.Title,
+                Category = formRequest.Category,
+                Subject = formRequest.Subject,
+                InitialMessage = formRequest.InitialMessage
+            };
+
+            var fileRequests = FormFileMapper.ToFileUploadRequests(uploadedFiles);
+
+            var ticket = await _ticketService.CreateTicketAsync(
+                CurrentUserId,
+                request,
+                fileRequests);
+
             return CreatedAtAction(nameof(GetTicketById), new { ticketId = ticket.Id }, ticket);
         }
 

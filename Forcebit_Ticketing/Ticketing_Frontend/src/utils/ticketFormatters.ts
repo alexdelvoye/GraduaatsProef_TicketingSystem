@@ -1,4 +1,4 @@
-import { StatusFilter, TicketStatus } from "../types";
+import type { StatusFilter, TicketStatus } from "../types";
 
 // Format a backend ISO date string for compact ticket cards.
 export function formatTicketDate(value: string) {

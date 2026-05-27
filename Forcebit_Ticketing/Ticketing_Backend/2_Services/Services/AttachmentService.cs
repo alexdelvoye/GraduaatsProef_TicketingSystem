@@ -3,12 +3,10 @@ using Domain.Enums;
 using Domain.Rules;
 
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 using Services.DTOs.Attachments;
 using Services.Exceptions;
 using Services.Interfaces;
-using Services.Options;
 
 namespace Services.Services
 {
@@ -20,20 +18,17 @@ namespace Services.Services
         private readonly ITicketRepository _ticketRepository;
         private readonly IAttachmentRepository _attachmentRepository;
         private readonly IFileStorageService _fileStorageService;
-        private readonly FileStorageOptions _fileStorageOptions;
         private readonly ILogger<AttachmentService> _logger;
 
         public AttachmentService(
             ITicketRepository ticketRepository,
             IAttachmentRepository attachmentRepository,
             IFileStorageService fileStorageService,
-            IOptions<FileStorageOptions> fileStorageOptions,
             ILogger<AttachmentService> logger)
         {
             _ticketRepository = ticketRepository;
             _attachmentRepository = attachmentRepository;
             _fileStorageService = fileStorageService;
-            _fileStorageOptions = fileStorageOptions.Value;
             _logger = logger;
         }
 
@@ -160,10 +155,7 @@ namespace Services.Services
             if (!TicketRules.CanAccess(ticket, userId, role))
                 throw new ForbiddenException("You are not allowed to download this attachment.");
 
-            var fullFilePath = ResolveStoredFilePath(attachment.FilePath);
-
-            if (!File.Exists(fullFilePath))
-                throw new NotFoundException("Attachment file not found on the server.");
+            var content = await _fileStorageService.OpenReadAsync(attachment.FilePath);
 
             _logger.LogInformation(
                 "Attachment {AttachmentId} downloaded from ticket {TicketId} by user {UserId}.",
@@ -173,36 +165,12 @@ namespace Services.Services
 
             return new AttachmentDownloadResponse
             {
-                Content = File.OpenRead(fullFilePath),
+                Content = content,
                 FileName = attachment.FileName,
                 ContentType = string.IsNullOrWhiteSpace(attachment.ContentType)
                     ? "application/octet-stream"
                     : attachment.ContentType
             };
-        }
-
-        private string ResolveStoredFilePath(string storedFilePath)
-        {
-            // FilePath is stored as a relative URL-like value, for example
-            // "/uploads/file.pdf". Convert it back to a physical path and then
-            // verify it still stays inside the configured upload folder.
-            var relativeFilePath = storedFilePath
-                .TrimStart('/', '\\')
-                .Replace('/', Path.DirectorySeparatorChar)
-                .Replace('\\', Path.DirectorySeparatorChar);
-
-            var uploadRoot = Path.GetFullPath(Path.Combine(
-                Directory.GetCurrentDirectory(),
-                _fileStorageOptions.UploadFolder));
-
-            var fullFilePath = Path.GetFullPath(Path.Combine(
-                Directory.GetCurrentDirectory(),
-                relativeFilePath));
-
-            if (!fullFilePath.StartsWith(uploadRoot, StringComparison.OrdinalIgnoreCase))
-                throw new ForbiddenException("Invalid attachment path.");
-
-            return fullFilePath;
         }
 
         private static UserRole ParseRoleOrThrow(string userRole)

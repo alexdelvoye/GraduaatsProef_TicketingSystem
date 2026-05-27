@@ -4,9 +4,10 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import { getMyTickets } from "../api/ticketApi";
 import { useAuth } from "../context/AuthContext";
-import { TicketGroup, TicketListItem } from "../types";
 
 import { useErrorHandler } from "./useErrorHandler";
+
+import type { TicketGroup, TicketListItem } from "../types";
 
 // These groups describe the visual columns/sections on the home screen.
 // Keeping them as data makes the render code simpler and avoids repeating the

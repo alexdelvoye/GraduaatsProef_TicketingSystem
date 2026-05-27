@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-using Services.DTOs.Attachments;
+using Api.Mapping;
+using Api.Requests;
+
 using Services.DTOs.Messages;
 using Services.Exceptions;
 using Services.Interfaces;
@@ -40,20 +42,15 @@ namespace Api.Controllers
         [HttpPost("with-attachments")]
         public async Task<ActionResult<TicketMessageResponse>> AddMessageWithAttachments(
             Guid ticketId,
-            [FromForm] string message)
+            [FromForm] CreateMessageWithAttachmentsFormRequest formRequest)
         {
-            if (string.IsNullOrWhiteSpace(message))
-                throw new BadRequestException("Reply is required.");
-
-            if (message.Length > 3000)
-                throw new BadRequestException("Reply must be 3000 characters or less.");
-
             // Multipart/form-data is used when the reply contains files. The
-            // service still receives the same message DTO and file abstraction,
-            // so validation/business rules remain in the service layer.
+            // API request model is only for [FromForm] binding. The service
+            // still receives the normal message DTO and file abstraction, so
+            // validation/business rules remain in the service layer.
             var request = new CreateTicketMessageRequest
             {
-                Message = message
+                Message = formRequest.Message
             };
 
             // React Native, Expo Web and browser clients can encode multipart
@@ -65,15 +62,7 @@ namespace Api.Controllers
             if (uploadedFiles.Count == 0)
                 throw new BadRequestException("At least one attachment is required.");
 
-            var fileRequests = uploadedFiles
-                .Select(file => new FileUploadRequest
-                {
-                    FileName = file.FileName,
-                    ContentType = file.ContentType,
-                    Content = file.OpenReadStream(),
-                    Length = file.Length
-                })
-                .ToList();
+            var fileRequests = FormFileMapper.ToFileUploadRequests(uploadedFiles);
 
             var response = await _ticketService.AddMessageAsync(
                 ticketId,

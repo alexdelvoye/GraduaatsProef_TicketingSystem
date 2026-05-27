@@ -3,7 +3,8 @@ import { Platform } from "react-native";
 import { API_URL, ApiError } from "./apiClient";
 
 import { getAuthItem } from "../storage/authStorage";
-import { TicketAttachment } from "../types";
+
+import type { TicketAttachment } from "../types";
 
 // Protected download for an attachment already shown in the conversation.
 // The file is fetched with the JWT token, then the browser receives a temporary
