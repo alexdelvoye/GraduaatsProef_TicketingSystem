@@ -1,6 +1,117 @@
 @Api_HostAddress = http://localhost:5047
+@ClientToken = paste-client-jwt-here
+@AdminToken = paste-admin-jwt-here
+@TicketId = paste-ticket-id-here
 
-GET {{Api_HostAddress}}/weatherforecast/
+### Swagger UI check
+GET {{Api_HostAddress}}/swagger/index.html
+
+### Register client
+POST {{Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test Client",
+  "companyName": "Test Company",
+  "email": "client@example.com",
+  "password": "Password12345",
+  "confirmPassword": "Password12345"
+}
+
+### Login client
+POST {{Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "client@example.com",
+  "password": "Password12345"
+}
+
+### Login admin
+POST {{Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@forcebit.be",
+  "password": "Admin123!"
+}
+
+### Client creates ticket
+POST {{Api_HostAddress}}/api/tickets
+Authorization: Bearer {{ClientToken}}
+Content-Type: application/json
+
+{
+  "title": "Printer does not work",
+  "category": "Question",
+  "subject": "Software",
+  "initialMessage": "The printer software opens, but printing never starts."
+}
+
+### Client lists own tickets
+GET {{Api_HostAddress}}/api/tickets
+Authorization: Bearer {{ClientToken}}
 Accept: application/json
 
-###
+### Admin lists all tickets
+GET {{Api_HostAddress}}/api/admin/tickets
+Authorization: Bearer {{AdminToken}}
+Accept: application/json
+
+### Get ticket detail
+GET {{Api_HostAddress}}/api/tickets/{{TicketId}}
+Authorization: Bearer {{AdminToken}}
+Accept: application/json
+
+### Admin replies to ticket
+POST {{Api_HostAddress}}/api/tickets/{{TicketId}}/messages
+Authorization: Bearer {{AdminToken}}
+Content-Type: application/json
+
+{
+  "message": "Thanks for reporting this. We are checking the printer software settings."
+}
+
+### Reply with attachments
+# Replace the file path with a real local png, jpg, pdf, or zip file.
+POST {{Api_HostAddress}}/api/tickets/{{TicketId}}/messages/with-attachments
+Authorization: Bearer {{AdminToken}}
+Content-Type: multipart/form-data; boundary=replyBoundary
+
+--replyBoundary
+Content-Disposition: form-data; name="message"
+
+Here is a reply with an attachment.
+--replyBoundary
+Content-Disposition: form-data; name="files"; filename="example.pdf"
+Content-Type: application/pdf
+
+< ./example.pdf
+--replyBoundary--
+
+### Admin sets status to In Progress
+PATCH {{Api_HostAddress}}/api/tickets/{{TicketId}}/status
+Authorization: Bearer {{AdminToken}}
+Content-Type: application/json
+
+{
+  "status": "InProgress"
+}
+
+### Admin closes ticket
+PATCH {{Api_HostAddress}}/api/tickets/{{TicketId}}/status
+Authorization: Bearer {{AdminToken}}
+Content-Type: application/json
+
+{
+  "status": "Closed"
+}
+
+### Client reopens ticket
+PATCH {{Api_HostAddress}}/api/tickets/{{TicketId}}/status
+Authorization: Bearer {{ClientToken}}
+Content-Type: application/json
+
+{
+  "status": "Open"
+}

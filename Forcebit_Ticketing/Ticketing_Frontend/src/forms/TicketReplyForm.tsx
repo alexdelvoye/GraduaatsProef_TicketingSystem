@@ -5,10 +5,16 @@ import { Formik, FormikHelpers } from "formik";
 import { Pressable, Text, View } from "react-native";
 
 import { FormTextInput } from "./FormTextInput";
+import { submitFormWithValidationToast } from "./formErrorHelpers";
 
+import { useNotifications } from "../context/NotificationContext";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
 import { SelectedAttachment } from "../types";
+import {
+  ATTACHMENT_UPLOAD_LIMIT_LABEL,
+  getAttachmentSizeError,
+} from "../utils/attachmentLimits";
 import {
   TicketMessageFormValues,
   ticketMessageSchema,
@@ -32,7 +38,10 @@ export function TicketReplyForm({
   errorMessage,
   onSubmit,
 }: TicketReplyFormProps) {
+  const { showError } = useNotifications();
+
   const [attachments, setAttachments] = useState<SelectedAttachment[]>([]);
+  const [attachmentError, setAttachmentError] = useState("");
 
   // The hook returns a boolean so this reusable form can decide whether to
   // clear the textarea. A failed API request keeps the typed message in place.
@@ -44,12 +53,17 @@ export function TicketReplyForm({
 
     if (submitted) {
       setAttachments([]);
+      setAttachmentError("");
       helpers.resetForm();
     }
   }
 
   async function handlePickAttachments() {
     const result = await DocumentPicker.getDocumentAsync({
+      // Important for web: the default base64 behavior reads the whole file
+      // before returning. Large files would appear to do nothing because the
+      // picker is busy reading gigabytes before our size validation can run.
+      base64: false,
       copyToCacheDirectory: true,
       multiple: true,
       type: [
@@ -69,28 +83,41 @@ export function TicketReplyForm({
       uri: asset.uri,
       name: asset.name,
       mimeType: asset.mimeType,
-      size: asset.size,
+      // Expo web can put the size on asset.file instead of asset.size. Store
+      // whichever value is available so validation can give immediate feedback.
+      size: asset.size ?? asset.file?.size,
       file: asset.file,
     }));
+
+    const knownAttachmentKeys = new Set(
+      attachments.map(
+        (attachment) =>
+          `${attachment.uri}:${attachment.name}:${attachment.size ?? 0}`,
+      ),
+    );
+
+    const newAttachments = pickedAttachments.filter((attachment) => {
+      const key = `${attachment.uri}:${attachment.name}:${attachment.size ?? 0}`;
+      return !knownAttachmentKeys.has(key);
+    });
+
+    const sizeError = getAttachmentSizeError(newAttachments, attachments);
+
+    if (sizeError) {
+      setAttachmentError(sizeError);
+      showError("Attachment too large", sizeError);
+      return;
+    }
+
+    setAttachmentError("");
 
     // A user can open the picker more than once before pressing send. Append
     // new files instead of replacing the previous selection, but skip the exact
     // same file if the picker returns it again.
-    setAttachments((currentAttachments) => {
-      const knownAttachmentKeys = new Set(
-        currentAttachments.map(
-          (attachment) =>
-            `${attachment.uri}:${attachment.name}:${attachment.size ?? 0}`,
-        ),
-      );
-
-      const newAttachments = pickedAttachments.filter((attachment) => {
-        const key = `${attachment.uri}:${attachment.name}:${attachment.size ?? 0}`;
-        return !knownAttachmentKeys.has(key);
-      });
-
-      return [...currentAttachments, ...newAttachments];
-    });
+    setAttachments((currentAttachments) => [
+      ...currentAttachments,
+      ...newAttachments,
+    ]);
   }
 
   return (
@@ -109,6 +136,8 @@ export function TicketReplyForm({
         handleBlur,
         handleChange,
         handleSubmit,
+        setTouched,
+        validateForm,
       }) => (
         <>
           {/* handleChange writes into Formik state; handleBlur marks the field
@@ -150,13 +179,24 @@ export function TicketReplyForm({
             {attachments.length > 0 ? (
               <Pressable
                 style={styles.secondaryButton}
-                onPress={() => setAttachments([])}
+                onPress={() => {
+                  setAttachments([]);
+                  setAttachmentError("");
+                }}
                 disabled={disabled}
               >
                 <Text style={styles.secondaryButtonText}>Clear files</Text>
               </Pressable>
             ) : null}
           </View>
+
+          <Text style={styles.attachmentHelpText}>
+            Upload limit: {ATTACHMENT_UPLOAD_LIMIT_LABEL} per reply.
+          </Text>
+
+          {attachmentError ? (
+            <Text style={styles.attachmentErrorText}>{attachmentError}</Text>
+          ) : null}
 
           {attachments.length > 0 ? (
             <View style={styles.attachmentList}>
@@ -180,7 +220,16 @@ export function TicketReplyForm({
               styles.primaryButton,
               (disabled || isSubmitting) && styles.buttonDisabled,
             ]}
-            onPress={() => handleSubmit()}
+            onPress={async () => {
+              await submitFormWithValidationToast({
+                values,
+                validateForm,
+                setTouched,
+                submitForm: handleSubmit,
+                showError,
+                toastTitle: "Please check the reply",
+              });
+            }}
             disabled={disabled || isSubmitting}
           >
             <Text style={styles.primaryButtonText}>

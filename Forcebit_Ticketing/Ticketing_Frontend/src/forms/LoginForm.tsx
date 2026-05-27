@@ -2,7 +2,9 @@ import { Formik } from "formik";
 import { Pressable, Text } from "react-native";
 
 import { FormTextInput } from "./FormTextInput";
+import { submitFormWithValidationToast } from "./formErrorHelpers";
 
+import { useNotifications } from "../context/NotificationContext";
 import { loginStyles as styles } from "../styles/loginStyles";
 import { LoginFormValues, loginSchema } from "../validation/loginSchema";
 
@@ -17,6 +19,8 @@ const initialValues: LoginFormValues = {
 };
 
 export function LoginForm({ errorMessage, onSubmit }: LoginFormProps) {
+  const { showError } = useNotifications();
+
   return (
     // Formik owns values/touched/errors/isSubmitting.
     // Yup owns validation. The screen only passes the submit action.
@@ -33,6 +37,8 @@ export function LoginForm({ errorMessage, onSubmit }: LoginFormProps) {
         handleBlur,
         handleChange,
         handleSubmit,
+        setTouched,
+        validateForm,
       }) => (
         <>
           {/* handleChange and handleBlur update Formik state directly, so this
@@ -74,7 +80,16 @@ export function LoginForm({ errorMessage, onSubmit }: LoginFormProps) {
              helps prevent double login attempts. */}
           <Pressable
             style={[styles.button, isSubmitting && styles.buttonDisabled]}
-            onPress={() => handleSubmit()}
+            onPress={async () => {
+              await submitFormWithValidationToast({
+                values,
+                validateForm,
+                setTouched,
+                submitForm: handleSubmit,
+                showError,
+                toastTitle: "Please check the form",
+              });
+            }}
             disabled={isSubmitting}
           >
             <Text style={styles.buttonText}>

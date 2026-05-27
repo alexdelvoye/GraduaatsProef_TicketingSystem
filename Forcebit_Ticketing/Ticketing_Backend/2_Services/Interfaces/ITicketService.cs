@@ -1,4 +1,5 @@
-﻿using Services.DTOs.Messages;
+using Services.DTOs.Attachments;
+using Services.DTOs.Messages;
 using Services.DTOs.Tickets;
 
 namespace Services.Interfaces
@@ -28,6 +29,7 @@ namespace Services.Interfaces
             Guid ticketId,
             Guid senderId,
             string senderRole,
-            CreateTicketMessageRequest request);
+            CreateTicketMessageRequest request,
+            IReadOnlyCollection<FileUploadRequest>? attachments = null);
     }
 }

@@ -1,11 +1,14 @@
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Rules;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using Services.DTOs.Attachments;
 using Services.Exceptions;
 using Services.Interfaces;
+using Services.Options;
 
 namespace Services.Services
 {
@@ -17,17 +20,20 @@ namespace Services.Services
         private readonly ITicketRepository _ticketRepository;
         private readonly IAttachmentRepository _attachmentRepository;
         private readonly IFileStorageService _fileStorageService;
+        private readonly FileStorageOptions _fileStorageOptions;
         private readonly ILogger<AttachmentService> _logger;
 
         public AttachmentService(
             ITicketRepository ticketRepository,
             IAttachmentRepository attachmentRepository,
             IFileStorageService fileStorageService,
+            IOptions<FileStorageOptions> fileStorageOptions,
             ILogger<AttachmentService> logger)
         {
             _ticketRepository = ticketRepository;
             _attachmentRepository = attachmentRepository;
             _fileStorageService = fileStorageService;
+            _fileStorageOptions = fileStorageOptions.Value;
             _logger = logger;
         }
 
@@ -44,10 +50,7 @@ namespace Services.Services
             if (ticket == null)
                 throw new NotFoundException("Ticket not found.");
 
-            // Convert the role claim string to a domain enum before applying
-            // rules. Invalid role claims are treated as forbidden.
-            if (!UserRoleRules.TryParse(userRole, out var role))
-                throw new ForbiddenException("Invalid user role.");
+            var role = ParseRoleOrThrow(userRole);
 
             // The same ownership/admin rule applies to uploads as to reading a ticket.
             if (!TicketRules.CanUploadAttachment(ticket, uploadedById, role))
@@ -95,8 +98,7 @@ namespace Services.Services
             if (ticket == null)
                 throw new NotFoundException("Ticket not found.");
 
-            if (!UserRoleRules.TryParse(userRole, out var role))
-                throw new ForbiddenException("Invalid user role.");
+            var role = ParseRoleOrThrow(userRole);
 
             if (!TicketRules.CanUploadAttachment(ticket, uploadedById, role))
                 throw new ForbiddenException("You are not allowed to upload to this ticket.");
@@ -133,6 +135,84 @@ namespace Services.Services
                 uploadedById);
 
             return MapToResponse(attachment);
+        }
+
+        public async Task<AttachmentDownloadResponse> DownloadAttachmentAsync(
+            Guid ticketId,
+            Guid attachmentId,
+            Guid userId,
+            string userRole)
+        {
+            // The attachment id comes from the URL, but the ticket id is also
+            // checked so a user cannot download a file through the wrong ticket.
+            var attachment = await _attachmentRepository.GetByIdAsync(attachmentId);
+
+            if (attachment == null || attachment.TicketId != ticketId)
+                throw new NotFoundException("Attachment not found.");
+
+            var ticket = await _ticketRepository.GetByIdAsync(ticketId);
+
+            if (ticket == null)
+                throw new NotFoundException("Ticket not found.");
+
+            var role = ParseRoleOrThrow(userRole);
+
+            if (!TicketRules.CanAccess(ticket, userId, role))
+                throw new ForbiddenException("You are not allowed to download this attachment.");
+
+            var fullFilePath = ResolveStoredFilePath(attachment.FilePath);
+
+            if (!File.Exists(fullFilePath))
+                throw new NotFoundException("Attachment file not found on the server.");
+
+            _logger.LogInformation(
+                "Attachment {AttachmentId} downloaded from ticket {TicketId} by user {UserId}.",
+                attachmentId,
+                ticketId,
+                userId);
+
+            return new AttachmentDownloadResponse
+            {
+                Content = File.OpenRead(fullFilePath),
+                FileName = attachment.FileName,
+                ContentType = string.IsNullOrWhiteSpace(attachment.ContentType)
+                    ? "application/octet-stream"
+                    : attachment.ContentType
+            };
+        }
+
+        private string ResolveStoredFilePath(string storedFilePath)
+        {
+            // FilePath is stored as a relative URL-like value, for example
+            // "/uploads/file.pdf". Convert it back to a physical path and then
+            // verify it still stays inside the configured upload folder.
+            var relativeFilePath = storedFilePath
+                .TrimStart('/', '\\')
+                .Replace('/', Path.DirectorySeparatorChar)
+                .Replace('\\', Path.DirectorySeparatorChar);
+
+            var uploadRoot = Path.GetFullPath(Path.Combine(
+                Directory.GetCurrentDirectory(),
+                _fileStorageOptions.UploadFolder));
+
+            var fullFilePath = Path.GetFullPath(Path.Combine(
+                Directory.GetCurrentDirectory(),
+                relativeFilePath));
+
+            if (!fullFilePath.StartsWith(uploadRoot, StringComparison.OrdinalIgnoreCase))
+                throw new ForbiddenException("Invalid attachment path.");
+
+            return fullFilePath;
+        }
+
+        private static UserRole ParseRoleOrThrow(string userRole)
+        {
+            // Roles arrive from JWT claims as strings. Converting once here
+            // keeps the public methods focused on their upload/download flow.
+            if (UserRoleRules.TryParse(userRole, out var role))
+                return role;
+
+            throw new ForbiddenException("Invalid user role.");
         }
 
         private static AttachmentResponse MapToResponse(TicketAttachment attachment)

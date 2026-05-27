@@ -1,7 +1,8 @@
-﻿
-
 namespace Services.DTOs.Attachments
 {
+    // Public metadata returned after uploads and inside ticket detail messages.
+    // The API exposes a protected download endpoint separately; FileUrl keeps
+    // the saved storage path visible without making the upload folder public.
     public class AttachmentResponse
     {
         public Guid Id { get; set; }

@@ -6,6 +6,8 @@ using Services.Interfaces;
 namespace Services.Services
 {
     // Application service for user/admin overview use cases.
+    // Email provider code does not belong here; notification sending is handled
+    // by EmailService so this service stays focused on users.
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;

@@ -12,12 +12,14 @@ namespace Services.Options
 
         // The Range attribute is checked at startup because Program.cs calls
         // ValidateDataAnnotations() for this options class.
-        [Range(1, 50 * 1024 * 1024)]
-        public long MaxFileSizeInBytes { get; set; } = 5 * 1024 * 1024;
+        // Brevo transactional emails allow 20 MB total email size including
+        // attachments and content. The local upload limit follows that ceiling.
+        [Range(1, 20 * 1024 * 1024)]
+        public long MaxFileSizeInBytes { get; set; } = 20 * 1024 * 1024;
 
         // Keep extensions lowercase because LocalFileStorageService normalizes
         // uploaded file extensions before comparing.
         [MinLength(1)]
-        public string[] AllowedExtensions { get; set; } = [".jpg", ".jpeg", ".png", ".pdf"];
+        public string[] AllowedExtensions { get; set; } = [".jpg", ".jpeg", ".png", ".pdf", ".zip"];
     }
 }

@@ -29,14 +29,69 @@ forcebit_ticketingdb
 
 The current development connection string uses the local MySQL `root` user. For a real deployment, move secrets such as database passwords and JWT keys into environment variables or user secrets.
 
+## Email Notifications
+
+The backend uses Brevo for ticket notification emails. Configure these values in the `Email` section or with environment variables/user secrets:
+
+```text
+Email:ApiKey
+Email:FromEmail
+Email:FromName
+```
+
+`Email:ApiKey` can also come from the `BREVO_APIKEY` environment variable. Keep real API keys out of source control. `Email:FromEmail` must be a sender address or domain that is verified in Brevo.
+
+For local development, store the Brevo key with .NET user secrets:
+
+```powershell
+dotnet user-secrets set "Email:ApiKey" "<your-brevo-api-key>" --project Ticketing_Backend/1_Api/1_Api.csproj
+```
+
+The app only sends email notifications to clients. Admins use the dashboard to see new tickets and client replies, which prevents the support mailbox from being flooded when many clients are active.
+
+Ticket descriptions and replies are limited to 3000 characters so they fit the database message column and return clear validation errors.
+
+## Attachments
+
+Clients and admins can add one or more attachments to ticket replies. The picker can be opened multiple times before sending; each new selection is added to the reply. Attachments shown in the conversation can be clicked in the web app to download the stored file. The backend accepts:
+
+```text
+.png
+.jpg / .jpeg
+.pdf
+.zip
+```
+
+The local upload limit is `20 MB` per reply, matching Brevo's transactional email limit for the whole email including attachments and content. The frontend shows a clear error when the selected files exceed that limit, and the backend enforces the same rule. Attachment metadata is stored in the database, while the file itself is saved under the configured upload folder.
+
+Stored metadata:
+
+```text
+Id
+TicketId
+MessageId
+UploadedById
+FileName
+FilePath
+ContentType
+UploadedAt
+```
+
 ## Run The Backend
 
-From the repository root:
+From `cmd.exe`, run:
+
+```cmd
+cd /d C:\Users\alexd\Documents\Graduaat_Programmeren\Graduaatsproef\repo\Forcebit_Ticketing
+dotnet run --project Ticketing_Backend\1_Api\1_Api.csproj --launch-profile http
+```
+
+From PowerShell or another terminal already opened in the repository root:
 
 ```powershell
 dotnet restore Ticketing_Backend/1_Api/1_Api.csproj
 dotnet build Ticketing_Backend/1_Api/1_Api.csproj
-dotnet run --project Ticketing_Backend/1_Api/1_Api.csproj
+dotnet run --project Ticketing_Backend/1_Api/1_Api.csproj --launch-profile http
 ```
 
 Apply migrations when the database model changes:
@@ -59,7 +114,15 @@ http://localhost:5047/swagger
 
 ## Run The Frontend
 
-From the frontend folder:
+From `cmd.exe`, run:
+
+```cmd
+cd /d C:\Users\alexd\Documents\Graduaat_Programmeren\Graduaatsproef\repo\Forcebit_Ticketing\Ticketing_Frontend
+npm install
+npx expo start
+```
+
+From PowerShell or another terminal already opened in the repository root:
 
 ```powershell
 cd Ticketing_Frontend
@@ -129,6 +192,7 @@ Implemented:
 - Client and admin ticket messages.
 - Admin status updates.
 - Client close and reopen actions for their own tickets.
+- Brevo email notifications to clients for admin messages and status updates.
 - Backend exception middleware with consistent error responses.
 - Frontend Formik/Yup validation for the main forms.
 - Frontend toast notifications for success and error feedback.
@@ -136,8 +200,6 @@ Implemented:
 
 Deferred for later:
 
-- Real email sending.
-- Full attachment flow in the frontend.
 - Production secret management.
 
 ## Troubleshooting

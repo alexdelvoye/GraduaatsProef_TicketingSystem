@@ -84,5 +84,21 @@ namespace Api.Controllers
 
             return Ok(attachment);
         }
+
+        [HttpGet("{attachmentId:guid}/download")]
+        public async Task<IActionResult> DownloadAttachment(
+            Guid ticketId,
+            Guid attachmentId)
+        {
+            // The service checks that the attachment belongs to this ticket and
+            // that the authenticated user may access the ticket conversation.
+            var download = await _attachmentService.DownloadAttachmentAsync(
+                ticketId,
+                attachmentId,
+                CurrentUserId,
+                CurrentUserRole);
+
+            return File(download.Content, download.ContentType, download.FileName);
+        }
     }
 }

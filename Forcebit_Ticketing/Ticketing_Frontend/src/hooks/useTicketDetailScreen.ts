@@ -144,6 +144,7 @@ export function useTicketDetailScreen(ticketId: string) {
       clearError();
 
       await downloadTicketAttachment(ticketId, attachment);
+      showSuccess("Download started", attachment.fileName);
     } catch (error) {
       handleError(error, "Could not download this attachment.");
     }

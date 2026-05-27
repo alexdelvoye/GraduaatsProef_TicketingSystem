@@ -20,17 +20,23 @@ namespace Services.Services
     {
         private readonly ITicketRepository _ticketRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IAttachmentRepository _attachmentRepository;
+        private readonly IFileStorageService _fileStorageService;
         private readonly IEmailService _emailService;
         private readonly ILogger<TicketService> _logger;
 
         public TicketService(
             ITicketRepository ticketRepository,
             IUserRepository userRepository,
+            IAttachmentRepository attachmentRepository,
+            IFileStorageService fileStorageService,
             IEmailService emailService,
             ILogger<TicketService> logger)
         {
             _ticketRepository = ticketRepository;
             _userRepository = userRepository;
+            _attachmentRepository = attachmentRepository;
+            _fileStorageService = fileStorageService;
             _emailService = emailService;
             _logger = logger;
         }
@@ -129,9 +135,9 @@ namespace Services.Services
                 ticket.Id,
                 clientId);
 
-            await _emailService.SendTicketCreatedEmailAsync(
-                "support@forcebit.be",
-                ticket.Title);
+            // No email is sent on ticket creation. Admins use the dashboard as
+            // their work queue, which avoids flooding support users with email
+            // when many clients create tickets.
 
             return MapToTicketDetailResponse(ticket);
         }
@@ -171,13 +177,22 @@ namespace Services.Services
                 ticket.Status,
                 currentUserId);
 
-            if (ticket.Client != null && ticket.Status == TicketStatus.Closed)
+            if (role == UserRole.Admin && ticket.Client != null)
             {
-                // Email is still a service dependency even while the current
-                // implementation is a placeholder/logging service.
-                await _emailService.SendTicketClosedEmailAsync(
+                // Admin status changes notify the client that owns the ticket.
+                // This includes Closed, because clients need an explicit signal
+                // that support considers the issue resolved.
+                _logger.LogInformation(
+                    "Sending status notification for ticket {TicketId} to client {ClientEmail} with status {Status}.",
+                    ticket.Id,
                     ticket.Client.Email,
-                    ticket.Title);
+                    ticket.Status);
+
+                await _emailService.SendTicketStatusUpdatedEmailAsync(
+                    ticket.Client.Email,
+                    ticket.Title,
+                    ticket.Status.ToString(),
+                    role.ToString());
             }
         }
 
@@ -185,7 +200,8 @@ namespace Services.Services
             Guid ticketId,
             Guid senderId,
             string senderRole,
-            CreateTicketMessageRequest request)
+            CreateTicketMessageRequest request,
+            IReadOnlyCollection<FileUploadRequest>? attachments = null)
         {
             var ticket = await _ticketRepository.GetDetailByIdAsync(ticketId);
 
@@ -220,28 +236,66 @@ namespace Services.Services
                 DateTime.UtcNow);
 
             await _ticketRepository.AddMessageAsync(message);
+
+            var savedAttachments = new List<TicketAttachment>();
+            var emailAttachments = new List<EmailAttachmentRequest>();
+
+            foreach (var file in attachments ?? [])
+            {
+                // Files are saved locally first. The database stores only
+                // metadata/path, while Brevo receives the in-memory bytes when
+                // an admin reply is emailed to the client.
+                var filePath = await _fileStorageService.SaveFileAsync(file);
+                var attachment = new TicketAttachment
+                {
+                    Id = Guid.NewGuid(),
+                    TicketId = ticketId,
+                    MessageId = message.Id,
+                    UploadedById = senderId,
+                    FileName = file.FileName,
+                    FilePath = filePath,
+                    ContentType = file.ContentType,
+                    UploadedAt = DateTime.UtcNow
+                };
+
+                savedAttachments.Add(attachment);
+                message.Attachments.Add(attachment);
+
+                await _attachmentRepository.AddAsync(attachment);
+
+                if (role == UserRole.Admin)
+                {
+                    emailAttachments.Add(new EmailAttachmentRequest
+                    {
+                        FileName = file.FileName,
+                        ContentType = file.ContentType,
+                        Content = await ReadFileContentAsync(file)
+                    });
+                }
+            }
+
             await _ticketRepository.SaveChangesAsync();
 
             _logger.LogInformation(
-                "Message {MessageId} added to ticket {TicketId} by user {SenderId}.",
+                "Message {MessageId} added to ticket {TicketId} by user {SenderId} with {AttachmentCount} attachment(s).",
                 message.Id,
                 ticketId,
-                senderId);
+                senderId,
+                savedAttachments.Count);
 
             if (role == UserRole.Admin && ticket.Client != null)
             {
-                // Admin replies notify the client.
-                await _emailService.SendTicketReplyEmailAsync(
+                // Admin replies notify the client. If the admin selected files,
+                // those files are attached to the Brevo email as well.
+                await _emailService.SendTicketMessageEmailAsync(
                     ticket.Client.Email,
-                    ticket.Title);
+                    ticket.Title,
+                    request.Message,
+                    role.ToString(),
+                    emailAttachments);
             }
-            else
-            {
-                // Client replies notify support.
-                await _emailService.SendTicketReplyEmailAsync(
-                    "support@forcebit.be",
-                    ticket.Title);
-            }
+            // Client replies do not send email. Admins see them in the
+            // dashboard, keeping support inboxes from becoming noisy.
 
             return new TicketMessageResponse
             {
@@ -251,7 +305,8 @@ namespace Services.Services
                 SenderName = sender.Name,
                 SenderRole = sender.Role.ToString(),
                 Message = message.Message,
-                CreatedAt = message.CreatedAt
+                CreatedAt = message.CreatedAt,
+                Attachments = savedAttachments.Select(MapAttachmentToResponse).ToList()
             };
         }
 
@@ -308,32 +363,46 @@ namespace Services.Services
                         SenderRole = m.Sender?.Role.ToString() ?? "",
                         Message = m.Message,
                         CreatedAt = m.CreatedAt,
-                        Attachments = m.Attachments.Select(a => new AttachmentResponse
-                        {
-                            Id = a.Id,
-                            TicketId = a.TicketId,
-                            MessageId = a.MessageId,
-                            FileName = a.FileName,
-                            FileUrl = a.FilePath,
-                            ContentType = a.ContentType,
-                            UploadedAt = a.UploadedAt
-                        }).ToList()
+                        Attachments = m.Attachments.Select(MapAttachmentToResponse).ToList()
                     }).ToList(),
 
                 // Ticket-level attachments have no MessageId. Message-level
                 // attachments are mapped inside each message above.
                 Attachments = ticket.Attachments
                     .Where(a => a.MessageId == null)
-                    .Select(a => new AttachmentResponse
-                    {
-                        Id = a.Id,
-                        TicketId = a.TicketId,
-                        MessageId = a.MessageId,
-                        FileName = a.FileName,
-                        FileUrl = a.FilePath,
-                        ContentType = a.ContentType,
-                        UploadedAt = a.UploadedAt
-                    }).ToList()
+                    .Select(MapAttachmentToResponse).ToList()
+            };
+        }
+
+        private static async Task<byte[]> ReadFileContentAsync(FileUploadRequest file)
+        {
+            if (file.Content.CanSeek)
+            {
+                file.Content.Position = 0;
+            }
+
+            using var memoryStream = new MemoryStream();
+            await file.Content.CopyToAsync(memoryStream);
+
+            if (file.Content.CanSeek)
+            {
+                file.Content.Position = 0;
+            }
+
+            return memoryStream.ToArray();
+        }
+
+        private static AttachmentResponse MapAttachmentToResponse(TicketAttachment attachment)
+        {
+            return new AttachmentResponse
+            {
+                Id = attachment.Id,
+                TicketId = attachment.TicketId,
+                MessageId = attachment.MessageId,
+                FileName = attachment.FileName,
+                FileUrl = attachment.FilePath,
+                ContentType = attachment.ContentType,
+                UploadedAt = attachment.UploadedAt
             };
         }
     }

@@ -1,5 +1,7 @@
 using Domain.Entities;
 
+using Microsoft.EntityFrameworkCore;
+
 using Persistence.Data;
 
 using Services.Interfaces;
@@ -15,6 +17,13 @@ namespace Persistence.Repositories
         public AttachmentRepository(AppDbContext context)
         {
             _context = context;
+        }
+
+        public async Task<TicketAttachment?> GetByIdAsync(Guid id)
+        {
+            return await _context.TicketAttachments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(attachment => attachment.Id == id);
         }
 
         public async Task AddAsync(TicketAttachment attachment)

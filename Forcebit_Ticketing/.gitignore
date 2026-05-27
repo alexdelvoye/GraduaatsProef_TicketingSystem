@@ -1,0 +1,14 @@
+# Visual Studio local workspace state.
+.vs/
+
+# Build outputs.
+bin/
+obj/
+
+# Frontend dependencies and Expo cache.
+Ticketing_Frontend/node_modules/
+Ticketing_Frontend/.expo/
+
+# Uploaded ticket files are runtime data. The database stores metadata, but the
+# local files themselves should not be committed to git.
+Ticketing_Backend/1_Api/uploads/

@@ -85,6 +85,21 @@ builder.Services.AddOptions<EmailOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+builder.Services.PostConfigure<EmailOptions>(options =>
+{
+    var apiKeyFromEnvironment = Environment.GetEnvironmentVariable("BREVO_APIKEY");
+
+    // Configuration order in development is:
+    // appsettings.json -> appsettings.Development.json -> user secrets.
+    // This PostConfigure step adds one final deployment-friendly override.
+    // Environment variables are useful for deployment, but an empty variable
+    // should not overwrite the local user-secret value during development.
+    if (!string.IsNullOrWhiteSpace(apiKeyFromEnvironment))
+    {
+        options.ApiKey = apiKeyFromEnvironment;
+    }
+});
+
 builder.Services.AddOptions<FileStorageOptions>()
     .Bind(builder.Configuration.GetSection("FileStorage"))
     .ValidateDataAnnotations()

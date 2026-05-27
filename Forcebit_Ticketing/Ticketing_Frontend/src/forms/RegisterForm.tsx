@@ -2,7 +2,9 @@ import { Formik } from "formik";
 import { Pressable, Text } from "react-native";
 
 import { FormTextInput } from "./FormTextInput";
+import { submitFormWithValidationToast } from "./formErrorHelpers";
 
+import { useNotifications } from "../context/NotificationContext";
 import { registerStyles as styles } from "../styles/registerStyles";
 import {
   RegisterFormValues,
@@ -23,6 +25,8 @@ const initialValues: RegisterFormValues = {
 };
 
 export function RegisterForm({ errorMessage, onSubmit }: RegisterFormProps) {
+  const { showError } = useNotifications();
+
   return (
     // The form value type is inferred from the Yup schema, so field names stay
     // synchronized between validation, UI and submit code.
@@ -39,6 +43,8 @@ export function RegisterForm({ errorMessage, onSubmit }: RegisterFormProps) {
         handleBlur,
         handleChange,
         handleSubmit,
+        setTouched,
+        validateForm,
       }) => (
         <>
           {/* Yup compares confirmPassword with password. Keeping that rule in
@@ -115,7 +121,16 @@ export function RegisterForm({ errorMessage, onSubmit }: RegisterFormProps) {
 
           <Pressable
             style={[styles.button, isSubmitting && styles.buttonDisabled]}
-            onPress={() => handleSubmit()}
+            onPress={async () => {
+              await submitFormWithValidationToast({
+                values,
+                validateForm,
+                setTouched,
+                submitForm: handleSubmit,
+                showError,
+                toastTitle: "Please check the form",
+              });
+            }}
             disabled={isSubmitting}
           >
             <Text style={styles.buttonText}>

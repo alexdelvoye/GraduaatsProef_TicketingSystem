@@ -3,7 +3,9 @@ import { Pressable, Text } from "react-native";
 
 import { FormOptionGroup } from "./FormOptionGroup";
 import { FormTextInput } from "./FormTextInput";
+import { submitFormWithValidationToast } from "./formErrorHelpers";
 
+import { useNotifications } from "../context/NotificationContext";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { ticketCategories, ticketSubjects } from "../types";
 import {
@@ -30,6 +32,8 @@ function formatCategory(category: string) {
 }
 
 export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
+  const { showError } = useNotifications();
+
   return (
     // Category and subject are enum-like choices, so this form uses option
     // groups instead of free text. That prevents invalid values before submit.
@@ -48,6 +52,8 @@ export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
         handleSubmit,
         setFieldValue,
         setFieldTouched,
+        setTouched,
+        validateForm,
       }) => (
         <>
           <Text style={styles.label}>Title</Text>
@@ -113,7 +119,16 @@ export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
               styles.primaryButton,
               isSubmitting && styles.buttonDisabled,
             ]}
-            onPress={() => handleSubmit()}
+            onPress={async () => {
+              await submitFormWithValidationToast({
+                values,
+                validateForm,
+                setTouched,
+                submitForm: handleSubmit,
+                showError,
+                toastTitle: "Please check the ticket",
+              });
+            }}
             disabled={isSubmitting}
           >
             <Text style={styles.primaryButtonText}>

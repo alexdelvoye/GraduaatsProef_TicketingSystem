@@ -16,8 +16,11 @@ namespace Services.DTOs.Tickets
         [Required]
         public string Subject { get; set; } = string.Empty;
 
+        // The form calls this a description for the client, but the backend
+        // stores it as the first TicketMessage. That is why this uses the same
+        // 3000-character limit as a normal reply.
         [Required]
-        [StringLength(4000)]
+        [StringLength(3000, ErrorMessage = "Description must be 3000 characters or less.")]
         public string InitialMessage { get; set; } = string.Empty;
     }
 }

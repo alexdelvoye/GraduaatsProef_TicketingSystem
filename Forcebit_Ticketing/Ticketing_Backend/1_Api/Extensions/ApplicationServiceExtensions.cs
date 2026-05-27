@@ -15,10 +15,14 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IAttachmentService, AttachmentService>();
 
         // Utility services are still registered behind interfaces so the app can
-        // swap implementations later, for example a real email provider.
+        // swap implementations later without changing the controllers/services.
         services.AddScoped<ITokenService, TokenService>();
-        services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
+
+        // EmailService calls Brevo's transactional HTTP API. AddHttpClient
+        // injects a managed HttpClient so we reuse connections instead of
+        // creating sockets manually for every notification.
+        services.AddHttpClient<IEmailService, EmailService>();
 
         return services;
     }

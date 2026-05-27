@@ -202,6 +202,37 @@ Log levels matter:
 - `Warning` for expected but important problems, such as invalid login.
 - `Error` for unexpected exceptions.
 
+## Email Notifications
+
+The backend sends ticket notifications through Brevo's transactional email API. `EmailOptions` is bound with the Options pattern, and `EmailService` receives a managed `HttpClient` through `AddHttpClient`. The API key can come from the `Email:ApiKey` setting, .NET user secrets, or from the `BREVO_APIKEY` environment variable. Empty `BREVO_APIKEY` values are ignored so they do not accidentally override the local user secret.
+
+Notification rules:
+
+- Admin sends a message: the ticket client receives the ticket title and message body.
+- Admin changes status: the ticket client receives the ticket title and new status. Closed tickets use a clearer `Ticket closed` subject because that is the most important client-facing status update.
+- Client creates a ticket, replies, closes, or reopens: no email is sent. Admins follow those actions from the dashboard.
+
+`TicketService` decides who should be notified because it knows the workflow and current user role. `EmailService` only formats and sends the email, which keeps provider-specific Brevo code out of the ticket use case. Brevo rejects unverified sender addresses, so `Email:FromEmail` must match a sender or domain configured in the Brevo account.
+
+The service logs Brevo's response body on successful sends so a test run can be matched with the provider message id. Email bodies use a simple table-free HTML layout with clear sections for the heading, ticket title, message/status content, and footer. User-entered ticket text is HTML-encoded before it is inserted into the email.
+
+Ticket messages are limited to 3000 characters. The frontend Yup schemas, backend request DTOs, and database column all use the same limit so long messages fail with a validation message instead of an unexpected database error.
+
+## Attachment Flow
+
+The attachment workflow follows the same three-layer structure as the rest of the project:
+
+1. `TicketReplyForm` lets the user select files and sends multipart form data only when files are present. The picker appends new selections so several files can be attached to one reply.
+2. `attachmentFormData` builds the multipart request differently per platform: web uploads are converted to Blob/File values, while native uploads use the React Native `{ uri, name, type }` file shape.
+3. `TicketMessagesController` reads `Request.Form.Files` and converts the uploaded files into `FileUploadRequest` DTOs so the service layer does not depend on ASP.NET types. Reading from `Request.Form.Files` is more reliable for React Native multipart uploads than depending on one exact action-parameter binding shape.
+4. `TicketService` creates the message, saves files through `IFileStorageService`, creates `TicketAttachment` metadata rows, and sends admin attachments through Brevo when the client should receive an email.
+5. `LocalFileStorageService` validates size and extension, writes the file to the configured upload folder, and returns the stored file path.
+6. Existing attachments are downloaded through a protected API endpoint. `attachmentApi` fetches the file with the JWT token and creates a temporary browser download link, so the upload folder does not need to be publicly exposed.
+
+The database stores attachment metadata, not the binary file. The metadata fields are `Id`, `TicketId`, `MessageId`, `UploadedById`, `FileName`, `FilePath`, `ContentType`, and `UploadedAt`.
+
+Allowed local extensions are `.png`, `.jpg`, `.jpeg`, `.pdf`, and `.zip`. The configured upload limit is 20 MB per reply, which follows Brevo's documented transactional email size limit. The frontend mirrors this limit in `attachmentLimits` for immediate user feedback, while `LocalFileStorageService` remains the final backend check. On web, the document picker is configured with `base64: false` so it returns file metadata immediately instead of trying to read a huge file into memory before validation. Because Brevo receives base64 file content, large files should still be tested carefully: base64 makes the outgoing API payload larger than the raw file.
+
 ## Frontend Form Structure
 
 The frontend now uses Formik and Yup for forms.
@@ -235,9 +266,17 @@ Instead of every screen inventing its own alert style, the app has one system fo
 
 - Success confirmations.
 - Error messages.
+- Form validation submit errors.
 - Friendly feedback after actions.
 
 This makes the app feel more professional and also makes the code easier to maintain.
+
+Toasts are positioned at the bottom right on web so they behave like common
+desktop ticketing/admin systems and do not cover the page header or navigation.
+
+Formik still shows field errors inline. The shared `formErrorHelpers` submit
+path shows a toast when the user presses submit on an invalid form, while the
+inline text shows exactly which field needs attention.
 
 ## Ticket Workflow
 
@@ -310,8 +349,6 @@ The project treats a ticket as the complete support conversation. The ticket tab
 
 ## Things Still To Improve
 
-- Add real email sending for notifications.
-- Finish the frontend attachment upload experience.
 - Move local secrets to user secrets or environment variables.
 - Add automated integration tests for the main ticket workflow.
 - Add pagination and filtering if the ticket list grows.

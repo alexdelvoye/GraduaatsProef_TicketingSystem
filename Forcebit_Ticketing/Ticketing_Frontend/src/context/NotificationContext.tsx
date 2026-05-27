@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors } from "../styles/theme";
 
@@ -121,6 +121,7 @@ export function NotificationProvider({
             onPress={dismissNotification}
             style={[
               styles.toast,
+              Platform.OS === "web" ? styles.toastWeb : styles.toastNative,
               notification.type === "success" && styles.toastSuccess,
               notification.type === "error" && styles.toastError,
             ]}
@@ -154,9 +155,7 @@ const styles = StyleSheet.create({
   },
   toast: {
     position: "absolute",
-    left: 18,
-    right: 18,
-    top: 52,
+    bottom: 24,
     zIndex: 20,
     backgroundColor: colors.input,
     borderLeftColor: colors.primary,
@@ -168,6 +167,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 14,
     elevation: 8,
+  },
+  toastWeb: {
+    right: 24,
+    width: "90%",
+    maxWidth: 360,
+  },
+  toastNative: {
+    left: 18,
+    right: 18,
   },
   toastSuccess: {
     borderLeftColor: colors.success,

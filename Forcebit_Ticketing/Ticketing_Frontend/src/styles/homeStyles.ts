@@ -286,6 +286,17 @@ export const homeStyles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 12,
   },
+  attachmentHelpText: {
+    color: colors.muted,
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  attachmentErrorText: {
+    color: colors.danger,
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
   attachmentText: {
     color: colors.text,
     backgroundColor: colors.input,
