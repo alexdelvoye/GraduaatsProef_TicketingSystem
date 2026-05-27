@@ -1,55 +1,25 @@
-import { useState } from "react";
 import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { useAuth } from "../context/AuthContext";
-import { useErrorHandler } from "../hooks/useErrorHandler";
+import { useRegisterScreen } from "../hooks/useRegisterScreen";
 import { colors } from "../styles/theme";
 import { registerStyles as styles } from "../styles/registerStyles";
-import { registerSchema } from "../validation/registerSchema";
-import { RootStackParamList } from "../types";
+import { RegisterScreenProps } from "../types";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Register">;
-
-export default function RegisterScreen({ navigation }: Props) {
-  const { signUp } = useAuth();
-
-  const [name, setName] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { errorMessage, clearError, handleError } = useErrorHandler(
-    "Registration failed.",
-  );
-
-  async function handleRegister() {
-    try {
-      clearError();
-      setIsSubmitting(true);
-
-      const formValues = await registerSchema.validate(
-        {
-          name,
-          companyName,
-          email,
-          password,
-          confirmPassword,
-        },
-        { abortEarly: true },
-      );
-
-      await signUp({
-        ...formValues,
-        email: formValues.email.toLowerCase(),
-      });
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+export default function RegisterScreen({ navigation }: RegisterScreenProps) {
+  const {
+    name,
+    setName,
+    companyName,
+    setCompanyName,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
+    isSubmitting,
+    errorMessage,
+    handleRegister,
+  } = useRegisterScreen();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

@@ -1,4 +1,3 @@
-import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -7,97 +6,26 @@ import {
   Text,
   View,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { getMyTickets } from "../api/ticketApi";
-import { useAuth } from "../context/AuthContext";
-import { useErrorHandler } from "../hooks/useErrorHandler";
+import { useHomeScreen } from "../hooks/useHomeScreen";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
-import { RootStackParamList, TicketListItem, TicketStatus } from "../types";
+import { HomeScreenProps } from "../types";
+import {
+  formatTicketDate,
+  formatTicketStatus,
+} from "../utils/ticketFormatters";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Home">;
-
-type TicketGroup = {
-  status: TicketStatus;
-  title: string;
-  description: string;
-};
-
-const ticketGroups: TicketGroup[] = [
-  {
-    status: "Open",
-    title: "Open",
-    description: "Waiting for a first response",
-  },
-  {
-    status: "InProgress",
-    title: "In progress",
-    description: "Being handled by Forcebit",
-  },
-  {
-    status: "Closed",
-    title: "Closed",
-    description: "Resolved tickets",
-  },
-];
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(value));
-}
-
-function groupTickets(tickets: TicketListItem[]) {
-  return ticketGroups.map((group) => ({
-    ...group,
-    tickets: tickets.filter((ticket) => ticket.status === group.status),
-  }));
-}
-
-export default function HomeScreen({ navigation }: Props) {
-  const { user, signOut } = useAuth();
-  const [tickets, setTickets] = useState<TicketListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const { errorMessage, clearError, handleError } = useErrorHandler(
-    "Could not load your tickets.",
-  );
-
-  const groupedTickets = useMemo(() => groupTickets(tickets), [tickets]);
-  const activeTicketCount = tickets.filter(
-    (ticket) => ticket.status !== "Closed",
-  ).length;
-
-  const loadTickets = useCallback(
-    async (showRefreshing = false) => {
-      try {
-        clearError();
-        showRefreshing ? setIsRefreshing(true) : setIsLoading(true);
-        const data = await getMyTickets();
-        setTickets(data);
-      } catch (error) {
-        handleError(error);
-      } finally {
-        setIsLoading(false);
-        setIsRefreshing(false);
-      }
-    },
-    [clearError, handleError],
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      if (user) {
-        loadTickets();
-      } else {
-        setIsLoading(false);
-      }
-    }, [loadTickets, user]),
-  );
+export default function HomeScreen({ navigation }: HomeScreenProps) {
+  const {
+    user,
+    signOut,
+    groupedTickets,
+    activeTicketCount,
+    isLoading,
+    isRefreshing,
+    errorMessage,
+    loadTickets,
+  } = useHomeScreen();
 
   return (
     <ScrollView
@@ -189,9 +117,7 @@ export default function HomeScreen({ navigation }: Props) {
                         ticket.status === "Closed" && styles.statusPillClosed,
                       ]}
                     >
-                      {ticket.status === "InProgress"
-                        ? "In progress"
-                        : ticket.status}
+                      {formatTicketStatus(ticket.status)}
                     </Text>
                   </View>
 
@@ -199,7 +125,7 @@ export default function HomeScreen({ navigation }: Props) {
                     {ticket.category} / {ticket.subject}
                   </Text>
                   <Text style={styles.ticketDate}>
-                    Updated {formatDate(ticket.updatedAt)}
+                    Updated {formatTicketDate(ticket.updatedAt)}
                   </Text>
                 </Pressable>
               ))

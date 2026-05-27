@@ -30,6 +30,7 @@ namespace Persistence.Repositories
         public async Task<List<User>> GetClientsAsync()
         {
             return await _context.Users
+                .Include(u => u.Tickets)
                 .Where(u => u.Role == UserRole.Client)
                 .OrderBy(u => u.CompanyName)
                 .ToListAsync();

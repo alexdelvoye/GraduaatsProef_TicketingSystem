@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { ApiError } from "../api/apiClient";
 
+// Helper function to extract a user-friendly error message from various error types, including ApiError and generic Error objects
 function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof ApiError || error instanceof Error) {
     return error.message;
@@ -9,6 +10,7 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+// Custom hook to manage error state and provide a consistent way to handle errors across components
 export function useErrorHandler(defaultMessage = "Something went wrong.") {
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -20,7 +22,7 @@ export function useErrorHandler(defaultMessage = "Something went wrong.") {
     (error: unknown, fallback = defaultMessage) => {
       setErrorMessage(getErrorMessage(error, fallback));
     },
-    [defaultMessage]
+    [defaultMessage],
   );
 
   return {

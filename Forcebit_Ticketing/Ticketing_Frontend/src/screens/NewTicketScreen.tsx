@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -8,69 +7,30 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { createTicket } from "../api/ticketApi";
-import { useErrorHandler } from "../hooks/useErrorHandler";
+import {
+  ticketCategories,
+  ticketSubjects,
+  useNewTicketScreen,
+} from "../hooks/useNewTicketScreen";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
-import { RootStackParamList } from "../types";
+import { NewTicketScreenProps } from "../types";
 
-type Props = NativeStackScreenProps<RootStackParamList, "NewTicket">;
-
-const categories = [
-  "Sales",
-  "TechnicalProblem",
-  "Question",
-  "Installation",
-  "Other",
-];
-
-const subjects = [
-  "Gateway",
-  "Sensors",
-  "Software",
-  "Dashboard",
-  "Connectivity",
-  "Account",
-  "Other",
-];
-
-export default function NewTicketScreen({ navigation }: Props) {
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState(categories[0]);
-  const [subject, setSubject] = useState(subjects[0]);
-  const [description, setDescription] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const { errorMessage, clearError, handleError } = useErrorHandler(
-    "Could not create the ticket.",
-  );
-
-  async function handleCreateTicket() {
-    if (!title.trim() || !description.trim()) {
-      return;
-    }
-
-    try {
-      clearError();
-      setIsSubmitting(true);
-
-      await createTicket({
-        title: title.trim(),
-        category,
-        subject,
-        description: description.trim(),
-      });
-
-      navigation.navigate("Home");
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  const isDisabled = isSubmitting || !title.trim() || !description.trim();
+export default function NewTicketScreen({ navigation }: NewTicketScreenProps) {
+  const {
+    title,
+    setTitle,
+    category,
+    setCategory,
+    subject,
+    setSubject,
+    description,
+    setDescription,
+    isSubmitting,
+    isDisabled,
+    errorMessage,
+    handleCreateTicket,
+  } = useNewTicketScreen(() => navigation.navigate("Home"));
 
   return (
     <KeyboardAvoidingView
@@ -103,7 +63,7 @@ export default function NewTicketScreen({ navigation }: Props) {
 
           <Text style={styles.label}>Category</Text>
           <View style={styles.optionGrid}>
-            {categories.map((item) => (
+            {ticketCategories.map((item) => (
               <Pressable
                 key={item}
                 style={[
@@ -126,7 +86,7 @@ export default function NewTicketScreen({ navigation }: Props) {
 
           <Text style={styles.label}>Subject</Text>
           <View style={styles.optionGrid}>
-            {subjects.map((item) => (
+            {ticketSubjects.map((item) => (
               <Pressable
                 key={item}
                 style={[

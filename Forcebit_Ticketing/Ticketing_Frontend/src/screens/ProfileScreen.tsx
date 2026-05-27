@@ -1,12 +1,9 @@
 import { Pressable, Text, View } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useAuth } from "../context/AuthContext";
 import { homeStyles as styles } from "../styles/homeStyles";
-import { RootStackParamList } from "../types";
+import { ProfileScreenProps } from "../types";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Profile">;
-
-export default function ProfileScreen({ navigation }: Props) {
+export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const { user, signOut } = useAuth();
 
   return (

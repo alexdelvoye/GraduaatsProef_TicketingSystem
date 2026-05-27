@@ -7,14 +7,10 @@ namespace Services.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
-        private readonly ITicketRepository _ticketRepository;
 
-        public UserService(
-            IUserRepository userRepository,
-            ITicketRepository ticketRepository)
+        public UserService(IUserRepository userRepository)
         {
             _userRepository = userRepository;
-            _ticketRepository = ticketRepository;
         }
 
         public async Task<List<ClientListItemResponse>> GetClientsAsync()
@@ -25,10 +21,8 @@ namespace Services.Services
 
             foreach (var client in clients)
             {
-                var tickets = await _ticketRepository.GetTicketsByClientIdAsync(client.Id);
-
-                var openCount = tickets.Count(t => t.Status != TicketStatus.Closed);
-                var closedCount = tickets.Count(t => t.Status == TicketStatus.Closed);
+                var openCount = client.Tickets.Count(t => t.Status != TicketStatus.Closed);
+                var closedCount = client.Tickets.Count(t => t.Status == TicketStatus.Closed);
 
                 result.Add(new ClientListItemResponse
                 {

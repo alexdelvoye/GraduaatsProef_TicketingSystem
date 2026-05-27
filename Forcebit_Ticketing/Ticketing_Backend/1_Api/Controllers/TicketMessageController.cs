@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.DTOs.Messages;
+using Services.Exceptions;
 using Services.Interfaces;
 using System.Security.Claims;
 
@@ -33,12 +34,18 @@ namespace Api.Controllers
 
         private Guid GetUserId()
         {
-            return Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!Guid.TryParse(userId, out var parsedUserId))
+                throw new UnauthorizedException("Invalid authentication token.");
+
+            return parsedUserId;
         }
 
         private string GetUserRole()
         {
-            return User.FindFirstValue(ClaimTypes.Role)!;
+            return User.FindFirstValue(ClaimTypes.Role)
+                ?? throw new UnauthorizedException("Invalid authentication token.");
         }
     }
 }

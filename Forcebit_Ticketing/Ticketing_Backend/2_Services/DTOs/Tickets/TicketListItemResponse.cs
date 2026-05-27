@@ -4,6 +4,9 @@ namespace Services.DTOs.Tickets
     public class TicketListItemResponse
     {
         public Guid Id { get; set; }
+        public Guid ClientId { get; set; }
+        public string ClientName { get; set; } = string.Empty;
+        public string CompanyName { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public string Subject { get; set; } = string.Empty;

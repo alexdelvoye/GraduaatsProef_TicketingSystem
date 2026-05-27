@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   View,
   Text,
@@ -7,41 +6,21 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { useAuth } from "../context/AuthContext";
-import { useErrorHandler } from "../hooks/useErrorHandler";
+import { useLoginScreen } from "../hooks/useLoginScreen";
 import { colors } from "../styles/theme";
 import { loginStyles as styles } from "../styles/loginStyles";
-import { RootStackParamList } from "../types";
+import { LoginScreenProps } from "../types";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Login">;
-
-export default function LoginScreen({ navigation }: Props) {
-  const { signIn } = useAuth();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const { errorMessage, clearError, handleError } = useErrorHandler(
-    "Invalid email or password.",
-  );
-
-  async function handleLogin() {
-    try {
-      clearError();
-      setIsSubmitting(true);
-
-      await signIn({
-        email,
-        password,
-      });
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+export default function LoginScreen({ navigation }: LoginScreenProps) {
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    isSubmitting,
+    errorMessage,
+    handleLogin,
+  } = useLoginScreen();
 
   return (
     <KeyboardAvoidingView

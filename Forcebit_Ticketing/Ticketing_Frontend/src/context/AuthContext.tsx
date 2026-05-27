@@ -12,6 +12,8 @@ import {
   RegisterRequest,
 } from "../types";
 
+// Type definition for the authentication context, including user information, token,
+// loading state, and functions for signing in, signing up, and signing out
 type AuthContextType = {
   user: AuthUser | null;
   token: string | null;
@@ -21,8 +23,10 @@ type AuthContextType = {
   signOut: () => Promise<void>;
 };
 
+// Create a React context for authentication with an initial value of null
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// Provider component to wrap the app and provide authentication state and functions to its children
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -89,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Custom hook to access the authentication context, ensuring it is used within an AuthProvider
 export function useAuth() {
   const context = useContext(AuthContext);
 

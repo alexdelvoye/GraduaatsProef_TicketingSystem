@@ -1,4 +1,3 @@
-import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -9,105 +8,36 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
-  addTicketMessage,
-  getTicketById,
-  updateTicketStatus,
-} from "../api/ticketApi";
-import { useAuth } from "../context/AuthContext";
-import { useErrorHandler } from "../hooks/useErrorHandler";
+  ticketStatuses,
+  useTicketDetailScreen,
+} from "../hooks/useTicketDetailScreen";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
-import { RootStackParamList, TicketDetail, TicketStatus } from "../types";
+import { TicketDetailScreenProps } from "../types";
+import {
+  formatTicketDateTime,
+  formatTicketStatus,
+} from "../utils/ticketFormatters";
 
-type Props = NativeStackScreenProps<RootStackParamList, "TicketDetail">;
-
-const statuses: TicketStatus[] = ["Open", "InProgress", "Closed"];
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
-}
-
-function formatStatus(status: TicketStatus) {
-  return status === "InProgress" ? "In progress" : status;
-}
-
-export default function TicketDetailScreen({ navigation, route }: Props) {
-  const { user } = useAuth();
+export default function TicketDetailScreen({
+  navigation,
+  route,
+}: TicketDetailScreenProps) {
   const { ticketId } = route.params;
-
-  const [ticket, setTicket] = useState<TicketDetail | null>(null);
-  const [reply, setReply] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusSubmitting, setStatusSubmitting] = useState<TicketStatus | null>(
-    null,
-  );
-
-  const { errorMessage, clearError, handleError } = useErrorHandler(
-    "Could not load this ticket.",
-  );
-
-  const loadTicket = useCallback(async () => {
-    try {
-      clearError();
-      setIsLoading(true);
-      const data = await getTicketById(ticketId);
-      setTicket(data);
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [clearError, handleError, ticketId]);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadTicket();
-    }, [loadTicket]),
-  );
-
-  async function handleSendReply() {
-    if (!reply.trim()) {
-      return;
-    }
-
-    try {
-      clearError();
-      setIsSubmitting(true);
-      await addTicketMessage(ticketId, { message: reply.trim() });
-      setReply("");
-      await loadTicket();
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  async function handleUpdateStatus(status: TicketStatus) {
-    try {
-      clearError();
-      setStatusSubmitting(status);
-      await updateTicketStatus(ticketId, status);
-      await loadTicket();
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setStatusSubmitting(null);
-    }
-  }
-
-  const replyDisabled =
-    isSubmitting || !reply.trim() || ticket?.status === "Closed";
+  const {
+    user,
+    ticket,
+    reply,
+    setReply,
+    isLoading,
+    isSubmitting,
+    statusSubmitting,
+    errorMessage,
+    replyDisabled,
+    handleSendReply,
+    handleUpdateStatus,
+  } = useTicketDetailScreen(ticketId);
 
   return (
     <KeyboardAvoidingView
@@ -145,7 +75,7 @@ export default function TicketDetailScreen({ navigation, route }: Props) {
                     ticket.status === "Closed" && styles.statusPillClosed,
                   ]}
                 >
-                  {formatStatus(ticket.status)}
+                  {formatTicketStatus(ticket.status)}
                 </Text>
               </View>
 
@@ -153,7 +83,7 @@ export default function TicketDetailScreen({ navigation, route }: Props) {
                 {ticket.category} / {ticket.subject}
               </Text>
               <Text style={styles.ticketDate}>
-                Created {formatDate(ticket.createdAt)}
+                Created {formatTicketDateTime(ticket.createdAt)}
               </Text>
               <Text style={styles.description}>{ticket.description}</Text>
             </View>
@@ -162,7 +92,7 @@ export default function TicketDetailScreen({ navigation, route }: Props) {
               <View style={styles.card}>
                 <Text style={styles.sectionTitle}>Status</Text>
                 <View style={styles.optionGrid}>
-                  {statuses.map((status) => (
+                  {ticketStatuses.map((status) => (
                     <Pressable
                       key={status}
                       style={[
@@ -181,7 +111,7 @@ export default function TicketDetailScreen({ navigation, route }: Props) {
                       >
                         {statusSubmitting === status
                           ? "Saving..."
-                          : formatStatus(status)}
+                          : formatTicketStatus(status)}
                       </Text>
                     </Pressable>
                   ))}
@@ -208,7 +138,7 @@ export default function TicketDetailScreen({ navigation, route }: Props) {
                         {message.senderName || message.senderRole}
                       </Text>
                       <Text style={styles.ticketDate}>
-                        {formatDate(message.createdAt)}
+                        {formatTicketDateTime(message.createdAt)}
                       </Text>
                     </View>
                     <Text style={styles.messageText}>{message.message}</Text>

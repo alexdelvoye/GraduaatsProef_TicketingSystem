@@ -1,5 +1,56 @@
 export type TicketStatus = "Open" | "InProgress" | "Closed";
 
+export type TicketCategory =
+  | "Sales"
+  | "TechnicalProblem"
+  | "Question"
+  | "Installation"
+  | "Other";
+
+export type TicketSubject =
+  | "Gateway"
+  | "Sensors"
+  | "Software"
+  | "Dashboard"
+  | "Connectivity"
+  | "Account"
+  | "Other";
+
+export type StatusFilter = "All" | TicketStatus;
+
+export type TicketGroup = {
+  status: TicketStatus;
+  title: string;
+  description: string;
+};
+
+export const ticketStatuses: TicketStatus[] = ["Open", "InProgress", "Closed"];
+
+export const statusFilters: StatusFilter[] = [
+  "All",
+  "Open",
+  "InProgress",
+  "Closed",
+];
+
+export const ticketCategories: TicketCategory[] = [
+  "Sales",
+  "TechnicalProblem",
+  "Question",
+  "Installation",
+  "Other",
+];
+
+export const ticketSubjects: TicketSubject[] = [
+  "Gateway",
+  "Sensors",
+  "Software",
+  "Dashboard",
+  "Connectivity",
+  "Account",
+  "Other",
+];
+
 export type TicketListItem = {
   id: string;
   clientId: string;
@@ -31,8 +82,8 @@ export type TicketDetail = TicketListItem & {
 
 export type CreateTicketRequest = {
   title: string;
-  category: string;
-  subject: string;
+  category: TicketCategory;
+  subject: TicketSubject;
   description: string;
 };
 

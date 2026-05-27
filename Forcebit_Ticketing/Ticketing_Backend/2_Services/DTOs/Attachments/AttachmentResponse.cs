@@ -13,7 +13,5 @@ namespace Services.DTOs.Attachments
         public string ContentType { get; set; } = string.Empty;
 
         public DateTime UploadedAt { get; set; }
-
-        public FileUploadRequest File { get; set; }
     }
 }

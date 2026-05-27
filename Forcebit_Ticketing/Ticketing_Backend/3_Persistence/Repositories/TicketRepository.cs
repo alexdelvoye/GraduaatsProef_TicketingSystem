@@ -35,6 +35,7 @@ namespace Persistence.Repositories
         public async Task<List<Ticket>> GetTicketsByClientIdAsync(Guid clientId)
         {
             return await _context.Tickets
+                .Include(t => t.Client)
                 .Where(t => t.ClientId == clientId)
                 .OrderByDescending(t => t.UpdatedAt)
                 .ToListAsync();

@@ -1,4 +1,3 @@
-import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -7,101 +6,34 @@ import {
   Text,
   View,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { getAllTickets, getClients } from "../api/ticketApi";
-import { useAuth } from "../context/AuthContext";
-import { useErrorHandler } from "../hooks/useErrorHandler";
+import {
+  getClientLabel,
+  statusFilters,
+  useAdminScreen,
+} from "../hooks/useAdminScreen";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
+import { AdminScreenProps } from "../types";
 import {
-  ClientListItem,
-  RootStackParamList,
-  TicketListItem,
-  TicketStatus,
-} from "../types";
+  formatTicketDate,
+  formatTicketStatus,
+} from "../utils/ticketFormatters";
 
-type Props = NativeStackScreenProps<RootStackParamList, "AdminHome">;
-type StatusFilter = "All" | TicketStatus;
-
-const statusFilters: StatusFilter[] = ["All", "Open", "InProgress", "Closed"];
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(value));
-}
-
-function formatStatus(status: StatusFilter) {
-  if (status === "All") {
-    return "All";
-  }
-
-  return status === "InProgress" ? "In progress" : status;
-}
-
-function getClientLabel(client: ClientListItem) {
-  return client.companyName || client.name;
-}
-
-export default function AdminScreen({ navigation }: Props) {
-  const { signOut } = useAuth();
-  const [clients, setClients] = useState<ClientListItem[]>([]);
-  const [tickets, setTickets] = useState<TicketListItem[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("All");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const { errorMessage, clearError, handleError } = useErrorHandler(
-    "Could not load the admin dashboard.",
-  );
-
-  const loadDashboard = useCallback(
-    async (showRefreshing = false) => {
-      try {
-        clearError();
-        showRefreshing ? setIsRefreshing(true) : setIsLoading(true);
-
-        const [clientData, ticketData] = await Promise.all([
-          getClients(),
-          getAllTickets(),
-        ]);
-
-        setClients(clientData);
-        setTickets(ticketData);
-      } catch (error) {
-        handleError(error);
-      } finally {
-        setIsLoading(false);
-        setIsRefreshing(false);
-      }
-    },
-    [clearError, handleError],
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      loadDashboard();
-    }, [loadDashboard]),
-  );
-
-  const filteredTickets = useMemo(() => {
-    return tickets.filter((ticket) => {
-      const clientMatches =
-        selectedClientId === "All" || ticket.clientId === selectedClientId;
-      const statusMatches =
-        selectedStatus === "All" || ticket.status === selectedStatus;
-
-      return clientMatches && statusMatches;
-    });
-  }, [selectedClientId, selectedStatus, tickets]);
-
-  const activeTicketCount = tickets.filter(
-    (ticket) => ticket.status !== "Closed",
-  ).length;
+export default function AdminScreen({ navigation }: AdminScreenProps) {
+  const {
+    signOut,
+    clients,
+    selectedClientId,
+    setSelectedClientId,
+    selectedStatus,
+    setSelectedStatus,
+    filteredTickets,
+    activeTicketCount,
+    isLoading,
+    isRefreshing,
+    errorMessage,
+    loadDashboard,
+  } = useAdminScreen();
 
   return (
     <ScrollView
@@ -228,7 +160,7 @@ export default function AdminScreen({ navigation }: Props) {
                         styles.optionButtonTextSelected,
                     ]}
                   >
-                    {formatStatus(status)}
+                    {formatTicketStatus(status)}
                   </Text>
                 </Pressable>
               ))}
@@ -267,7 +199,7 @@ export default function AdminScreen({ navigation }: Props) {
                         ticket.status === "Closed" && styles.statusPillClosed,
                       ]}
                     >
-                      {formatStatus(ticket.status)}
+                      {formatTicketStatus(ticket.status)}
                     </Text>
                   </View>
 
@@ -276,7 +208,7 @@ export default function AdminScreen({ navigation }: Props) {
                     {ticket.category} / {ticket.subject}
                   </Text>
                   <Text style={styles.ticketDate}>
-                    Updated {formatDate(ticket.updatedAt)}
+                    Updated {formatTicketDate(ticket.updatedAt)}
                   </Text>
                 </Pressable>
               ))

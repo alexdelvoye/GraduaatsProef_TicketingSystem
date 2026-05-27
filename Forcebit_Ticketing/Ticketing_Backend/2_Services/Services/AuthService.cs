@@ -22,18 +22,20 @@ namespace Services.Services
 
         public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
         {
+            var email = request.Email.Trim().ToLowerInvariant();
+
             if (request.Password != request.ConfirmPassword)
                 throw new BadRequestException("Passwords do not match.");
 
-            if (await _userRepository.EmailExistsAsync(request.Email.ToLower()))
+            if (await _userRepository.EmailExistsAsync(email))
                 throw new BadRequestException("Email is already in use.");
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Name = request.Name,
-                CompanyName = request.CompanyName,
-                Email = request.Email.ToLower(),
+                Name = request.Name.Trim(),
+                CompanyName = request.CompanyName.Trim(),
+                Email = email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 Role = UserRole.Client,
                 CreatedAt = DateTime.UtcNow
@@ -61,7 +63,7 @@ namespace Services.Services
 
         public async Task<AuthResponse?> LoginAsync(LoginRequest request)
         {
-            var email = request.Email.ToLower();
+            var email = request.Email.Trim().ToLowerInvariant();
 
             var user = await _userRepository.GetByEmailAsync(email);
 

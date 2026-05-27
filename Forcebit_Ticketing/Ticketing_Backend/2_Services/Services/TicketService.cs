@@ -31,6 +31,9 @@ namespace Services.Services
             return tickets.Select(t => new TicketListItemResponse
             {
                 Id = t.Id,
+                ClientId = t.ClientId,
+                ClientName = t.Client?.Name ?? "",
+                CompanyName = t.Client?.CompanyName ?? "",
                 Title = t.Title,
                 Category = t.Category.ToString(),
                 Subject = t.Subject.ToString(),
@@ -47,6 +50,9 @@ namespace Services.Services
             return tickets.Select(t => new TicketListItemResponse
             {
                 Id = t.Id,
+                ClientId = t.ClientId,
+                ClientName = t.Client?.Name ?? "",
+                CompanyName = t.Client?.CompanyName ?? "",
                 Title = t.Title,
                 Category = t.Category.ToString(),
                 Subject = t.Subject.ToString(),
@@ -119,7 +125,9 @@ namespace Services.Services
             if (ticket == null)
                 throw new NotFoundException("Ticket not found.");
 
-            if (!Enum.TryParse<TicketStatus>(request.Status, true, out var status))
+            var normalizedStatus = request.Status.Replace(" ", string.Empty);
+
+            if (!Enum.TryParse<TicketStatus>(normalizedStatus, true, out var status))
                 throw new BadRequestException("Invalid ticket status.");
 
             ticket.Status = status;

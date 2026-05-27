@@ -2,6 +2,7 @@ import { getAuthItem } from "../storage/authStorage";
 
 const API_URL = "http://localhost:5047/api";
 
+// Type definition for the expected structure of error responses from the backend
 type BackendErrorResponse = {
   statusCode?: number;
   message?: string;
@@ -10,6 +11,7 @@ type BackendErrorResponse = {
   errors?: Record<string, string[]>;
 };
 
+// Custom error class to represent API errors with additional context
 export class ApiError extends Error {
   statusCode?: number;
   details?: string;
@@ -19,7 +21,7 @@ export class ApiError extends Error {
     message: string,
     statusCode?: number,
     details?: string,
-    errors?: Record<string, string[]>
+    errors?: Record<string, string[]>,
   ) {
     super(message);
     this.name = "ApiError";
@@ -29,10 +31,12 @@ export class ApiError extends Error {
   }
 }
 
+// Checks if the response has a JSON content type
 function isJsonResponse(response: Response) {
   return response.headers.get("content-type")?.includes("application/json");
 }
 
+// Reads the response body and returns it as JSON if possible, otherwise as text. Handles 204 No Content responses gracefully.
 async function readResponseBody(response: Response) {
   if (response.status === 204) {
     return null;
@@ -46,6 +50,7 @@ async function readResponseBody(response: Response) {
   return text ? { message: text } : null;
 }
 
+// Extracts a user-friendly error message from the backend response
 function getBackendErrorMessage(data: BackendErrorResponse | null) {
   if (!data) {
     return "Request failed.";
@@ -64,9 +69,10 @@ function getBackendErrorMessage(data: BackendErrorResponse | null) {
   return firstValidationError ?? "Request failed.";
 }
 
+// Main function to perform API requests with proper error handling and authentication
 export async function apiFetch<T = unknown>(
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
   const token = await getAuthItem("token");
 
@@ -85,7 +91,7 @@ export async function apiFetch<T = unknown>(
     });
   } catch {
     throw new ApiError(
-      "Could not reach the server. Check that the backend is running and CORS is configured."
+      "Could not reach the server. Check that the backend is running and CORS is configured.",
     );
   }
 
@@ -96,7 +102,7 @@ export async function apiFetch<T = unknown>(
       getBackendErrorMessage(data),
       response.status,
       data?.details,
-      data?.errors
+      data?.errors,
     );
   }
 

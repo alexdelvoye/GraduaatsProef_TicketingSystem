@@ -7,7 +7,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddPersistenceServices(builder.Configuration);
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 // Add controllers to the container.
 builder.Services.AddControllers();
@@ -71,6 +73,8 @@ builder.Services
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+await app.SeedAdminUserAsync();
 
 if (app.Environment.IsDevelopment())
 {
