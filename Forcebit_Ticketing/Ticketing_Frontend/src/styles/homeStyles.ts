@@ -275,4 +275,34 @@ export const homeStyles = StyleSheet.create({
     marginTop: 6,
     marginBottom: 8,
   },
+  attachmentActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginBottom: 12,
+  },
+  attachmentList: {
+    gap: 6,
+    marginTop: 10,
+    marginBottom: 12,
+  },
+  attachmentText: {
+    color: colors.text,
+    backgroundColor: colors.input,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    fontSize: 13,
+  },
+  attachmentDownloadButton: {
+    backgroundColor: colors.input,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  attachmentDownloadText: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: "700",
+  },
 });

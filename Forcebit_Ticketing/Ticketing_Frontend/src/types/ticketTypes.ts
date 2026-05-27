@@ -74,6 +74,16 @@ export type TicketListItem = {
 };
 
 // Message shape returned inside ticket detail responses.
+export type TicketAttachment = {
+  id: string;
+  ticketId: string;
+  messageId?: string | null;
+  fileName: string;
+  fileUrl: string;
+  contentType: string;
+  uploadedAt: string;
+};
+
 export type TicketMessage = {
   id: string;
   ticketId: string;
@@ -82,6 +92,7 @@ export type TicketMessage = {
   senderRole: string;
   message: string;
   createdAt: string;
+  attachments: TicketAttachment[];
 };
 
 // Detail extends list item with conversation data. The original create-ticket
@@ -103,6 +114,15 @@ export type CreateTicketRequest = {
 // Request body for adding a message to an existing ticket.
 export type CreateTicketMessageRequest = {
   message: string;
+};
+
+// Frontend-only shape for files selected before they are uploaded.
+export type SelectedAttachment = {
+  uri: string;
+  name: string;
+  mimeType?: string;
+  size?: number;
+  file?: File;
 };
 
 // Admin dashboard client summary.

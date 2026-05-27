@@ -2,7 +2,7 @@ import { getAuthItem } from "../storage/authStorage";
 
 // Central API base URL. Keeping this in one file makes it easy to switch from
 // localhost to a LAN IP when testing on a physical device.
-const API_URL = "http://localhost:5047/api";
+export const API_URL = "http://localhost:5047/api";
 
 // Expected structure of backend errors. It supports both our custom exception
 // middleware response and ASP.NET validation responses.
@@ -89,6 +89,18 @@ function getBackendErrorMessage(data: BackendErrorResponse | null) {
   return firstValidationError ?? "Request failed.";
 }
 
+function isFormDataBody(body: BodyInit | null | undefined) {
+  // React Native and browser FormData implementations are not always reliable
+  // with instanceof checks across runtimes. Checking for append() is enough for
+  // our API client because other request bodies are strings/undefined.
+  return Boolean(
+    body &&
+    typeof body === "object" &&
+    "append" in body &&
+    typeof (body as { append?: unknown }).append === "function",
+  );
+}
+
 // Main API helper. Every API function goes through here so authentication,
 // response reading, and error handling stay consistent across the app.
 export async function apiFetch<T = unknown>(
@@ -99,10 +111,12 @@ export async function apiFetch<T = unknown>(
   // get authenticated requests without recreating the API client.
   const token = await getAuthItem("token");
 
-  // Merge default headers with caller-provided headers. Caller headers come
-  // last so special requests can override defaults when needed.
+  const isMultipartRequest = isFormDataBody(options.body);
+
+  // Merge default headers with caller-provided headers. FormData must not get
+  // an explicit Content-Type because React Native adds the multipart boundary.
   const headers = {
-    "Content-Type": "application/json",
+    ...(!isMultipartRequest ? { "Content-Type": "application/json" } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {}),
   };

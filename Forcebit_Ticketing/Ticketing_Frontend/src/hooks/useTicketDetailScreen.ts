@@ -2,15 +2,23 @@ import { useCallback, useState } from "react";
 
 import { useFocusEffect } from "@react-navigation/native";
 
+import { downloadTicketAttachment } from "../api/attachmentApi";
 import {
   addTicketMessage,
+  addTicketMessageWithAttachments,
   getTicketById,
   updateTicketStatus,
 } from "../api/ticketApi";
 
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
-import { ticketStatuses, TicketDetail, TicketStatus } from "../types";
+import {
+  ticketStatuses,
+  SelectedAttachment,
+  TicketAttachment,
+  TicketDetail,
+  TicketStatus,
+} from "../types";
 import { formatTicketStatus } from "../utils/ticketFormatters";
 import { TicketMessageFormValues } from "../validation/ticketSchema";
 
@@ -78,11 +86,20 @@ export function useTicketDetailScreen(ticketId: string) {
 
   // Formik calls this after Yup validation succeeds. The hook trims the message
   // before sending so accidental whitespace is not saved as part of the reply.
-  async function handleSendReply(values: TicketMessageFormValues) {
+  async function handleSendReply(
+    values: TicketMessageFormValues,
+    attachments: SelectedAttachment[],
+  ) {
     try {
       clearError();
 
-      await addTicketMessage(ticketId, { message: values.message.trim() });
+      const message = values.message.trim();
+
+      if (attachments.length > 0) {
+        await addTicketMessageWithAttachments(ticketId, message, attachments);
+      } else {
+        await addTicketMessage(ticketId, { message });
+      }
 
       // Reload after writing so the message list and status are based on the
       // database result, not on a guessed local update.
@@ -122,6 +139,16 @@ export function useTicketDetailScreen(ticketId: string) {
     }
   }
 
+  async function handleDownloadAttachment(attachment: TicketAttachment) {
+    try {
+      clearError();
+
+      await downloadTicketAttachment(ticketId, attachment);
+    } catch (error) {
+      handleError(error, "Could not download this attachment.");
+    }
+  }
+
   // Closed tickets cannot receive new replies. Keeping this as a derived value
   // avoids duplicating the same status check in multiple screen components.
   const isTicketClosed = ticket?.status === "Closed";
@@ -150,5 +177,6 @@ export function useTicketDetailScreen(ticketId: string) {
     clientStatusAction,
     handleSendReply,
     handleUpdateStatus,
+    handleDownloadAttachment,
   };
 }

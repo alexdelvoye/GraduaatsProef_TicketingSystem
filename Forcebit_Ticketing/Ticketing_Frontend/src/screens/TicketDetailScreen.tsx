@@ -39,6 +39,7 @@ export default function TicketDetailScreen({
     clientStatusAction,
     handleSendReply,
     handleUpdateStatus,
+    handleDownloadAttachment,
   } = useTicketDetailScreen(ticketId);
 
   return (
@@ -174,6 +175,22 @@ export default function TicketDetailScreen({
                       </Text>
                     </View>
                     <Text style={styles.messageText}>{message.message}</Text>
+
+                    {message.attachments.length > 0 ? (
+                      <View style={styles.attachmentList}>
+                        {message.attachments.map((attachment) => (
+                          <Pressable
+                            key={attachment.id}
+                            style={styles.attachmentDownloadButton}
+                            onPress={() => handleDownloadAttachment(attachment)}
+                          >
+                            <Text style={styles.attachmentDownloadText}>
+                              {attachment.fileName}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    ) : null}
                   </View>
                 ))
               )}

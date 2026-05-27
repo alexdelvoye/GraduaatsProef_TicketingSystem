@@ -7,8 +7,10 @@ import {
   TicketDetail,
   TicketListItem,
   TicketMessage,
+  SelectedAttachment,
   TicketStatus,
 } from "../types";
+import { appendAttachmentToFormData } from "../utils/attachmentFormData";
 
 // Client endpoint: returns only the authenticated client's tickets.
 export function getMyTickets() {
@@ -52,6 +54,29 @@ export function addTicketMessage(
     method: "POST",
     body: JSON.stringify(request),
   });
+}
+
+// Multipart endpoint for replies that include one or more files.
+export async function addTicketMessageWithAttachments(
+  ticketId: string,
+  message: string,
+  attachments: SelectedAttachment[],
+) {
+  const formData = new FormData();
+
+  formData.append("message", message);
+
+  for (const attachment of attachments) {
+    await appendAttachmentToFormData(formData, attachment);
+  }
+
+  return apiFetch<TicketMessage>(
+    `/tickets/${ticketId}/messages/with-attachments`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
 }
 
 // Admin endpoint for changing ticket workflow state.

@@ -54,11 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
         }
-      } catch (error) {
+      } catch {
         // If stored JSON is corrupted, clear it. A clean logout is better than
         // leaving the app in a half-authenticated state.
-        console.log("Failed to load auth:", error);
-
         await deleteAuthItem("token");
         await deleteAuthItem("user");
 
