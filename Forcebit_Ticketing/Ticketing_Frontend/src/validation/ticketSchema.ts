@@ -1,10 +1,12 @@
 import * as yup from "yup";
-import {
-  ticketCategories,
-  ticketSubjects,
-  TicketCategory,
-  TicketSubject,
-} from "../types";
+
+import { ticketCategories, ticketSubjects } from "../types";
+
+import type { TicketCategory, TicketSubject } from "../types";
+
+// Must match the backend DTOs and the TicketMessages.Message database column.
+// Keeping one frontend constant avoids different forms drifting apart again.
+const ticketMessageMaxLength = 3000;
 
 // Ticket form schemas keep form validation separate from screen components.
 // This makes screens easier to read and keeps all ticket input rules together.
@@ -25,7 +27,10 @@ export const createTicketSchema = yup.object({
   description: yup
     .string()
     .trim()
-    .max(4000, "Description must be 4000 characters or less.")
+    .max(
+      ticketMessageMaxLength,
+      `Description must be ${ticketMessageMaxLength} characters or less.`,
+    )
     // The form still says description for the client, but this value is sent as
     // initialMessage and stored as the first conversation message.
     .required("Description is required."),
@@ -35,7 +40,10 @@ export const ticketMessageSchema = yup.object({
   message: yup
     .string()
     .trim()
-    .max(4000, "Reply must be 4000 characters or less.")
+    .max(
+      ticketMessageMaxLength,
+      `Reply must be ${ticketMessageMaxLength} characters or less.`,
+    )
     .required("Reply is required."),
 });
 
