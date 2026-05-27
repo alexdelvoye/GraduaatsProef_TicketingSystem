@@ -45,11 +45,37 @@ namespace Persistence.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<string>> GetAttachmentPathsForClientTicketsAsync(
+            Guid userId)
+        {
+            // Account deletion removes the client's tickets, which cascades the
+            // attachment rows. The service still needs these paths first so it
+            // can remove the physical files from disk as well.
+            return await _context.TicketAttachments
+                .Where(a => a.Ticket != null && a.Ticket.ClientId == userId)
+                .Select(a => a.FilePath)
+                .ToListAsync();
+        }
+
         public async Task AddAsync(User user)
         {
             // AddAsync marks the entity for insertion. SaveChangesAsync performs
             // the actual database write.
             await _context.Users.AddAsync(user);
+        }
+
+        public async Task DeleteAsync(User user)
+        {
+            // Client tickets point to the user with DeleteBehavior.Restrict.
+            // Therefore the tickets must be removed before the user can be
+            // removed. Ticket messages and attachments are removed by their own
+            // cascade rules when the ticket is deleted.
+            var tickets = await _context.Tickets
+                .Where(t => t.ClientId == user.Id)
+                .ToListAsync();
+
+            _context.Tickets.RemoveRange(tickets);
+            _context.Users.Remove(user);
         }
 
         public async Task<bool> EmailExistsAsync(string email)

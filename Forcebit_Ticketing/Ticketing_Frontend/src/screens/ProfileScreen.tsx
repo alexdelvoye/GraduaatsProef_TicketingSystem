@@ -1,47 +1,90 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
-import { useAuth } from "../context/AuthContext";
+import { ProfileForm } from "../forms/ProfileForm";
+import { useProfileScreen } from "../hooks/useProfileScreen";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { ProfileScreenProps } from "../types";
 
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
-  // Profile is read-only for now. AuthContext provides the saved user data and
-  // the signOut action.
-  const { user, signOut } = useAuth();
+  const {
+    user,
+    signOut,
+    errorMessage,
+    handleUpdateProfile,
+    confirmDeleteProfile,
+  } = useProfileScreen();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.logo}>FORCEBIT</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View>
+        <View style={styles.header}>
+          <Text style={styles.logo}>FORCEBIT</Text>
 
-        <Pressable
-          onPress={() => navigation.goBack()}
-          style={styles.secondaryButton}
-        >
-          <Text style={styles.secondaryButtonText}>Back</Text>
-        </Pressable>
+          <Pressable
+            onPress={() => navigation.goBack()}
+            style={styles.secondaryButton}
+          >
+            <Text style={styles.secondaryButtonText}>Back</Text>
+          </Pressable>
+        </View>
+
+        {user ? (
+          <>
+            <View style={styles.card}>
+              <Text style={styles.title}>Profile</Text>
+              <Text style={styles.muted}>
+                Update the contact details used for ticket communication.
+              </Text>
+
+              <ProfileForm
+                user={user}
+                errorMessage={errorMessage}
+                onSubmit={handleUpdateProfile}
+              />
+
+              <View style={styles.profileReadOnlySection}>
+                <Text style={styles.sectionTitle}>Account details</Text>
+
+                <View style={styles.profileDetailGrid}>
+                  <View style={styles.profileDetailItem}>
+                    <Text style={styles.profileDetailLabel}>Company</Text>
+                    <Text style={styles.profileDetailValue}>
+                      {user.companyName}
+                    </Text>
+                  </View>
+
+                  <View style={styles.profileDetailItem}>
+                    <Text style={styles.profileDetailLabel}>Role</Text>
+                    <Text style={styles.profileDetailValue}>{user.role}</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.profilePageActions}>
+              <Pressable
+                style={styles.profileLogoutButton}
+                onPress={() => {
+                  void signOut();
+                }}
+              >
+                <Text style={styles.logoutText}>Log out</Text>
+              </Pressable>
+
+              {user.role === "Client" ? (
+                <Pressable
+                  style={styles.profileDeleteButton}
+                  onPress={confirmDeleteProfile}
+                >
+                  <Text style={styles.profileDeleteButtonText}>
+                    Remove account
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
+          </>
+        ) : null}
       </View>
-
-      <View style={styles.card}>
-        <Text style={styles.title}>Profile</Text>
-
-        {/* Optional chaining avoids crashes during brief auth state transitions. */}
-        <Text style={styles.label}>Name</Text>
-        <Text style={styles.value}>{user?.name}</Text>
-
-        <Text style={styles.label}>Email</Text>
-        <Text style={styles.value}>{user?.email}</Text>
-
-        <Text style={styles.label}>Company</Text>
-        <Text style={styles.value}>{user?.companyName}</Text>
-
-        <Text style={styles.label}>Role</Text>
-        <Text style={styles.role}>{user?.role}</Text>
-      </View>
-
-      <Pressable style={styles.logoutWideButton} onPress={signOut}>
-        <Text style={styles.logoutText}>Log out</Text>
-      </Pressable>
-    </View>
+    </ScrollView>
   );
 }

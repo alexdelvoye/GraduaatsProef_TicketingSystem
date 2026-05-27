@@ -23,7 +23,8 @@ type AuthContextType = {
   isLoading: boolean;
   signIn: (request: LoginRequest) => Promise<void>;
   signUp: (request: RegisterRequest) => Promise<void>;
-  signOut: () => Promise<void>;
+  updateUser: (user: AuthUser) => Promise<void>;
+  signOut: (showToast?: boolean) => Promise<void>;
 };
 
 // Null is used as the initial value so useAuth can detect missing providers and
@@ -95,19 +96,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await saveAuth(data);
   }
 
-  async function signOut() {
+  async function updateUser(updatedUser: AuthUser) {
+    // Profile edits should update both React state and persistent storage so
+    // the new name/email survive a page refresh.
+    await setAuthItem("user", JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  }
+
+  async function signOut(showToast = true) {
     // Remove both token and user data so future API calls are anonymous.
     await deleteAuthItem("token");
     await deleteAuthItem("user");
 
     setToken(null);
     setUser(null);
-    showInfo("Signed out", "Your session has ended.");
+
+    if (showToast) {
+      showInfo("Signed out", "Your session has ended.");
+    }
   }
 
   return (
     <AuthContext.Provider
-      value={{ user, token, isLoading, signIn, signUp, signOut }}
+      value={{ user, token, isLoading, signIn, signUp, updateUser, signOut }}
     >
       {children}
     </AuthContext.Provider>

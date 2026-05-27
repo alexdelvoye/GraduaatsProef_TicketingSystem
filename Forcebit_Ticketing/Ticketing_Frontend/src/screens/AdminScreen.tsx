@@ -60,7 +60,12 @@ export default function AdminScreen({ navigation }: AdminScreenProps) {
             <Text style={styles.secondaryButtonText}>Profile</Text>
           </Pressable>
 
-          <Pressable onPress={signOut} style={styles.logoutButton}>
+          <Pressable
+            onPress={() => {
+              void signOut();
+            }}
+            style={styles.logoutButton}
+          >
             <Text style={styles.logoutText}>Log out</Text>
           </Pressable>
         </View>

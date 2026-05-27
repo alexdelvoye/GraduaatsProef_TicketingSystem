@@ -1,21 +1,26 @@
 import { StyleSheet } from "react-native";
-import { colors } from "./theme";
+import { colors, layout } from "./theme";
 
 export const loginStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
     justifyContent: "center",
+    alignItems: "center",
     padding: 24,
   },
   card: {
+    width: "100%",
+    maxWidth: layout.formMaxWidth,
     backgroundColor: colors.card,
-    borderRadius: 18,
-    padding: 24,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: layout.radiusLarge,
+    padding: 28,
   },
   logo: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "700",
     marginBottom: 32,
   },
@@ -32,7 +37,9 @@ export const loginStyles = StyleSheet.create({
   input: {
     backgroundColor: colors.input,
     color: colors.text,
-    borderRadius: 10,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: 12,
     padding: 14,
     marginBottom: 14,
   },
@@ -43,7 +50,7 @@ export const loginStyles = StyleSheet.create({
   button: {
     backgroundColor: colors.primary,
     padding: 14,
-    borderRadius: 10,
+    borderRadius: 14,
     alignItems: "center",
     marginTop: 8,
   },
@@ -51,7 +58,7 @@ export const loginStyles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
-    color: "#111236",
+    color: colors.textDark,
     fontWeight: "700",
   },
   link: {

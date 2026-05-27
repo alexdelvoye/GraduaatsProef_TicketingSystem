@@ -192,6 +192,8 @@ Implemented:
 - Client and admin ticket messages.
 - Admin status updates.
 - Client close and reopen actions for their own tickets.
+- Profile editing for name and email, with company and role shown as read-only account details.
+- Client account removal from the profile screen.
 - Brevo email notifications to clients for admin messages and status updates.
 - Backend exception middleware with consistent error responses.
 - Frontend Formik/Yup validation for the main forms.

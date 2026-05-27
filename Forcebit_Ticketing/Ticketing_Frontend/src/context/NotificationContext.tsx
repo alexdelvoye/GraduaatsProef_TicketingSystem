@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 24,
     zIndex: 20,
-    backgroundColor: colors.input,
+    backgroundColor: colors.card,
     borderLeftColor: colors.primary,
     borderLeftWidth: 4,
     borderRadius: 10,

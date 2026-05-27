@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { colors } from "./theme";
+import { colors, layout } from "./theme";
 
 export const homeStyles = StyleSheet.create({
   container: {
@@ -7,15 +7,23 @@ export const homeStyles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    padding: 24,
-    paddingTop: 56,
-    paddingBottom: 32,
+    width: "100%",
+    maxWidth: layout.pageMaxWidth,
+    alignSelf: "center",
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    paddingBottom: 40,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 28,
+    flexWrap: "wrap",
+    backgroundColor: colors.card,
+    borderRadius: layout.radiusLarge,
+    paddingVertical: 22,
+    paddingHorizontal: 28,
+    marginBottom: 44,
     gap: 12,
   },
   headerActions: {
@@ -25,15 +33,17 @@ export const homeStyles = StyleSheet.create({
   },
   logo: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "700",
+    letterSpacing: 0,
   },
   hero: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    gap: 16,
-    marginBottom: 24,
+    flexWrap: "wrap",
+    gap: 20,
+    marginBottom: 30,
   },
   eyebrow: {
     color: colors.primary,
@@ -45,16 +55,38 @@ export const homeStyles = StyleSheet.create({
   logoutButton: {
     borderColor: colors.primary,
     borderWidth: 1,
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
   },
-  logoutWideButton: {
+  profilePageActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 12,
+    marginTop: 2,
+  },
+  profileLogoutButton: {
     borderColor: colors.primary,
     borderWidth: 1,
-    borderRadius: 10,
-    padding: 14,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
     alignItems: "center",
+    minWidth: 220,
+  },
+  profileDeleteButton: {
+    borderColor: colors.danger,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    alignItems: "center",
+    minWidth: 220,
+  },
+  profileDeleteButtonText: {
+    color: colors.danger,
+    fontWeight: "700",
   },
   logoutText: {
     color: colors.primary,
@@ -62,9 +94,11 @@ export const homeStyles = StyleSheet.create({
   },
   secondaryButton: {
     backgroundColor: colors.input,
-    borderRadius: 10,
-    paddingVertical: 9,
-    paddingHorizontal: 14,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
   },
   secondaryButtonText: {
     color: colors.text,
@@ -72,13 +106,13 @@ export const homeStyles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: colors.primary,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 14,
-    paddingHorizontal: 18,
+    paddingHorizontal: 22,
     alignItems: "center",
   },
   primaryButtonText: {
-    color: "#111236",
+    color: colors.textDark,
     fontWeight: "700",
   },
   buttonDisabled: {
@@ -86,13 +120,15 @@ export const homeStyles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.card,
-    borderRadius: 18,
-    padding: 20,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: layout.radiusLarge,
+    padding: 22,
     marginBottom: 18,
   },
   title: {
     color: colors.text,
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: "600",
     marginBottom: 8,
   },
@@ -101,14 +137,46 @@ export const homeStyles = StyleSheet.create({
     marginTop: 14,
     marginBottom: 8,
   },
-  value: {
+  profileFormActions: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    marginTop: 24,
+    marginBottom: 24,
+  },
+  profileSaveButton: {
+    minWidth: 190,
+  },
+  profileReadOnlySection: {
+    borderTopColor: colors.inputBorder,
+    borderTopWidth: 1,
+    paddingTop: 20,
+  },
+  profileDetailGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginTop: 14,
+  },
+  profileDetailItem: {
+    flexGrow: 1,
+    flexBasis: 260,
+    backgroundColor: colors.backgroundDeep,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+  },
+  profileDetailLabel: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 6,
+    textTransform: "uppercase",
+  },
+  profileDetailValue: {
     color: colors.text,
     fontSize: 16,
-  },
-  role: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "600",
   },
   muted: {
     color: colors.muted,
@@ -122,7 +190,7 @@ export const homeStyles = StyleSheet.create({
   },
   sectionTitle: {
     color: colors.text,
-    fontSize: 21,
+    fontSize: 24,
     fontWeight: "600",
     marginBottom: 4,
   },
@@ -142,9 +210,11 @@ export const homeStyles = StyleSheet.create({
   },
   ticketCard: {
     backgroundColor: colors.card,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 10,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: layout.radiusMedium,
+    padding: 18,
+    marginBottom: 12,
   },
   ticketCardHeader: {
     flexDirection: "row",
@@ -173,7 +243,7 @@ export const homeStyles = StyleSheet.create({
     fontWeight: "700",
   },
   statusPillClosed: {
-    backgroundColor: colors.input,
+    backgroundColor: colors.cardSoft,
     color: colors.muted,
   },
   ticketMeta: {
@@ -186,8 +256,10 @@ export const homeStyles = StyleSheet.create({
   },
   messageCard: {
     backgroundColor: colors.card,
-    borderRadius: 14,
-    padding: 16,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: layout.radiusMedium,
+    padding: 18,
     marginTop: 10,
   },
   adminMessageCard: {
@@ -212,7 +284,9 @@ export const homeStyles = StyleSheet.create({
   emptyText: {
     color: colors.muted,
     backgroundColor: colors.card,
-    borderRadius: 14,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: layout.radiusMedium,
     padding: 16,
   },
   loadingState: {
@@ -222,7 +296,9 @@ export const homeStyles = StyleSheet.create({
   input: {
     backgroundColor: colors.input,
     color: colors.text,
-    borderRadius: 10,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: 12,
     padding: 14,
   },
   inputError: {
@@ -241,19 +317,22 @@ export const homeStyles = StyleSheet.create({
   },
   optionButton: {
     backgroundColor: colors.input,
-    borderRadius: 10,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
   },
   optionButtonSelected: {
     backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   optionButtonText: {
     color: colors.text,
     fontWeight: "700",
   },
   optionButtonTextSelected: {
-    color: "#111236",
+    color: colors.textDark,
   },
   optionSubtext: {
     color: colors.muted,
@@ -261,7 +340,7 @@ export const homeStyles = StyleSheet.create({
     marginTop: 4,
   },
   optionSubtextSelected: {
-    color: "#111236",
+    color: colors.textDark,
   },
   errorText: {
     color: colors.danger,
@@ -300,14 +379,18 @@ export const homeStyles = StyleSheet.create({
   attachmentText: {
     color: colors.text,
     backgroundColor: colors.input,
-    borderRadius: 8,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 10,
     fontSize: 13,
   },
   attachmentDownloadButton: {
     backgroundColor: colors.input,
-    borderRadius: 8,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 10,
   },

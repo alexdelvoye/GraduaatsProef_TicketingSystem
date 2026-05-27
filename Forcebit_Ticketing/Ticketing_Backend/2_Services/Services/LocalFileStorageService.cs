@@ -65,6 +65,24 @@ namespace Services.Services
             return $"/{_options.UploadFolder}/{storedFileName}";
         }
 
+        public Task DeleteFileIfExistsAsync(string storedFilePath)
+        {
+            if (string.IsNullOrWhiteSpace(storedFilePath))
+                return Task.CompletedTask;
+
+            // Stored paths look like "/Uploads/file.ext". Only the file name is
+            // trusted here so a malicious path cannot escape the upload folder.
+            var fileName = Path.GetFileName(storedFilePath);
+            var absolutePath = Path.Combine(_uploadFolder, fileName);
+
+            if (File.Exists(absolutePath))
+            {
+                File.Delete(absolutePath);
+            }
+
+            return Task.CompletedTask;
+        }
+
         private static string FormatBytes(long bytes)
         {
             // Keep the error message readable for users instead of returning a

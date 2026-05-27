@@ -278,6 +278,39 @@ Formik still shows field errors inline. The shared `formErrorHelpers` submit
 path shows a toast when the user presses submit on an invalid form, while the
 inline text shows exactly which field needs attention.
 
+## Frontend Styling
+
+The frontend styling follows the Forcebit website direction: dark navy pages,
+rounded darker navigation/cards, white text, muted helper text, and lime action
+buttons. Shared screen styles live in `homeStyles`, while authentication screens
+use `loginStyles` and `registerStyles` because their centered form layout is
+different from the ticket dashboard layout.
+
+The main content wrapper uses a maximum width and centered alignment. This keeps
+the app readable on wide desktop browsers while still allowing the same screens
+to shrink on smaller windows.
+
+## Profile Editing
+
+The profile screen lets the authenticated user edit only `Name` and `Email`.
+`CompanyName` and `Role` are shown as read-only values because those fields are
+business/admin data, not normal personal profile details.
+
+The frontend separates those concerns visually as well: editable contact fields
+live in the profile form, while company and role are grouped below as account
+details.
+
+The backend enforces this by using `UpdateProfileRequest`, which contains only
+`Name` and `Email`. Even if a malicious client sends company or role values,
+the controller/service do not bind or update those fields.
+
+Client users can also remove their own account from the profile screen. The
+backend exposes this as `DELETE /api/profile`, reads the account id from the
+JWT, refuses admin deletion, removes uploaded files for the client's tickets,
+removes the client's tickets, and then removes the user. This order is needed
+because tickets use a restrictive foreign key to the client user, while ticket
+messages and attachment rows cascade from the deleted tickets.
+
 ## Ticket Workflow
 
 Client ticket creation:
