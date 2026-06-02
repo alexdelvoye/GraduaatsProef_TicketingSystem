@@ -176,6 +176,11 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// The ticketing workflows depend on MySQL for users, tickets, messages and
+// attachments. Verify the connection before accepting requests so a stopped
+// database gives a clear startup error.
+await app.EnsureDatabaseIsAvailableAsync();
+
 // Development convenience: create a known admin account for testing/demo use.
 await app.SeedAdminUserAsync();
 

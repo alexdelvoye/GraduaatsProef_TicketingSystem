@@ -54,6 +54,25 @@ Browser opening for the frontend is delegated to Expo's `--web` flag. The
 launcher does not open the frontend URL itself, because doing both would create
 two browser tabs for the same app.
 
+## Database Startup Check
+
+The backend depends on MySQL for authentication, tickets, conversation messages,
+attachments, profile data, and the seeded admin account. Because those workflows
+cannot work without persistence, the API verifies the database connection during
+startup.
+
+There are two checks:
+
+- `PersistenceServiceExtensions` wraps Pomelo's server-version detection so a
+  stopped MySQL service or invalid connection string produces a clear startup
+  exception.
+- `DatabaseStartupExtensions.EnsureDatabaseIsAvailableAsync` calls EF Core's
+  `CanConnectAsync` after the app is built and before requests are accepted.
+
+This is intentional fail-fast behavior. It is better for development and demos
+if the backend stops immediately with a database message than if login or ticket
+replies fail later with a less obvious provider exception.
+
 ## Single Responsibility Principle
 
 Single Responsibility Principle means that a class should have one main reason to change.
@@ -459,6 +478,26 @@ Client close/reopen:
 4. Reopening moves the ticket back to `Open`.
 5. Clients cannot set `InProgress`, because that is an internal support workflow state.
 
+## Development Documentation Rule
+
+Every code change should be treated as a documentation change candidate. When a
+feature, workflow, validation rule, configuration value, architectural choice,
+or user-facing behavior changes, the related comments and README sections must
+be updated in the same change.
+
+This rule exists because the project is part of a graduaatsproef. The code must
+work, but it must also be explainable and defensible. Documentation should make
+clear:
+
+- What changed from the user's point of view.
+- Where the responsibility lives in the codebase.
+- Why the chosen implementation fits the project structure.
+- Which setup, test, or demo steps are affected.
+
+Inline comments are reserved for non-obvious implementation decisions. Simple
+code should stay readable by itself, while comments explain intent, trade-offs,
+or constraints that are useful during maintenance or a project defense.
+
 ## Defending The Design
 
 Useful explanation for a presentation:
@@ -472,6 +511,13 @@ Exception middleware prevents repeated error handling code in every controller. 
 Why use the Options pattern:
 
 The Options pattern gives strongly typed configuration. Instead of reading individual strings from configuration in many places, the app binds settings once and injects typed objects.
+
+Why check the database on startup:
+
+The app cannot provide its main workflows without MySQL. Startup validation
+turns a hidden dependency into an explicit prerequisite. If MySQL is stopped,
+the backend fails before serving requests, which gives a clearer development
+and demo error than failing during login or while adding a reply.
 
 Why use Formik and Yup:
 

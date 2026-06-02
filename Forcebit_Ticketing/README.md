@@ -49,6 +49,11 @@ forcebit_ticketingdb
 
 The current development connection string uses the local MySQL `root` user. For a real deployment, move secrets such as database passwords and JWT keys into environment variables or user secrets.
 
+The backend checks the MySQL connection during startup. If MySQL is not running
+or the connection string is wrong, the API stops immediately with a clear
+database connection error instead of starting and failing later during login or
+ticket actions.
+
 ## Email Notifications
 
 The backend uses Brevo for ticket notification emails. Configure these values in the `Email` section or with environment variables/user secrets:
@@ -244,6 +249,18 @@ npm run lint
 npm run typecheck
 ```
 
+## Development Documentation Rule
+
+When code is added or changed, the matching documentation must be checked in
+the same change. Update comments, `README.md`, and `TECHNICAL_README.md` when a
+change affects behavior, setup, architecture, important design decisions, or
+anything that needs to be explained during the graduaatsproef defense.
+
+Comments should explain why code exists or why a non-obvious choice was made.
+They should not repeat simple code line by line. The goal is that the project
+stays maintainable and that every important feature can be defended from the
+repository documentation.
+
 ## Practical Test Flow
 
 1. Start MySQL.
@@ -287,6 +304,13 @@ Deferred for later:
 ## Troubleshooting
 
 If the backend starts and then stops, check the console logs first. The project now logs startup, requests, unhandled exceptions, and important service actions.
+
+If the backend reports that it cannot connect to MySQL, confirm that:
+
+- The MySQL service is running.
+- Port `3306` is listening locally.
+- The database name, user, and password in `DefaultConnection` are correct.
+- Migrations were applied to `forcebit_ticketingdb`.
 
 If the frontend cannot reach the API, confirm that:
 

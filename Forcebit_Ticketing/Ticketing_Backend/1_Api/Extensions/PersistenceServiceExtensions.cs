@@ -21,13 +21,27 @@ public static class PersistenceServiceExtensions
             throw new InvalidOperationException("DefaultConnection is missing in appsettings.json");
         }
 
+        ServerVersion serverVersion;
+
+        try
+        {
+            // AutoDetect opens a connection so Pomelo can use the correct MySQL
+            // dialect. Wrapping it gives developers a clear startup error when
+            // MySQL is stopped or the connection string is wrong.
+            serverVersion = ServerVersion.AutoDetect(connectionString);
+        }
+        catch (Exception exception)
+        {
+            throw new InvalidOperationException(
+                "Could not connect to the MySQL database. Start MySQL and check the DefaultConnection value in appsettings.json.",
+                exception);
+        }
+
         services.AddDbContext<AppDbContext>(options =>
         {
-            // AutoDetect reads the MySQL server version from the connection so
-            // Pomelo can generate compatible SQL.
             options.UseMySql(
                 connectionString,
-                ServerVersion.AutoDetect(connectionString)
+                serverVersion
             );
         });
 
