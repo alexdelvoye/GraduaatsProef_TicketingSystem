@@ -71,6 +71,65 @@ The app only sends email notifications to clients. Admins use the dashboard to s
 
 Ticket descriptions and replies are limited to 3000 characters so they fit the database message column and return clear validation errors.
 
+## Start The Full App
+
+For development and showcase demos, the repository includes a PowerShell launcher:
+
+```powershell
+.\Start-Forcebit.bat
+```
+
+On Windows, you can also double-click `Start-Forcebit.bat` from File Explorer.
+The batch file opens the PowerShell launcher with the correct execution policy
+for this local script.
+
+You can also run the PowerShell script directly:
+
+```powershell
+.\scripts\Start-Forcebit.ps1
+```
+
+If Windows blocks local scripts because of the execution policy, run it with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Start-Forcebit.ps1
+```
+
+The script starts the backend in one PowerShell window and starts the Expo web
+frontend in another window. Expo opens the frontend in the browser. Keep the
+launcher window open while developing or presenting. When you press any key in
+that launcher window, it stops both services and closes the backend/frontend
+terminal windows.
+
+Runtime logs stay visible in the matching service window:
+
+- Backend `ILogger` output appears in the backend PowerShell window.
+- Frontend Expo/Metro output appears in the frontend PowerShell window.
+
+Default URLs:
+
+```text
+Backend:  http://localhost:5047
+Frontend: http://localhost:8081
+Swagger:  http://localhost:5047/swagger
+```
+
+Optional parameters:
+
+```powershell
+.\scripts\Start-Forcebit.ps1 -OpenSwagger
+.\scripts\Start-Forcebit.ps1 -NoBrowser
+.\scripts\Start-Forcebit.ps1 -FrontendPort 8082
+```
+
+`-NoBrowser` starts Expo without the `--web` browser-open flag. This is useful
+when you want the servers running but do not want a browser tab opened
+automatically.
+
+The launcher expects frontend dependencies to be installed already. If
+`Ticketing_Frontend/node_modules` is missing, run `npm install` inside
+`Ticketing_Frontend` first.
+
 ## Attachments
 
 Clients can add one or more attachments while creating a ticket, and clients/admins can add attachments to replies. The picker can be opened multiple times before sending; each new selection is added to the message. Attachments shown in the conversation can be clicked in the web app to download the stored file. The backend accepts:

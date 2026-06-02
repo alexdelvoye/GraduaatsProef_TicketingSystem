@@ -19,6 +19,41 @@ The dependency direction is important:
 
 The goal is to prevent controllers from becoming too smart. Controllers should not know how ticket rules work, how passwords are hashed, or how files are stored. They should receive a request, ask a service to perform the action, and return a result.
 
+## Development Launcher
+
+The repository contains `scripts/Start-Forcebit.ps1` for development and
+showcase demos. It starts the ASP.NET Core backend, starts the Expo web
+frontend, and lets Expo open the frontend URL in the browser.
+
+`Start-Forcebit.bat` is a Windows double-click entry point that delegates to the
+PowerShell script. This avoids duplicated startup logic while making the app
+easy to launch from File Explorer during a demonstration.
+
+The script is intentionally placed in `scripts` instead of inside the backend or
+frontend source folders. It is project automation, not application logic. This
+keeps the application layers focused while still making the demo startup
+repeatable.
+
+The launcher also checks for `dotnet`, `npm`, and installed frontend
+dependencies before starting the app. That makes setup problems visible at the
+beginning, which is safer during a presentation than discovering the issue after
+multiple terminal windows have opened.
+
+The launcher keeps running while the backend and frontend are active. Pressing
+any key in the launcher window stops the process trees that were started for the
+demo, which closes the backend and frontend terminal windows and prevents
+leftover `dotnet` or `npx expo` processes from continuing in the background.
+
+The backend and frontend are started in separate terminals so their logs stay
+separated by responsibility. Backend `ILogger` output remains in the backend
+terminal, while Expo/Metro output remains in the frontend terminal. The launcher
+does not redirect these streams to files, because terminal output is easier to
+watch during development and during a live project demonstration.
+
+Browser opening for the frontend is delegated to Expo's `--web` flag. The
+launcher does not open the frontend URL itself, because doing both would create
+two browser tabs for the same app.
+
 ## Single Responsibility Principle
 
 Single Responsibility Principle means that a class should have one main reason to change.
