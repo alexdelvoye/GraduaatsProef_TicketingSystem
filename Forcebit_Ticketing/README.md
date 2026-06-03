@@ -2,7 +2,7 @@
 
 Forcebit Ticketing is a support ticket system built with an ASP.NET Core backend, a MySQL database, and an Expo React Native frontend. Clients can create tickets, reply in a conversation, attach files, and follow the status. Admins can manage the support queue, reply to clients, and update ticket status.
 
-For architecture, workflow explanations, and graduaatsproef defense notes, see [TECHNICAL_README.md](TECHNICAL_README.md).
+For architecture, workflow explanations and design decisions, see [TECHNICAL_README.md](TECHNICAL_README.md).
 
 ## Features
 
@@ -233,12 +233,3 @@ If the frontend cannot call the API:
 - For physical device testing, use the computer LAN IP instead of `localhost`.
 
 If login fails after JWT configuration changes, check the `Jwt` settings used by token creation and validation.
-
-## Documentation Rule
-
-This project is part of a graduaatsproef. When code changes affect behavior, setup, architecture, or an important design decision, update the matching comments and documentation in the same change.
-
-Use:
-
-- `README.md` for practical setup and usage.
-- `TECHNICAL_README.md` for architecture, theory, workflows, and defense notes.

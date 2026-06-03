@@ -1,6 +1,6 @@
 # Forcebit Ticketing Technical Deep Dive
 
-This document explains how the project is structured and why the main design choices were made. The normal [README.md](README.md) is the practical run guide. This file is the educational version: architecture, theory, workflows, and defense notes.
+This document explains how the project is structured and why the main design choices were made. The normal [README.md](README.md) is the practical run guide. This file is the educational version: architecture, theory, workflows and design decisions.
 
 ## How To Read This Project
 
@@ -12,8 +12,6 @@ When you need to understand a feature, start at the user action and follow the d
 4. Service: the application use case and coordination point.
 5. Domain entity/rule: business behavior that should not depend on HTTP or EF Core.
 6. Repository and EF Core configuration: database queries, includes, relationships, and persistence details.
-
-This reading path is useful during a defense because it shows where each responsibility lives instead of jumping randomly between files.
 
 ## Architecture Overview
 
@@ -491,7 +489,7 @@ The launcher:
 
 This is development automation, not application logic, so it lives in `scripts` rather than inside a backend or frontend source folder.
 
-## Design Decisions To Defend
+## Design Decisions
 
 ### Why layered architecture?
 
@@ -528,29 +526,6 @@ Derived state reduces duplication. The app stores raw API results and calculates
 ### Why client-side pagination for now?
 
 The current APIs return the full lists needed by the dashboards, and the project size is still local/demo scale. Client-side pagination centralizes the UI pattern now. If the data grows, the same controls can be connected to server-side pagination later.
-
-## Documentation And Comment Rule
-
-Every meaningful code change should trigger a documentation check.
-
-Update comments or documentation when a change affects:
-
-- User-facing behavior.
-- Setup steps.
-- Architecture.
-- Validation rules.
-- Ticket workflow rules.
-- Security or authorization boundaries.
-- File upload behavior.
-- Email behavior.
-- Demo or defense explanation.
-
-Inline comments should explain intent, trade-offs, or non-obvious constraints. They should not narrate obvious code line by line.
-
-Use:
-
-- `README.md` for practical project setup.
-- `TECHNICAL_README.md` for deeper explanation and defense material.
 
 ## Future Improvements
 
