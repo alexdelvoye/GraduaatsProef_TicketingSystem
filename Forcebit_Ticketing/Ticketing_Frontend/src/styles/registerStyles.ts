@@ -14,5 +14,9 @@ export const registerStyles = StyleSheet.create({
     padding: 24,
   },
 
+  authContainerCompact: {
+    padding: 16,
+  },
+
   ...authSharedStyleDefinitions,
 });

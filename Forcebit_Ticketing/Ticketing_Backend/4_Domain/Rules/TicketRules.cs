@@ -35,9 +35,17 @@ public static class TicketRules
         UserRole userRole,
         TicketStatus newStatus)
     {
+        if (newStatus == TicketStatus.New)
+        {
+            // New is assigned only when a ticket is created. Once the ticket
+            // has a conversation history, users should not move it back to New.
+            return false;
+        }
+
         if (userRole == UserRole.Admin)
         {
-            // Admins manage the full support workflow: Open, InProgress, Closed.
+            // Admins can move tickets between active discussion and resolved.
+            // New is intentionally excluded because it is creation-only.
             return true;
         }
 
@@ -46,26 +54,36 @@ public static class TicketRules
             return false;
         }
 
-        // Clients may close their own ticket when they consider the issue fixed,
-        // and may reopen a closed ticket when the problem comes back. They may
-        // not move tickets into InProgress because that is an internal support
-        // workflow state.
-        return newStatus == TicketStatus.Open || newStatus == TicketStatus.Closed;
+        if (newStatus == TicketStatus.Closed)
+        {
+            // Clients may close their own ticket when they consider the issue fixed.
+            return ticket.Status != TicketStatus.Closed;
+        }
+
+        if (newStatus == TicketStatus.Open)
+        {
+            // Reopening should not make the ticket look brand new again. It
+            // moves back to the active Open conversation state instead.
+            return ticket.Status == TicketStatus.Closed;
+        }
+
+        // Clients cannot set New because that status is only for newly created,
+        // not-yet-handled tickets.
+        return false;
     }
 
-    public static bool ShouldMoveToInProgress(Ticket ticket, UserRole senderRole)
+    public static bool ShouldMoveToOpen(Ticket ticket, UserRole senderRole)
     {
-        // An admin reply is the moment support has started handling the ticket.
-        // Client replies should not move a new ticket into InProgress.
-        return ticket.Status == TicketStatus.Open && senderRole == UserRole.Admin;
+        // An admin reply is the moment support has started handling a new
+        // ticket, so the ticket moves into the active Open conversation state.
+        return ticket.Status == TicketStatus.New && senderRole == UserRole.Admin;
     }
 
-    // API/frontends sometimes send readable values like "In Progress" or
-    // "Technical Problem". The enum values are stored without spaces, so these
-    // helpers normalize input before parsing.
+    // API/frontends sometimes send readable values like "Technical Problem".
+    // The enum values are stored without spaces, so these helpers normalize
+    // input before parsing.
     public static bool TryParseStatus(string value, out TicketStatus status)
     {
-        // Removing spaces makes both "InProgress" and "In Progress" acceptable.
         return Enum.TryParse(value.Replace(" ", string.Empty), true, out status);
     }
 

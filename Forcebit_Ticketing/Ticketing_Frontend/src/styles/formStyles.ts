@@ -34,6 +34,10 @@ export const formStyleDefinitions = {
     marginBottom: 4,
   },
 
+  optionGridCompact: {
+    gap: 8,
+  },
+
   optionButton: {
     backgroundColor: colors.input,
     borderColor: colors.inputBorder,
@@ -41,6 +45,12 @@ export const formStyleDefinitions = {
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
+  },
+
+  optionButtonCompact: {
+    flexGrow: 1,
+    minHeight: 44,
+    justifyContent: "center",
   },
 
   optionButtonSelected: {

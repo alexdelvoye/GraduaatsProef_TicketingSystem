@@ -9,6 +9,7 @@ import { submitFormWithValidationToast } from "./formErrorHelpers";
 
 import { useNotifications } from "../context/NotificationContext";
 import { useAttachmentPicker } from "../hooks/useAttachmentPicker";
+import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
 import { ticketMessageSchema } from "../validation/ticketSchema";
@@ -35,6 +36,7 @@ export function TicketReplyForm({
   onSubmit,
 }: TicketReplyFormProps) {
   const { showError } = useNotifications();
+  const { isCompact, isNarrow } = useResponsiveLayout();
   const { attachments, attachmentError, pickAttachments, clearAttachments } =
     useAttachmentPicker("per reply");
 
@@ -110,6 +112,8 @@ export function TicketReplyForm({
           <Pressable
             style={[
               styles.primaryButton,
+              isCompact ? styles.primaryButtonCompact : null,
+              isNarrow ? styles.primaryButtonNarrow : null,
               (disabled || isSubmitting) && styles.buttonDisabled,
             ]}
             onPress={async () => {

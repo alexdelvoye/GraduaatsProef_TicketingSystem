@@ -137,7 +137,7 @@ The launcher expects frontend dependencies to be installed already. If
 
 ## Attachments
 
-Clients can add one or more attachments while creating a ticket, and clients/admins can add attachments to replies. The picker can be opened multiple times before sending; each new selection is added to the message. Attachments shown in the conversation can be clicked in the web app to download the stored file. The backend accepts:
+Clients can add one or more attachments while creating a ticket, and clients/admins can add attachments to replies. The picker can be opened multiple times before sending; each new selection is added to the message. Attachments shown in the conversation can be clicked in the web app to download the stored file. PNG and JPG/JPEG attachments also show an inline preview in the conversation, so users can inspect screenshots or photos without downloading them first. The backend accepts:
 
 ```text
 .png
@@ -183,6 +183,18 @@ Apply migrations when the database model changes:
 ```powershell
 dotnet ef database update --project Ticketing_Backend/3_Persistence/3_Persistence.csproj --startup-project Ticketing_Backend/1_Api/1_Api.csproj
 ```
+
+The ticket status workflow is:
+
+```text
+New -> Open -> Closed
+```
+
+`New` means the ticket is waiting for the first support reply. `Open` means the
+conversation is active. `Closed` means the issue is resolved. Reopening a closed
+ticket moves it back to `Open`, not `New`, because the ticket already has
+conversation history. `New` is assigned only during ticket creation and is not
+available as a manual status update.
 
 The API runs on:
 
@@ -285,9 +297,11 @@ Implemented:
 - JWT authentication.
 - Client ticket creation, with the initial description saved as the first ticket message.
 - Ticket creation and replies with attachments.
+- Inline previews for PNG and JPG/JPEG conversation attachments.
 - Ticket list and ticket detail views.
 - Client and admin ticket messages.
-- Admin status updates.
+- Chat-style ticket conversation with client/admin messages on opposite sides.
+- Admin status updates with `New`, `Open`, and `Closed` workflow states.
 - Client close and reopen actions for their own tickets.
 - Profile editing for name and email, with company and role shown as read-only account details.
 - Client account removal from the profile screen.
@@ -295,6 +309,7 @@ Implemented:
 - Backend exception middleware with consistent error responses.
 - Frontend Formik/Yup validation for the main forms.
 - Frontend toast notifications for success and error feedback.
+- Responsive frontend layout for desktop, tablet-sized browser widths, and narrow screens.
 - Structured backend logging.
 
 Deferred for later:

@@ -11,9 +11,8 @@ export const attachmentStyleDefinitions = {
   },
 
   attachmentList: {
-    gap: 6,
-    marginTop: 10,
-    marginBottom: 12,
+    gap: 10,
+    marginTop: 12,
   },
 
   attachmentHelpText: {
@@ -53,5 +52,26 @@ export const attachmentStyleDefinitions = {
     color: colors.primary,
     fontSize: 13,
     fontWeight: "700",
+  },
+
+  // Message attachments can contain an inline image preview followed by the
+  // normal download button, so they need their own vertical spacing.
+  messageAttachment: {
+    gap: 6,
+  },
+
+  // Fixed preview height prevents large screenshots from resizing the whole
+  // conversation unpredictably.
+  attachmentPreviewImage: {
+    width: "100%",
+    height: 180,
+    backgroundColor: colors.backgroundDeep,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: 10,
+  },
+
+  attachmentPreviewImageCompact: {
+    height: 150,
   },
 } as const;

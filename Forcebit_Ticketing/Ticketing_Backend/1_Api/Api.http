@@ -118,13 +118,13 @@ Content-Type: application/pdf
 < ./example.pdf
 --replyBoundary--
 
-### Admin sets status to In Progress
+### Admin sets status to active/open conversation
 PATCH {{Api_HostAddress}}/api/tickets/{{TicketId}}/status
 Authorization: Bearer {{AdminToken}}
 Content-Type: application/json
 
 {
-  "status": "InProgress"
+  "status": "Open"
 }
 
 ### Admin closes ticket

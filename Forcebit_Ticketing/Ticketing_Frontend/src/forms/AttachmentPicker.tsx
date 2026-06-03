@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 
+import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { ATTACHMENT_UPLOAD_LIMIT_LABEL } from "../utils/attachmentLimits";
 
@@ -26,13 +27,21 @@ export function AttachmentPicker({
   onPickAttachments,
   onClearAttachments,
 }: AttachmentPickerProps) {
+  // Attachment action buttons become flexible on phone-width layouts so long
+  // labels do not overflow or create cramped controls.
+  const { isNarrow } = useResponsiveLayout();
+
   return (
     // This component only renders the attachment controls. The picker state,
     // duplicate detection and size validation live in useAttachmentPicker.
     <>
       <View style={styles.attachmentActions}>
         <Pressable
-          style={[styles.secondaryButton, disabled && styles.buttonDisabled]}
+          style={[
+            styles.secondaryButton,
+            isNarrow ? styles.secondaryButtonCompact : null,
+            disabled && styles.buttonDisabled,
+          ]}
           onPress={onPickAttachments}
           disabled={disabled}
         >
@@ -41,7 +50,11 @@ export function AttachmentPicker({
 
         {attachments.length > 0 ? (
           <Pressable
-            style={[styles.secondaryButton, disabled && styles.buttonDisabled]}
+            style={[
+              styles.secondaryButton,
+              isNarrow ? styles.secondaryButtonCompact : null,
+              disabled && styles.buttonDisabled,
+            ]}
             onPress={onClearAttachments}
             disabled={disabled}
           >

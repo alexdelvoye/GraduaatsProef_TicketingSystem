@@ -16,10 +16,21 @@ export const headerStyleDefinitions = {
     gap: 12,
   },
 
+  headerCompact: {
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+
   headerActions: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+  },
+
+  headerActionsCompact: {
+    width: "100%",
+    flexWrap: "wrap",
   },
 
   logo: {
@@ -27,5 +38,9 @@ export const headerStyleDefinitions = {
     fontSize: 24,
     fontWeight: "700",
     letterSpacing: 0,
+  },
+
+  logoCompact: {
+    fontSize: 22,
   },
 } as const;

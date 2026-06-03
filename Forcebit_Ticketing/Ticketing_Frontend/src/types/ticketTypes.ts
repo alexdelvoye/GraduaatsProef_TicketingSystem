@@ -1,6 +1,6 @@
 // Frontend version of the backend TicketStatus enum. Literal union types give
 // autocomplete and prevent typo values like "In progress".
-export type TicketStatus = "Open" | "InProgress" | "Closed";
+export type TicketStatus = "New" | "Open" | "Closed";
 
 // These values mirror backend ticket categories.
 export type TicketCategory =
@@ -31,14 +31,12 @@ export type TicketGroup = {
 };
 
 // Arrays are used by forms/buttons when rendering selectable values.
-export const ticketStatuses: TicketStatus[] = ["Open", "InProgress", "Closed"];
+export const ticketStatuses: TicketStatus[] = ["New", "Open", "Closed"];
 
-export const statusFilters: StatusFilter[] = [
-  "All",
-  "Open",
-  "InProgress",
-  "Closed",
-];
+// New is creation-only, so status update controls expose only actionable states.
+export const ticketStatusUpdateOptions: TicketStatus[] = ["Open", "Closed"];
+
+export const statusFilters: StatusFilter[] = ["All", "New", "Open", "Closed"];
 
 export const ticketCategories: TicketCategory[] = [
   "Sales",
@@ -131,6 +129,6 @@ export type ClientListItem = {
   name: string;
   companyName: string;
   email: string;
-  openTicketCount: number;
+  activeTicketCount: number;
   closedTicketCount: number;
 };

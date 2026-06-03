@@ -43,7 +43,8 @@ namespace Domain.Entities
                 Title = title.Trim(),
                 Category = category,
                 Subject = subject,
-                Status = TicketStatus.Open,
+                // New tickets still need a first support reply.
+                Status = TicketStatus.New,
                 CreatedAt = createdAt,
                 UpdatedAt = createdAt
             };
@@ -52,7 +53,7 @@ namespace Domain.Entities
         public TicketMessage AddMessage(
             Guid senderId,
             string message,
-            bool moveToInProgress,
+            bool moveToOpen,
             DateTime createdAt)
         {
             // Adding a message also updates the ticket timestamp and may change
@@ -70,9 +71,9 @@ namespace Domain.Entities
             Messages.Add(ticketMessage);
             UpdatedAt = createdAt;
 
-            if (moveToInProgress)
+            if (moveToOpen)
             {
-                Status = TicketStatus.InProgress;
+                Status = TicketStatus.Open;
                 ClosedAt = null;
             }
 

@@ -13,6 +13,10 @@ export const authSharedStyleDefinitions = {
     padding: 28,
   },
 
+  authCardCompact: {
+    padding: 20,
+  },
+
   logo: {
     color: colors.text,
     fontSize: 24,
@@ -20,11 +24,19 @@ export const authSharedStyleDefinitions = {
     marginBottom: 32,
   },
 
+  authLogoCompact: {
+    marginBottom: 24,
+  },
+
   title: {
     color: colors.text,
     fontSize: 32,
     fontWeight: "600",
     marginBottom: 8,
+  },
+
+  authTitleCompact: {
+    fontSize: 28,
   },
 
   subtitle: {

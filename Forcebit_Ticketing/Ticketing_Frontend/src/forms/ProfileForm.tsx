@@ -5,6 +5,7 @@ import { FormTextInput } from "./FormTextInput";
 import { submitFormWithValidationToast } from "./formErrorHelpers";
 
 import { useNotifications } from "../context/NotificationContext";
+import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { profileSchema } from "../validation/profileSchema";
 
@@ -23,6 +24,10 @@ export function ProfileForm({
   onSubmit,
 }: ProfileFormProps) {
   const { showError } = useNotifications();
+
+  // The save action becomes full width on compact layouts, matching the other
+  // primary form actions used throughout the app.
+  const { isCompact } = useResponsiveLayout();
 
   const initialValues: ProfileFormValues = {
     name: user.name,
@@ -74,11 +79,17 @@ export function ProfileForm({
             <Text style={styles.errorText}>{errorMessage}</Text>
           ) : null}
 
-          <View style={styles.profileFormActions}>
+          <View
+            style={[
+              styles.profileFormActions,
+              isCompact ? styles.profileFormActionsCompact : null,
+            ]}
+          >
             <Pressable
               style={[
                 styles.primaryButton,
                 styles.profileSaveButton,
+                isCompact ? styles.profileSaveButtonCompact : null,
                 isSubmitting && styles.buttonDisabled,
               ]}
               onPress={async () => {

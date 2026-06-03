@@ -8,6 +8,7 @@ import { submitFormWithValidationToast } from "./formErrorHelpers";
 
 import { useNotifications } from "../context/NotificationContext";
 import { useAttachmentPicker } from "../hooks/useAttachmentPicker";
+import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { ticketCategories, ticketSubjects } from "../types";
 import { createTicketSchema } from "../validation/ticketSchema";
@@ -38,6 +39,7 @@ function formatCategory(category: string) {
 
 export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
   const { showError } = useNotifications();
+  const { isCompact, isNarrow } = useResponsiveLayout();
   const { attachments, attachmentError, pickAttachments, clearAttachments } =
     useAttachmentPicker("per ticket");
 
@@ -132,6 +134,8 @@ export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
           <Pressable
             style={[
               styles.primaryButton,
+              isCompact ? styles.primaryButtonCompact : null,
+              isNarrow ? styles.primaryButtonNarrow : null,
               isSubmitting && styles.buttonDisabled,
             ]}
             onPress={async () => {

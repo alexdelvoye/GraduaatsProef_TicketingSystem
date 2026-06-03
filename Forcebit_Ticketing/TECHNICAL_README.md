@@ -299,6 +299,7 @@ The attachment workflow follows the same three-layer structure as the rest of th
 4. `TicketService` creates the message, saves files through `IFileStorageService`, creates `TicketAttachment` metadata rows, and sends admin attachments through Brevo when the client should receive an email. During ticket creation, selected files are attached to the initial message because the description is stored as the first conversation message.
 5. `LocalFileStorageService` validates size and extension, writes the file to the configured upload folder, and returns the stored file path. It also owns protected file opening/deletion path resolution, so path safety stays inside the storage implementation instead of being repeated in controllers or workflow services.
 6. Existing attachments are downloaded through a protected API endpoint. `attachmentApi` fetches the file with the JWT token and creates a temporary browser download link, so the upload folder does not need to be publicly exposed.
+7. PNG and JPG/JPEG attachments use the same protected endpoint for inline previews. The frontend fetches the file with the JWT token, creates a temporary object URL, and revokes old preview URLs when the ticket data changes or the screen unmounts. This keeps the upload folder private while avoiding forced downloads for normal screenshots/photos.
 
 The database stores attachment metadata, not the binary file. The metadata fields are `Id`, `TicketId`, `MessageId`, `UploadedById`, `FileName`, `FilePath`, `ContentType`, and `UploadedAt`.
 
@@ -395,6 +396,18 @@ rounded darker navigation/cards, white text, muted helper text, and lime action
 buttons. The shared tokens live in `theme.ts`, so colors and layout values do
 not have to be repeated across every stylesheet.
 
+The ticket detail conversation is styled like a chat thread. Client messages
+are aligned to the left with a dark bubble, while admin messages are aligned to
+the right with a lime bubble. This makes the sender role visible at a glance,
+which is easier to scan than a list of identical full-width message cards.
+
+Responsive layout decisions use the `useResponsiveLayout` hook. It exposes
+named `isCompact` and `isNarrow` breakpoints so screens, forms, the shared
+header, ticket cards, option buttons, and chat bubbles adjust consistently.
+Compact layouts reduce page padding, card padding, heading sizes, and preview
+heights. Narrow layouts let important actions use the full available width and
+allow chat bubbles to grow wider so messages remain readable.
+
 The authenticated ticket area uses `homeStyles` as a small public import for
 screens and components, but `homeStyles` is now only an aggregator. The actual
 style definitions are split by responsibility:
@@ -441,6 +454,19 @@ messages and attachment rows cascade from the deleted tickets.
 
 ## Ticket Workflow
 
+Ticket statuses:
+
+- `New` means a client has created a ticket and support has not replied yet.
+- `Open` means the conversation is active or a closed ticket was reopened.
+- `Closed` means the issue is resolved and the conversation is read-only.
+`New` is creation-only. Status update controls and domain rules allow moving
+tickets to `Open` or `Closed`, but not back to `New`.
+
+Older development databases may still contain the old stored strings `Open` and
+`InProgress`. The `RenameTicketWorkflowStatuses` migration converts those rows
+to `New` and `Open` so database data, backend enum values, and frontend labels
+use the same workflow language.
+
 Client ticket creation:
 
 1. Client fills in the ticket form.
@@ -450,8 +476,9 @@ Client ticket creation:
 5. The backend validates the user and ticket rules.
 6. The ticket container is created.
 7. The form description is saved as the first `TicketMessage`.
-8. The ticket and initial message are saved through the repository.
-9. The frontend shows a success toast.
+8. The ticket starts with status `New`.
+9. The ticket and initial message are saved through the repository.
+10. The frontend shows a success toast.
 
 Admin reply:
 
@@ -460,11 +487,12 @@ Admin reply:
 3. The frontend validates the message.
 4. The backend checks that the user is allowed to reply.
 5. The message is added to the ticket.
-6. The updated ticket is returned.
+6. If the ticket was `New`, the status changes to `Open`.
+7. The updated ticket is returned.
 
 Status update:
 
-1. Admin selects a new status.
+1. Admin selects `Open` or `Closed`.
 2. The backend checks role and status rules.
 3. The ticket status changes through domain behavior.
 4. The database is updated.
@@ -473,10 +501,10 @@ Status update:
 Client close/reopen:
 
 1. Client opens one of their own tickets.
-2. If the ticket is open or in progress, the client can close it.
+2. If the ticket is `New` or `Open`, the client can close it.
 3. If the ticket is closed, the client can reopen it.
 4. Reopening moves the ticket back to `Open`.
-5. Clients cannot set `InProgress`, because that is an internal support workflow state.
+5. Clients cannot set `New`, because that state is only for newly created tickets.
 
 ## Development Documentation Rule
 
@@ -547,7 +575,7 @@ service commands/results, but that would add extra boilerplate here.
 
 Why status rules are in the domain:
 
-Ticket status permissions are business rules. Admins can manage the full workflow, but clients can only close or reopen their own tickets. Keeping this rule in `TicketRules` prevents the frontend and controller from becoming the only place where the rule exists.
+Ticket status permissions are business rules. `New` is assigned only during ticket creation. Admins can move tickets between `Open` and `Closed`, while clients can only close or reopen their own tickets. Reopening uses `Open`, not `New`, because an existing conversation should not look like a brand-new ticket. Keeping this rule in `TicketRules` prevents the frontend and controller from becoming the only place where the rule exists.
 
 Why the initial description is a message:
 

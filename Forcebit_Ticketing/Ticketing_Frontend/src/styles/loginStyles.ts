@@ -14,5 +14,9 @@ export const loginStyles = StyleSheet.create({
     padding: 24,
   },
 
+  authContainerCompact: {
+    padding: 16,
+  },
+
   ...authSharedStyleDefinitions,
 });

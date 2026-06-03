@@ -18,6 +18,19 @@ export const sharedStyleDefinitions = {
     paddingBottom: 40,
   },
 
+  // Compact/narrow page variants are applied by useResponsiveLayout so every
+  // authenticated screen tightens spacing in the same way.
+  contentCompact: {
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 28,
+  },
+
+  contentNarrow: {
+    paddingHorizontal: 12,
+    paddingTop: 16,
+  },
+
   hero: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -25,6 +38,11 @@ export const sharedStyleDefinitions = {
     flexWrap: "wrap",
     gap: 20,
     marginBottom: 30,
+  },
+
+  heroCompact: {
+    marginBottom: 22,
+    gap: 14,
   },
 
   eyebrow: {
@@ -44,11 +62,22 @@ export const sharedStyleDefinitions = {
     marginBottom: 18,
   },
 
+  // Cards keep the same visual identity on small screens, but use less padding
+  // so form fields and conversation content have more usable width.
+  cardCompact: {
+    padding: 16,
+    marginBottom: 14,
+  },
+
   title: {
     color: colors.text,
     fontSize: 36,
     fontWeight: "600",
     marginBottom: 8,
+  },
+
+  titleCompact: {
+    fontSize: 28,
   },
 
   muted: {
@@ -63,11 +92,21 @@ export const sharedStyleDefinitions = {
     gap: 16,
   },
 
+  sectionHeaderCompact: {
+    alignItems: "flex-start",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+
   sectionTitle: {
     color: colors.text,
     fontSize: 24,
     fontWeight: "600",
     marginBottom: 4,
+  },
+
+  sectionTitleCompact: {
+    fontSize: 20,
   },
 
   countBadge: {
@@ -89,6 +128,10 @@ export const sharedStyleDefinitions = {
     borderWidth: 1,
     borderRadius: layout.radiusMedium,
     padding: 16,
+  },
+
+  emptyTextCompact: {
+    padding: 14,
   },
 
   loadingState: {

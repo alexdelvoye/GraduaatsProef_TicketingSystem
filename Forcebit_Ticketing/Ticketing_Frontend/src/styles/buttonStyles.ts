@@ -24,6 +24,14 @@ export const buttonStyleDefinitions = {
     paddingHorizontal: 16,
   },
 
+  // Reused by header and attachment actions when the available width is too
+  // small for multiple fixed-size buttons.
+  secondaryButtonCompact: {
+    flexGrow: 1,
+    flexBasis: 120,
+    alignItems: "center",
+  },
+
   secondaryButtonText: {
     color: colors.text,
     fontWeight: "700",
@@ -35,6 +43,16 @@ export const buttonStyleDefinitions = {
     paddingVertical: 14,
     paddingHorizontal: 22,
     alignItems: "center",
+  },
+
+  // Keep important actions easy to tap on compact layouts.
+  primaryButtonCompact: {
+    minHeight: 44,
+    justifyContent: "center",
+  },
+
+  primaryButtonNarrow: {
+    width: "100%",
   },
 
   primaryButtonText: {

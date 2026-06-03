@@ -9,6 +9,7 @@ import {
 
 import { AppHeader } from "../components/AppHeader";
 import { useHomeScreen } from "../hooks/useHomeScreen";
+import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
 import {
@@ -29,11 +30,16 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     errorMessage,
     loadTickets,
   } = useHomeScreen();
+  const { isCompact, isNarrow } = useResponsiveLayout();
 
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[
+        styles.content,
+        isCompact ? styles.contentCompact : null,
+        isNarrow ? styles.contentNarrow : null,
+      ]}
       // Pull-to-refresh reuses the same load function as initial loading, but
       // asks the hook to show the refresh spinner instead.
       refreshControl={
@@ -51,10 +57,12 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         }}
       />
 
-      <View style={styles.hero}>
+      <View style={[styles.hero, isCompact ? styles.heroCompact : null]}>
         <View>
           <Text style={styles.eyebrow}>{user?.companyName}</Text>
-          <Text style={styles.title}>Tickets</Text>
+          <Text style={[styles.title, isCompact ? styles.titleCompact : null]}>
+            Tickets
+          </Text>
           <Text style={styles.muted}>
             {activeTicketCount} active ticket
             {activeTicketCount === 1 ? "" : "s"}
@@ -64,7 +72,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         {user?.role === "Client" ? (
           // Only clients can create tickets. Admins use the admin dashboard.
           <Pressable
-            style={styles.primaryButton}
+            style={[
+              styles.primaryButton,
+              isCompact ? styles.primaryButtonCompact : null,
+              isNarrow ? styles.primaryButtonNarrow : null,
+            ]}
             onPress={() => navigation.navigate("NewTicket")}
           >
             <Text style={styles.primaryButtonText}>New ticket</Text>
@@ -84,10 +96,28 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         // groupedTickets is prepared by the hook so this screen only renders
         // each section.
         groupedTickets.map((group) => (
-          <View key={group.status} style={styles.ticketSection}>
-            <View style={styles.sectionHeader}>
+          <View
+            key={group.status}
+            style={[
+              styles.ticketSection,
+              isCompact ? styles.ticketSectionCompact : null,
+            ]}
+          >
+            <View
+              style={[
+                styles.sectionHeader,
+                isCompact ? styles.sectionHeaderCompact : null,
+              ]}
+            >
               <View>
-                <Text style={styles.sectionTitle}>{group.title}</Text>
+                <Text
+                  style={[
+                    styles.sectionTitle,
+                    isCompact ? styles.sectionTitleCompact : null,
+                  ]}
+                >
+                  {group.title}
+                </Text>
                 <Text style={styles.muted}>{group.description}</Text>
               </View>
 
@@ -95,7 +125,12 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             </View>
 
             {group.tickets.length === 0 ? (
-              <Text style={styles.emptyText}>
+              <Text
+                style={[
+                  styles.emptyText,
+                  isCompact ? styles.emptyTextCompact : null,
+                ]}
+              >
                 No tickets in this collection.
               </Text>
             ) : (
@@ -103,16 +138,25 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 // Pressing a ticket opens the shared detail screen.
                 <Pressable
                   key={ticket.id}
-                  style={styles.ticketCard}
+                  style={[
+                    styles.ticketCard,
+                    isCompact ? styles.ticketCardCompact : null,
+                  ]}
                   onPress={() =>
                     navigation.navigate("TicketDetail", { ticketId: ticket.id })
                   }
                 >
-                  <View style={styles.ticketCardHeader}>
+                  <View
+                    style={[
+                      styles.ticketCardHeader,
+                      isCompact ? styles.ticketCardHeaderCompact : null,
+                    ]}
+                  >
                     <Text style={styles.ticketTitle}>{ticket.title}</Text>
                     <Text
                       style={[
                         styles.statusPill,
+                        isCompact ? styles.statusPillCompact : null,
                         ticket.status === "Closed" && styles.statusPillClosed,
                       ]}
                     >

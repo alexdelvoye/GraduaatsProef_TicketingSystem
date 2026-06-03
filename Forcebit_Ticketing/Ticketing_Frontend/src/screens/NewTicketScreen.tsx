@@ -9,6 +9,7 @@ import {
 import { AppHeader } from "../components/AppHeader";
 import { NewTicketForm } from "../forms/NewTicketForm";
 import { useNewTicketScreen } from "../hooks/useNewTicketScreen";
+import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { homeStyles as styles } from "../styles/homeStyles";
 
 import type { NewTicketScreenProps } from "../types";
@@ -20,6 +21,7 @@ export default function NewTicketScreen({ navigation }: NewTicketScreenProps) {
   const { errorMessage, handleCreateTicket } = useNewTicketScreen(() =>
     navigation.navigate("Home"),
   );
+  const { isCompact, isNarrow } = useResponsiveLayout();
 
   return (
     <KeyboardAvoidingView
@@ -27,11 +29,19 @@ export default function NewTicketScreen({ navigation }: NewTicketScreenProps) {
       // Keeps the multiline description input usable when the keyboard opens.
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          isCompact ? styles.contentCompact : null,
+          isNarrow ? styles.contentNarrow : null,
+        ]}
+      >
         <AppHeader onBack={() => navigation.goBack()} />
 
-        <View style={styles.card}>
-          <Text style={styles.title}>New ticket</Text>
+        <View style={[styles.card, isCompact ? styles.cardCompact : null]}>
+          <Text style={[styles.title, isCompact ? styles.titleCompact : null]}>
+            New ticket
+          </Text>
 
           {/* NewTicketForm owns Formik/Yup details; this screen only places it
              in the page layout. */}

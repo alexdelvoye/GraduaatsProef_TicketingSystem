@@ -10,6 +10,10 @@ export const profileStyleDefinitions = {
     marginTop: 2,
   },
 
+  profilePageActionsCompact: {
+    alignItems: "stretch",
+  },
+
   profileLogoutButton: {
     borderColor: colors.primary,
     borderWidth: 1,
@@ -35,6 +39,11 @@ export const profileStyleDefinitions = {
     fontWeight: "700",
   },
 
+  profileActionButtonCompact: {
+    flexBasis: "100%",
+    minWidth: 0,
+  },
+
   profileFormActions: {
     flexDirection: "row",
     justifyContent: "flex-start",
@@ -42,8 +51,17 @@ export const profileStyleDefinitions = {
     marginBottom: 24,
   },
 
+  profileFormActionsCompact: {
+    alignItems: "stretch",
+  },
+
   profileSaveButton: {
     minWidth: 190,
+  },
+
+  profileSaveButtonCompact: {
+    minWidth: 0,
+    width: "100%",
   },
 
   profileReadOnlySection: {

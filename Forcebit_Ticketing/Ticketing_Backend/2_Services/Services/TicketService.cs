@@ -121,7 +121,7 @@ namespace Services.Services
             var initialMessage = ticket.AddMessage(
                 clientId,
                 request.InitialMessage,
-                moveToInProgress: false,
+                moveToOpen: false,
                 ticket.CreatedAt);
 
             initialMessage.Sender = client;
@@ -194,8 +194,9 @@ namespace Services.Services
             if (!TicketRules.TryParseStatus(request.Status, out var status))
                 throw new BadRequestException("Invalid ticket status.");
 
-            // Status permissions are domain rules: admins can manage the whole
-            // workflow, while clients can only close/reopen their own tickets.
+            // Status permissions are domain rules: admins manage the full
+            // workflow, while clients can close or reopen their own tickets.
+            // Reopen uses Open, not New, because the ticket already has history.
             if (!TicketRules.CanChangeStatus(ticket, currentUserId, role, status))
                 throw new ForbiddenException("You are not allowed to set this ticket status.");
 
@@ -262,12 +263,12 @@ namespace Services.Services
             if (sender == null)
                 throw new NotFoundException("Sender not found.");
 
-            // Domain behavior: when an admin replies to an open ticket, the
-            // ticket automatically becomes InProgress.
+            // Domain behavior: when an admin replies to a new ticket, the
+            // ticket becomes Open because the conversation is now active.
             var message = ticket.AddMessage(
                 senderId,
                 request.Message,
-                TicketRules.ShouldMoveToInProgress(ticket, role),
+                TicketRules.ShouldMoveToOpen(ticket, role),
                 DateTime.UtcNow);
 
             await _ticketRepository.AddMessageAsync(message);

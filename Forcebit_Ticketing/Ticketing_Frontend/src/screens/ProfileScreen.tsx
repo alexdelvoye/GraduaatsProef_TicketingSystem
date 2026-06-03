@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { AppHeader } from "../components/AppHeader";
 import { ProfileForm } from "../forms/ProfileForm";
 import { useProfileScreen } from "../hooks/useProfileScreen";
+import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { homeStyles as styles } from "../styles/homeStyles";
 
 import type { ProfileScreenProps } from "../types";
@@ -15,16 +16,28 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
     handleUpdateProfile,
     confirmDeleteProfile,
   } = useProfileScreen();
+  const { isCompact, isNarrow } = useResponsiveLayout();
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[
+        styles.content,
+        isCompact ? styles.contentCompact : null,
+        isNarrow ? styles.contentNarrow : null,
+      ]}
+    >
       <View>
         <AppHeader onBack={() => navigation.goBack()} />
 
         {user ? (
           <>
-            <View style={styles.card}>
-              <Text style={styles.title}>Profile</Text>
+            <View style={[styles.card, isCompact ? styles.cardCompact : null]}>
+              <Text
+                style={[styles.title, isCompact ? styles.titleCompact : null]}
+              >
+                Profile
+              </Text>
               <Text style={styles.muted}>
                 Update the contact details used for ticket communication.
               </Text>
@@ -36,7 +49,14 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
               />
 
               <View style={styles.profileReadOnlySection}>
-                <Text style={styles.sectionTitle}>Account details</Text>
+                <Text
+                  style={[
+                    styles.sectionTitle,
+                    isCompact ? styles.sectionTitleCompact : null,
+                  ]}
+                >
+                  Account details
+                </Text>
 
                 <View style={styles.profileDetailGrid}>
                   <View style={styles.profileDetailItem}>
@@ -54,9 +74,17 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
               </View>
             </View>
 
-            <View style={styles.profilePageActions}>
+            <View
+              style={[
+                styles.profilePageActions,
+                isCompact ? styles.profilePageActionsCompact : null,
+              ]}
+            >
               <Pressable
-                style={styles.profileLogoutButton}
+                style={[
+                  styles.profileLogoutButton,
+                  isCompact ? styles.profileActionButtonCompact : null,
+                ]}
                 onPress={() => {
                   void signOut();
                 }}
@@ -66,7 +94,10 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
 
               {user.role === "Client" ? (
                 <Pressable
-                  style={styles.profileDeleteButton}
+                  style={[
+                    styles.profileDeleteButton,
+                    isCompact ? styles.profileActionButtonCompact : null,
+                  ]}
                   onPress={confirmDeleteProfile}
                 >
                   <Text style={styles.profileDeleteButtonText}>

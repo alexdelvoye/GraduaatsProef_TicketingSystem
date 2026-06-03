@@ -20,12 +20,12 @@ export function formatTicketDateTime(value: string) {
   }).format(new Date(value));
 }
 
-// The backend stores enum-style values. This lookup keeps user-facing labels in
-// one place so "InProgress" is consistently shown as "In Progress".
+// Keep status display text centralized. If labels ever change again, screens
+// and filters do not need to duplicate that wording.
 const ticketStatusLabels: Record<StatusFilter | TicketStatus, string> = {
   All: "All",
+  New: "New",
   Open: "Open",
-  InProgress: "In Progress",
   Closed: "Closed",
 };
 

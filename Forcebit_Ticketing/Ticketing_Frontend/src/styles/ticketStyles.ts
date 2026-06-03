@@ -6,6 +6,10 @@ export const ticketStyleDefinitions = {
     marginBottom: 24,
   },
 
+  ticketSectionCompact: {
+    marginBottom: 18,
+  },
+
   ticketCard: {
     backgroundColor: colors.card,
     borderColor: colors.inputBorder,
@@ -15,12 +19,21 @@ export const ticketStyleDefinitions = {
     marginBottom: 12,
   },
 
+  ticketCardCompact: {
+    padding: 14,
+  },
+
   ticketCardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     gap: 12,
     marginBottom: 12,
+  },
+
+  ticketCardHeaderCompact: {
+    flexWrap: "wrap",
+    gap: 8,
   },
 
   ticketTitle: {
@@ -45,6 +58,10 @@ export const ticketStyleDefinitions = {
     fontWeight: "700",
   },
 
+  statusPillCompact: {
+    alignSelf: "flex-start",
+  },
+
   statusPillClosed: {
     backgroundColor: colors.cardSoft,
     color: colors.muted,
@@ -60,25 +77,60 @@ export const ticketStyleDefinitions = {
     fontSize: 13,
   },
 
+  // Conversation rows control left/right alignment. The bubble itself owns the
+  // color and tail-like corner radius for client/admin distinction.
+  messageRow: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    marginTop: 12,
+  },
+
+  adminMessageRow: {
+    justifyContent: "flex-end",
+  },
+
   messageCard: {
-    backgroundColor: colors.card,
-    borderColor: colors.inputBorder,
+    maxWidth: "78%",
     borderWidth: 1,
-    borderRadius: layout.radiusMedium,
-    padding: 18,
-    marginTop: 10,
+    borderRadius: 18,
+    padding: 14,
+  },
+
+  // Chat bubbles get wider as the viewport shrinks. That keeps messages and
+  // image previews readable instead of creating tall, skinny columns.
+  messageCardCompact: {
+    maxWidth: "88%",
+  },
+
+  messageCardNarrow: {
+    maxWidth: "100%",
+  },
+
+  clientMessageCard: {
+    backgroundColor: colors.cardSoft,
+    borderColor: colors.inputBorder,
+    borderTopLeftRadius: 6,
   },
 
   adminMessageCard: {
+    backgroundColor: colors.primarySoft,
     borderColor: colors.primary,
-    borderWidth: 1,
+    borderTopRightRadius: 6,
   },
 
   messageHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     gap: 12,
-    marginBottom: 10,
+    marginBottom: 8,
+  },
+
+  messageHeaderCompact: {
+    alignItems: "flex-start",
+    flexDirection: "column",
+    gap: 2,
   },
 
   messageSender: {
@@ -86,9 +138,21 @@ export const ticketStyleDefinitions = {
     fontWeight: "700",
   },
 
+  adminMessageSender: {
+    color: colors.textDark,
+  },
+
+  adminMessageDate: {
+    color: colors.mutedDark,
+  },
+
   messageText: {
     color: colors.text,
     fontSize: 15,
     lineHeight: 22,
+  },
+
+  adminMessageText: {
+    color: colors.textDark,
   },
 } as const;

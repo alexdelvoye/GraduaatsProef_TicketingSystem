@@ -1,8 +1,12 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useFocusEffect } from "@react-navigation/native";
 
-import { downloadTicketAttachment } from "../api/attachmentApi";
+import {
+  createAttachmentPreviewUrl,
+  downloadTicketAttachment,
+  isPreviewableImageAttachment,
+} from "../api/attachmentApi";
 import {
   addTicketMessage,
   addTicketMessageWithAttachments,
@@ -12,7 +16,7 @@ import {
 
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
-import { ticketStatuses } from "../types";
+import { ticketStatusUpdateOptions } from "../types";
 import { formatTicketStatus } from "../utils/ticketFormatters";
 
 import { useErrorHandler } from "./useErrorHandler";
@@ -25,7 +29,7 @@ import type {
 } from "../types";
 import type { TicketMessageFormValues } from "../validation/ticketSchema";
 
-export { ticketStatuses };
+export { ticketStatusUpdateOptions };
 
 // A custom hook is used here so the screen component can stay focused on
 // rendering. This hook owns the behavior of the ticket detail page: loading
@@ -42,6 +46,17 @@ export function useTicketDetailScreen(ticketId: string) {
   // Null means "we have not loaded a ticket yet" or "loading failed".
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
 
+  // Preview URLs are browser object URLs keyed by attachment id. State is used
+  // for rendering; the ref mirrors it so cleanup can run without stale closures.
+  const [attachmentPreviewUrls, setAttachmentPreviewUrls] = useState<
+    Record<string, string>
+  >({});
+  const attachmentPreviewUrlsRef = useRef<Record<string, string>>({});
+
+  // Preview generation is async. This flag prevents setting state if the user
+  // leaves the detail screen while image blobs are still loading.
+  const isMountedRef = useRef(true);
+
   // Separate loading flags keep the UI precise: full-screen loading for the
   // initial ticket load, and button-level loading for a status update.
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +69,92 @@ export function useTicketDetailScreen(ticketId: string) {
   const { errorMessage, clearError, handleError } = useErrorHandler(
     "Could not load this ticket.",
   );
+
+  const revokeAttachmentPreviewUrls = useCallback(() => {
+    // Object URLs hold browser memory until revoked. Revoke them whenever the
+    // ticket changes, loading fails, or the screen unmounts.
+    Object.values(attachmentPreviewUrlsRef.current).forEach((url) => {
+      URL.revokeObjectURL(url);
+    });
+
+    attachmentPreviewUrlsRef.current = {};
+  }, []);
+
+  const clearAttachmentPreviewUrls = useCallback(() => {
+    revokeAttachmentPreviewUrls();
+    setAttachmentPreviewUrls({});
+  }, [revokeAttachmentPreviewUrls]);
+
+  const refreshAttachmentPreviewUrls = useCallback(
+    async (loadedTicket: TicketDetail) => {
+      // Only image attachments need preview URLs. Other files still show the
+      // download action without doing extra blob requests.
+      const previewableAttachments = loadedTicket.messages.flatMap((message) =>
+        message.attachments.filter(isPreviewableImageAttachment),
+      );
+      const previewableIds = new Set(
+        previewableAttachments.map((attachment) => attachment.id),
+      );
+
+      const nextPreviewUrls: Record<string, string> = {};
+
+      // Keep object URLs for attachments that are still present after a reload.
+      // This avoids flicker and unnecessary refetching after sending a reply.
+      Object.entries(attachmentPreviewUrlsRef.current).forEach(([id, url]) => {
+        if (previewableIds.has(id)) {
+          nextPreviewUrls[id] = url;
+        } else {
+          URL.revokeObjectURL(url);
+        }
+      });
+
+      await Promise.all(
+        previewableAttachments.map(async (attachment) => {
+          if (nextPreviewUrls[attachment.id]) {
+            return;
+          }
+
+          try {
+            const previewUrl = await createAttachmentPreviewUrl(
+              loadedTicket.id,
+              attachment,
+            );
+
+            if (previewUrl) {
+              nextPreviewUrls[attachment.id] = previewUrl;
+            }
+          } catch {
+            // Preview failure should not block the conversation. The download
+            // button remains available for the same protected attachment.
+          }
+        }),
+      );
+
+      if (!isMountedRef.current) {
+        // If previews finished after unmount, the new object URLs were never
+        // stored in the ref. Revoke them here so they do not leak.
+        Object.values(nextPreviewUrls).forEach((url) => {
+          URL.revokeObjectURL(url);
+        });
+
+        return;
+      }
+
+      attachmentPreviewUrlsRef.current = nextPreviewUrls;
+      setAttachmentPreviewUrls(nextPreviewUrls);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      // Screen-level cleanup owns all preview URLs created by this hook.
+      isMountedRef.current = false;
+      revokeAttachmentPreviewUrls();
+    };
+  }, [revokeAttachmentPreviewUrls]);
 
   // useCallback keeps the function reference stable. That matters because
   // useFocusEffect depends on this function and should not rerun endlessly.
@@ -69,12 +170,20 @@ export function useTicketDetailScreen(ticketId: string) {
       const data = await getTicketById(ticketId);
 
       setTicket(data);
+      void refreshAttachmentPreviewUrls(data);
     } catch (error) {
+      clearAttachmentPreviewUrls();
       handleError(error);
     } finally {
       setIsLoading(false);
     }
-  }, [clearError, handleError, ticketId]);
+  }, [
+    clearAttachmentPreviewUrls,
+    clearError,
+    handleError,
+    refreshAttachmentPreviewUrls,
+    ticketId,
+  ]);
 
   // useFocusEffect is a React Navigation hook. It runs when the user navigates
   // to this screen, which keeps the ticket fresh after coming back from other
@@ -155,8 +264,8 @@ export function useTicketDetailScreen(ticketId: string) {
   // avoids duplicating the same status check in multiple screen components.
   const isTicketClosed = ticket?.status === "Closed";
 
-  // Client status actions are limited to close/reopen. Reopening means moving
-  // the ticket back to Open so support can pick it up again.
+  // Client status actions are limited to close/reopen. Reopening moves a closed
+  // ticket to the active conversation state, not to the brand-new "New" state.
   const clientStatusAction =
     user?.role === "Client" && ticket
       ? {
@@ -172,6 +281,7 @@ export function useTicketDetailScreen(ticketId: string) {
   return {
     user,
     ticket,
+    attachmentPreviewUrls,
     isLoading,
     statusSubmitting,
     errorMessage,

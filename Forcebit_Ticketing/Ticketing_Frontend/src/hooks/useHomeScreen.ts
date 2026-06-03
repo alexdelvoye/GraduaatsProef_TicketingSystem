@@ -14,14 +14,14 @@ import type { TicketGroup, TicketListItem } from "../types";
 // same status/title/description combinations.
 const ticketGroups: TicketGroup[] = [
   {
-    status: "Open",
-    title: "Open",
-    description: "Waiting for a first response",
+    status: "New",
+    title: "New",
+    description: "Waiting for a first support reply",
   },
   {
-    status: "InProgress",
-    title: "In Progress",
-    description: "Being handled by Forcebit",
+    status: "Open",
+    title: "Open",
+    description: "Active conversation with Forcebit",
   },
   {
     status: "Closed",
@@ -62,7 +62,8 @@ export function useHomeScreen() {
   // performance; it also documents that groupedTickets is derived state.
   const groupedTickets = useMemo(() => groupTickets(tickets), [tickets]);
 
-  // Closed tickets are not counted as active work.
+  // Closed tickets are not counted as active work. New and open conversation
+  // tickets both still need attention from either the client or support.
   const activeTicketCount = tickets.filter(
     (ticket) => ticket.status !== "Closed",
   ).length;
