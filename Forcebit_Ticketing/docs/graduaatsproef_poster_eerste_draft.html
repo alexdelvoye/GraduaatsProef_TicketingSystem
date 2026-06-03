@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <title>Forcebit Ticketing - Poster eerste draft</title>
+  <style>
+    @page {
+      size: A0 portrait;
+      margin: 24mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: #111827;
+      background: #ffffff;
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.18;
+    }
+
+    .poster {
+      min-height: 1139mm;
+      padding: 34mm 42mm 28mm;
+      border-top: 9mm solid #232323;
+      position: relative;
+    }
+
+    .kicker {
+      color: #6395c5;
+      font-size: 25pt;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 12mm 0 0;
+      color: #6395c5;
+      font-size: 68pt;
+      line-height: 0.95;
+      font-weight: 900;
+    }
+
+    .subtitle {
+      margin: 2mm 0 16mm;
+      color: #6395c5;
+      font-size: 37pt;
+      font-style: italic;
+      font-weight: 800;
+    }
+
+    .identity {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 18mm;
+      margin-bottom: 24mm;
+    }
+
+    .student {
+      font-size: 30pt;
+      line-height: 1.16;
+    }
+
+    .student strong {
+      display: block;
+      font-size: 34pt;
+    }
+
+    .summary {
+      margin: 0 auto 24mm;
+      max-width: 920mm;
+      text-align: center;
+    }
+
+    .summary h2 {
+      margin: 0 0 3mm;
+      color: #111827;
+      font-size: 29pt;
+      font-weight: 900;
+    }
+
+    .summary p {
+      margin: 0;
+      font-size: 18.5pt;
+      font-style: italic;
+    }
+
+    .meta-line {
+      margin-top: 8mm;
+      font-size: 16.5pt;
+      font-style: normal;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20mm;
+      border-top: 2.5pt solid #111827;
+      padding-top: 20mm;
+    }
+
+    .left {
+      padding-right: 18mm;
+      border-right: 3pt solid #111827;
+    }
+
+    h3 {
+      margin: 0 0 7mm;
+      color: #6395c5;
+      font-size: 28pt;
+      font-weight: 900;
+    }
+
+    h3 span {
+      color: #111827;
+    }
+
+    section {
+      margin-bottom: 19mm;
+    }
+
+    p,
+    li {
+      font-size: 18.5pt;
+    }
+
+    p {
+      margin: 0 0 7mm;
+    }
+
+    ul {
+      margin: 0 0 0 9mm;
+      padding: 0;
+    }
+
+    li {
+      margin-bottom: 3.3mm;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5mm;
+      margin-top: 8mm;
+    }
+
+    .tag {
+      padding: 3.5mm 6mm;
+      color: #121826;
+      background: #cffb4d;
+      border-radius: 99mm;
+      font-size: 17pt;
+      font-weight: 800;
+    }
+
+    .figure {
+      margin-bottom: 17mm;
+    }
+
+    .mock-app {
+      padding: 13mm;
+      background: #17173f;
+      border-radius: 8mm;
+      box-shadow: 0 4mm 12mm rgba(17, 24, 39, 0.22);
+    }
+
+    .mock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #ffffff;
+      font-size: 17pt;
+      font-weight: 800;
+      margin-bottom: 9mm;
+    }
+
+    .mock-button {
+      padding: 3mm 6mm;
+      color: #111827;
+      background: #cffb4d;
+      border-radius: 99mm;
+    }
+
+    .mock-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6mm;
+      margin-bottom: 10mm;
+    }
+
+    .mock-column {
+      min-height: 82mm;
+      padding: 5mm;
+      color: #ffffff;
+      background: #28285f;
+      border: 1.5pt solid #555993;
+      border-radius: 6mm;
+    }
+
+    .mock-column h4 {
+      margin: 0 0 4mm;
+      font-size: 16pt;
+      color: #cffb4d;
+    }
+
+    .mock-card {
+      height: 17mm;
+      margin-bottom: 4mm;
+      background: #3c3d78;
+      border-radius: 4mm;
+    }
+
+    .mock-chat {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7mm;
+    }
+
+    .bubble {
+      min-height: 33mm;
+      padding: 5mm;
+      border-radius: 7mm;
+      font-size: 13pt;
+      font-weight: 700;
+    }
+
+    .client-bubble {
+      color: #ffffff;
+      background: #303166;
+    }
+
+    .admin-bubble {
+      color: #101827;
+      background: #cffb4d;
+    }
+
+    .caption {
+      margin-top: 5mm;
+      font-size: 15pt;
+    }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5mm;
+      margin: 7mm 0;
+    }
+
+    .layer {
+      padding: 8mm 5mm;
+      color: #ffffff;
+      background: #6395c5;
+      border-radius: 5mm;
+      text-align: center;
+      font-size: 17pt;
+      font-weight: 900;
+    }
+
+    .highlight {
+      padding: 8mm;
+      margin-top: 7mm;
+      background: #f4f7fb;
+      border-left: 6pt solid #6395c5;
+    }
+
+    .bottom-band {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10mm;
+      margin-top: 24mm;
+      padding-top: 16mm;
+      border-top: 2.5pt solid #d7dce7;
+    }
+
+    .bottom-card {
+      min-height: 120mm;
+      padding: 10mm;
+      background: #f4f7fb;
+      border: 1.8pt solid #d7dce7;
+      border-radius: 7mm;
+    }
+
+    .bottom-card h3 {
+      margin-bottom: 6mm;
+      font-size: 25pt;
+    }
+
+    .bottom-card p {
+      font-size: 18pt;
+      margin-bottom: 5mm;
+    }
+
+    .footer {
+      position: absolute;
+      right: 42mm;
+      bottom: 16mm;
+      left: 42mm;
+      display: flex;
+      justify-content: space-between;
+      color: #5f6878;
+      font-size: 15pt;
+      border-top: 1.5pt solid #d7dce7;
+      padding-top: 6mm;
+    }
+  </style>
+</head>
+<body>
+  <main class="poster">
+    <div class="kicker">Graduaatsproef Graduaat in het Programmeren (2025-2026)</div>
+    <h1>Forcebit Ticketing</h1>
+    <div class="subtitle">Supportcommunicatie duidelijker maken met tickets, workflows en dashboards</div>
+
+    <div class="identity">
+      <div class="student">
+        <strong>Alex Delvoye</strong>
+        alexdelvoye@outlook.be<br>
+        Hogeschool Gent, Graduaat Programmeren
+      </div>
+      <div class="student">
+        Promotor: in te vullen<br>
+        Co-promotor: in te vullen<br>
+        Broncode: Forcebit_Ticketing repository
+      </div>
+    </div>
+
+    <div class="summary">
+      <h2>Samenvatting</h2>
+      <p>Forcebit Ticketing is een webapplicatie waarin klanten supporttickets kunnen aanmaken, beantwoorden en opvolgen. Administrators krijgen een dashboard met zoeken, filters, statusgroepen en paginatie. De focus van het project ligt niet alleen op functionaliteit, maar ook op begrijpbare code: controllers voor HTTP, services voor workflows, domain rules voor business logica, repositories voor data en hooks voor frontend gedrag.</p>
+      <div class="meta-line">Keuzerichting: Programmeren | Sleutelwoorden: ticketing, ASP.NET Core, React Native, Single Responsibility, workflow</div>
+    </div>
+
+    <div class="content">
+      <div class="left">
+        <section>
+          <h3><span>1.</span> Introductie</h3>
+          <p>In supportomgevingen raken vragen snel verspreid over mails, chatberichten en losse afspraken. Dit project bundelt de communicatie in tickets, zodat klant en administrator dezelfde geschiedenis zien.</p>
+          <p>Een ticket bevat metadata zoals titel, categorie, onderwerp en status. De volledige conversatie wordt apart bijgehouden als berichtenlijst, inclusief de eerste beschrijving van de klant.</p>
+        </section>
+
+        <section>
+          <h3><span>2.</span> Functionaliteit</h3>
+          <ul>
+            <li>Klanten kunnen registreren, inloggen, tickets aanmaken, antwoorden en bijlagen toevoegen.</li>
+            <li>Administrators kunnen alle tickets bekijken, zoeken, filteren, beantwoorden en statussen aanpassen.</li>
+            <li>Tickets zijn gegroepeerd als <strong>New</strong>, <strong>Open</strong> en <strong>Closed</strong>.</li>
+            <li>PNG/JPG/JPEG bijlagen krijgen een preview zodat screenshots niet eerst gedownload moeten worden.</li>
+            <li>Dashboardlijsten gebruiken paginatie zodat lange lijsten bruikbaar blijven.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3><span>3.</span> Backend structuur</h3>
+          <p>De backend is verdeeld in lagen. Elke laag heeft een duidelijke hoofdtaak. Daardoor is het gemakkelijker om te weten waar nieuwe code hoort en waar een fout onderzocht moet worden.</p>
+          <div class="architecture">
+            <div class="layer">API</div>
+            <div class="layer">Services</div>
+            <div class="layer">Persistence</div>
+            <div class="layer">Domain</div>
+          </div>
+          <p>Controllers lezen requests en JWT claims. Services voeren use cases uit. Repositories laden en bewaren data. Domain rules bewaken regels zoals toegang, antwoorden en statuswijzigingen.</p>
+        </section>
+
+        <section>
+          <h3><span>4.</span> Gebruikte technologieen</h3>
+          <div class="tags">
+            <span class="tag">ASP.NET Core</span>
+            <span class="tag">Entity Framework Core</span>
+            <span class="tag">MySQL</span>
+            <span class="tag">JWT</span>
+            <span class="tag">Expo React Native</span>
+            <span class="tag">TypeScript</span>
+            <span class="tag">Formik/Yup</span>
+          </div>
+        </section>
+      </div>
+
+      <div class="right">
+        <section class="figure">
+          <div class="mock-app">
+            <div class="mock-header">
+              <span>FORCEBIT Support Dashboard</span>
+              <span class="mock-button">New ticket</span>
+            </div>
+            <div class="mock-grid">
+              <div class="mock-column">
+                <h4>New</h4>
+                <div class="mock-card"></div>
+                <div class="mock-card"></div>
+                <div class="mock-card"></div>
+              </div>
+              <div class="mock-column">
+                <h4>Open</h4>
+                <div class="mock-card"></div>
+                <div class="mock-card"></div>
+              </div>
+              <div class="mock-column">
+                <h4>Closed</h4>
+                <div class="mock-card"></div>
+                <div class="mock-card"></div>
+                <div class="mock-card"></div>
+              </div>
+            </div>
+            <div class="mock-chat">
+              <div class="bubble client-bubble">Klantbericht links met donkere bubbel en bijlagen.</div>
+              <div class="bubble admin-bubble">Adminantwoord rechts met duidelijke kleur.</div>
+            </div>
+          </div>
+          <p class="caption"><strong>Figuur 1:</strong> Eerste posterconcept van het dashboard en de chatgerichte ticketdetailpagina. De visual is een schematische samenvatting, geen definitieve screenshot.</p>
+        </section>
+
+        <section>
+          <h3><span>5.</span> Workflow</h3>
+          <p>Een nieuw ticket start als <strong>New</strong>. Wanneer een administrator antwoordt, wordt het ticket <strong>Open</strong>. Een ticket kan daarna gesloten worden. Als een klant het heropent, gaat het terug naar <strong>Open</strong> en niet naar New, omdat het ticket al geschiedenis heeft.</p>
+          <div class="highlight">
+            <p><strong>Belangrijke keuze:</strong> de eerste beschrijving van een ticket wordt opgeslagen als eerste bericht. Zo staat alle communicatie in dezelfde chronologische conversatie.</p>
+          </div>
+        </section>
+
+        <section>
+          <h3><span>6.</span> Frontend logica</h3>
+          <p>Screens tonen de pagina, hooks beheren gedrag. <code>useHomeScreen</code> en <code>useAdminScreen</code> laden data, passen zoekfilters toe, maken statusgroepen en geven gepagineerde lijsten terug aan de UI.</p>
+          <p>De dashboards gebruiken derived state: de ruwe tickets blijven de bron van waarheid, terwijl zoekresultaten, tellingen, groepen en pagina's daaruit berekend worden.</p>
+        </section>
+
+        <section>
+          <h3><span>7.</span> Conclusies</h3>
+          <p>De applicatie toont dat een supportflow niet alleen uit schermen bestaat. De meeste waarde zit in duidelijke verantwoordelijkheden: HTTP aan de rand, workflow in services, business rules in domain code en herbruikbare frontendlogica in hooks en utilities.</p>
+        </section>
+
+        <section>
+          <h3><span>8.</span> Toekomstig werk</h3>
+          <ul>
+            <li>Automatische integratietests voor login, tickets, replies en statuswijzigingen.</li>
+            <li>Server-side paginatie wanneer ticket- en klantlijsten groter worden.</li>
+            <li>Productieklare secret management en logging.</li>
+            <li>Meer rapportage, zoals tickets per categorie of gemiddelde doorlooptijd.</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+
+    <div class="bottom-band">
+      <div class="bottom-card">
+        <h3><span>9.</span> Resultaat</h3>
+        <p>De eerste versie is een werkende ticketing applicatie met klant- en adminflows, statusbeheer, bijlagen, previews, e-mailnotificaties en responsive dashboards.</p>
+        <p>De code is opgesplitst zodat de belangrijkste onderdelen apart uitgelegd kunnen worden.</p>
+      </div>
+      <div class="bottom-card">
+        <h3><span>10.</span> Demo flow</h3>
+        <p>1. Klant maakt ticket aan.</p>
+        <p>2. Admin ziet New ticket en antwoordt.</p>
+        <p>3. Ticket wordt Open.</p>
+        <p>4. Klant sluit of heropent ticket.</p>
+      </div>
+      <div class="bottom-card">
+        <h3><span>11.</span> Verdediging</h3>
+        <p>Ik kan uitleggen waar HTTP, workflow, business rules, databasecode en frontendgedrag thuishoren.</p>
+        <p>Dat maakt het project niet alleen functioneel, maar ook onderhoudbaar en verdedigbaar.</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Forcebit Ticketing - eerste poster draft</span>
+      <span>Alex Delvoye | Graduaat Programmeren</span>
+    </div>
+  </main>
+</body>
+</html>

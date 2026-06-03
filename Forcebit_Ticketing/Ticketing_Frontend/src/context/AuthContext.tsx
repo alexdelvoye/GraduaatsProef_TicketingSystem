@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-import { login, register } from "../api/authApi";
+import { login, register } from "../apis/authApi";
 import {
   deleteAuthItem,
   getAuthItem,

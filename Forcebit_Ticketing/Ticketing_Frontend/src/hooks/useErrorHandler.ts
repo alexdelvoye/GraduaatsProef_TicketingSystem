@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import { ApiError } from "../api/apiClient";
+import { ApiError } from "../apis/apiClient";
 import { useNotifications } from "../context/NotificationContext";
 
 // Convert different unknown error shapes into a readable message. The parameter

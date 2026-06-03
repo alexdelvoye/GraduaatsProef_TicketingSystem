@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import { useFocusEffect } from "@react-navigation/native";
 
-import { getAllTickets, getClients } from "../api/ticketApi";
+import { getAllTickets, getClients } from "../apis/ticketApi";
 import { useAuth } from "../context/AuthContext";
 import { categoryFilters, statusFilters, subjectFilters } from "../types";
 import {

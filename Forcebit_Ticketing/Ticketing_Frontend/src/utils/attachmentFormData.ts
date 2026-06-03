@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
 
-import { ApiError } from "../api/apiClient";
+import { ApiError } from "../apis/apiClient";
 
 import { getSingleAttachmentSizeError } from "./attachmentLimits";
 

@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <title>Forcebit Ticketing - Graduaatsproefrapport</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 17mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: #172033;
+      background: #ffffff;
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 10.1pt;
+      line-height: 1.36;
+    }
+
+    .page {
+      position: relative;
+      min-height: 269mm;
+      padding: 3mm 0 11mm;
+      break-after: page;
+    }
+
+    .page:last-child {
+      break-after: auto;
+    }
+
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 269mm;
+      padding-top: 18mm;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      color: #10182b;
+      line-height: 1.18;
+    }
+
+    h1 {
+      font-size: 30pt;
+      margin-bottom: 8mm;
+    }
+
+    h2 {
+      font-size: 17pt;
+      padding-bottom: 2.4mm;
+      margin-bottom: 4.6mm;
+      border-bottom: 1.5pt solid #d4d9e7;
+    }
+
+    h3 {
+      font-size: 11.5pt;
+      margin: 4.3mm 0 1.8mm;
+    }
+
+    p {
+      margin: 0 0 2.7mm;
+    }
+
+    ul,
+    ol {
+      margin: 0 0 2.8mm 6mm;
+      padding: 0;
+    }
+
+    li {
+      margin-bottom: 1.1mm;
+    }
+
+    .subtitle {
+      color: #4b5874;
+      font-size: 15pt;
+      font-weight: 600;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: 36mm 1fr;
+      gap: 2mm 5mm;
+      margin-top: 12mm;
+      padding: 5mm;
+      background: #f4f7fb;
+      border: 1pt solid #dce2ee;
+    }
+
+    .label {
+      color: #56627a;
+      font-weight: 700;
+    }
+
+    .note {
+      padding: 3.5mm;
+      margin: 3.5mm 0;
+      background: #f7faf5;
+      border-left: 4pt solid #b7e34d;
+    }
+
+    .callout {
+      padding: 3.5mm;
+      margin: 3.5mm 0;
+      background: #f5f7fc;
+      border: 1pt solid #d9dfed;
+    }
+
+    .small {
+      color: #56627a;
+      font-size: 9pt;
+    }
+
+    .toc {
+      display: grid;
+      grid-template-columns: 1fr 12mm;
+      gap: 1.4mm 5mm;
+      margin-top: 3mm;
+    }
+
+    .toc div:nth-child(2n) {
+      color: #56627a;
+      text-align: right;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6mm;
+    }
+
+    .stack {
+      padding: 3.3mm;
+      margin: 3mm 0;
+      background: #fbfcff;
+      border: 1pt solid #dce2ee;
+    }
+
+    .footer {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: flex;
+      justify-content: space-between;
+      padding-top: 2mm;
+      color: #6a7488;
+      font-size: 8.5pt;
+      border-top: 1pt solid #e2e6ef;
+    }
+
+    code {
+      font-family: Consolas, monospace;
+      font-size: 9.2pt;
+      background: #eef2f8;
+      padding: 0.2mm 1mm;
+    }
+  </style>
+</head>
+<body>
+  <section class="page cover">
+    <div>
+      <p class="subtitle">Graduaatsproefrapport - eerste draft</p>
+      <h1>Forcebit Ticketing</h1>
+      <p class="subtitle">Een support ticketing applicatie met focus op functionaliteit, workflow en onderhoudbare structuur</p>
+
+      <div class="meta">
+        <span class="label">Student</span><span>Alex Delvoye</span>
+        <span class="label">Opleiding</span><span>Graduaat Programmeren</span>
+        <span class="label">Academiejaar</span><span>2025-2026</span>
+        <span class="label">Project</span><span>Forcebit Ticketing</span>
+        <span class="label">Versie</span><span>Eerste inhoudelijke draft</span>
+      </div>
+    </div>
+
+    <div>
+      <h2>Samenvatting</h2>
+      <p>Voor mijn graduaatsproef werkte ik aan een ticketing systeem voor Forcebit. Het doel van de applicatie is om communicatie tussen klanten en support duidelijker te maken. Een klant kan een ticket aanmaken, antwoorden sturen, bestanden toevoegen en de status opvolgen. Een administrator kan alle tickets bekijken, filteren, beantwoorden en de status aanpassen.</p>
+      <p>In dit rapport leg ik vooral uit hoe de functionaliteit is opgebouwd en waarom de code in verschillende lagen is verdeeld. De nadruk ligt op Single Responsibility, de meerlagenstructuur, de ticket workflow en de frontend logica. Ik probeer dit bewust uit te leggen op het niveau waarop ik het zelf kan verdedigen: niet als senior engineer, maar als graduaatstudent die keuzes heeft gemaakt om de applicatie overzichtelijk en uitbreidbaar te houden.</p>
+    </div>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 1 van 14</span></div>
+  </section>
+
+  <section class="page">
+    <h2>1. Inleiding en leeswijzer</h2>
+    <p>Deze eerste draft is bedoeld als basis voor het uiteindelijke graduaatsproefrapport. De tekst focust nog niet op elk klein codefragment. Die details staan al in de README en technische README van het project. Dit rapport legt vooral uit wat de applicatie doet, hoe de logica door de lagen loopt en waarom de structuur helpt om het project te begrijpen.</p>
+    <p>Ik heb het project stap voor stap opgebouwd vanuit een praktische nood: supportvragen moeten niet verloren gaan in losse mails, chatberichten of mondelinge afspraken. Een ticket moet een duidelijke plaats hebben, met een titel, categorie, onderwerp, status, berichten en eventueel bijlagen. Daardoor kan zowel de klant als de administrator volgen wat er al besproken is.</p>
+
+    <h3>Inhoud</h3>
+    <div class="toc">
+      <div>1. Inleiding en leeswijzer</div><div>2</div>
+      <div>2. Probleemstelling en doel</div><div>3</div>
+      <div>3. Functionaliteit voor klant en administrator</div><div>4</div>
+      <div>4. Gebruikte technologieen</div><div>5</div>
+      <div>5. Backend structuur en Single Responsibility</div><div>6</div>
+      <div>6. Services, domain rules en ticket workflow</div><div>7</div>
+      <div>7. Persistence, database en startupcontrole</div><div>8</div>
+      <div>8. Frontend structuur: screens, hooks en components</div><div>9</div>
+      <div>9. Dashboardlogica: zoeken, filteren en paginatie</div><div>10</div>
+      <div>10. Bijlagen, previews, e-mail en beveiliging</div><div>11</div>
+      <div>11. Validatie, foutafhandeling en logging</div><div>12</div>
+      <div>12. Kwaliteit, documentatie en testbaarheid</div><div>13</div>
+      <div>13. Reflectie en toekomstig werk</div><div>14</div>
+    </div>
+
+    <div class="note">
+      <p><strong>Schrijfstijl.</strong> Dit rapport is bewust geschreven als een studentendocument. Ik gebruik technische termen waar nodig, maar ik probeer telkens ook in gewone taal uit te leggen waarom iets zo is gebouwd.</p>
+    </div>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 2 van 14</span></div>
+  </section>
+
+  <section class="page">
+    <h2>2. Probleemstelling en doel</h2>
+    <p>Het probleem dat dit project probeert op te lossen is herkenbaar in veel kleine organisaties. Klanten hebben vragen of problemen, maar de opvolging gebeurt vaak via losse communicatiekanalen. Daardoor wordt het moeilijk om te zien welke problemen nieuw zijn, welke al besproken worden en welke opgelost zijn.</p>
+    <p>Een ticketing systeem brengt die communicatie samen. Een ticket is dan niet alleen een vraag, maar ook de volledige geschiedenis van die vraag. Berichten, statuswijzigingen en bijlagen blijven op een centrale plaats staan. Voor support is dat belangrijk omdat meerdere tickets tegelijk opgevolgd moeten worden. Voor klanten is het belangrijk omdat ze kunnen zien wat de huidige stand van zaken is.</p>
+
+    <h3>Doel van de applicatie</h3>
+    <p>Het doel was om een bruikbare basisapplicatie te bouwen waarin twee rollen samenwerken: klant en administrator. De klant moet zonder technische kennis een ticket kunnen aanmaken en opvolgen. De administrator moet snel kunnen zoeken, filteren en antwoorden zonder door een lange ongestructureerde lijst te moeten scrollen.</p>
+
+    <h3>Technische leerdoelen</h3>
+    <ul>
+      <li>Een backend bouwen met duidelijke lagen en verantwoordelijkheden.</li>
+      <li>Business rules niet alleen in de frontend plaatsen, maar ook in de backend afdwingen.</li>
+      <li>Een frontend bouwen met herbruikbare hooks, componenten en utilities.</li>
+      <li>Een workflow ontwerpen die logisch blijft wanneer tickets gesloten of heropend worden.</li>
+      <li>Documentatie schrijven waarmee ik de keuzes kan uitleggen en verdedigen.</li>
+    </ul>
+
+    <h3>Afbakening</h3>
+    <p>Het project is geen volledig commercieel ticketsysteem. Zaken zoals uitgebreide rapportage, SLA's, rollenbeheer en productiehosting vallen buiten deze eerste versie. De focus ligt op de kern: tickets, conversaties, statussen, bijlagen, dashboards en een onderhoudbare structuur.</p>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 3 van 14</span></div>
+  </section>
+
+  <section class="page">
+    <h2>3. Functionaliteit voor klant en administrator</h2>
+    <p>Forcebit Ticketing bestaat uit functionaliteit voor twee soorten gebruikers. De klant gebruikt de applicatie vooral om problemen te melden en op te volgen. De administrator gebruikt de applicatie als supportdashboard.</p>
+
+    <h3>Functionaliteit voor klanten</h3>
+    <p>Een klant kan zich registreren, inloggen en een profiel beheren. Daarna kan de klant een ticket aanmaken. Bij het aanmaken kiest de klant een categorie en onderwerp, vult een titel in en schrijft de eerste boodschap. Die eerste boodschap wordt opgeslagen als eerste bericht in de conversatie. Dat maakt de opbouw eenvoudiger: alle tekstberichten staan chronologisch in dezelfde berichtenlijst.</p>
+    <p>Een klant kan antwoorden op een ticket zolang het niet gesloten is. Daarnaast kan de klant bijlagen toevoegen, zoals screenshots, PDF-bestanden of zip-bestanden. Afbeeldingen van het type PNG, JPG en JPEG krijgen een preview zodat de gebruiker ze niet eerst moet downloaden. De klant kan een ticket sluiten wanneer het probleem opgelost is en opnieuw openen als het probleem toch nog bestaat.</p>
+
+    <h3>Functionaliteit voor administrators</h3>
+    <p>Een administrator ziet een overzicht van klanten en tickets. Omdat een lange lijst snel onduidelijk wordt, zijn er zoekvelden, filters en paginatie toegevoegd. Tickets kunnen gezocht worden op titel, klant, categorie en onderwerp. Daarnaast kan de administrator filteren op status, categorie en onderwerp.</p>
+    <p>De tickets zijn gegroepeerd in drie delen: New, Open en Closed. New betekent dat support nog niet geantwoord heeft. Open betekent dat de conversatie actief is. Closed betekent dat het ticket afgehandeld is. Deze verdeling maakt het dashboard bruikbaarder dan een lange lijst zonder duidelijke prioriteit.</p>
+
+    <div class="callout">
+      <p><strong>Belangrijkste meerwaarde:</strong> het project brengt ticketcommunicatie, statusopvolging, bijlagen en adminbeheer samen in een duidelijke workflow.</p>
+    </div>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 4 van 14</span></div>
+  </section>
+
+  <section class="page">
+    <h2>4. Gebruikte technologieen</h2>
+    <p>De backend is gebouwd met ASP.NET Core en draait als Web API. De database is MySQL en de toegang tot de database gebeurt met Entity Framework Core. De frontend is gebouwd met Expo React Native, zodat dezelfde code ook op web kan draaien. Voor formulieren worden Formik en Yup gebruikt.</p>
+
+    <div class="two-col">
+      <div>
+        <h3>Backend</h3>
+        <ul>
+          <li>ASP.NET Core Web API</li>
+          <li>Entity Framework Core</li>
+          <li>MySQL via Pomelo provider</li>
+          <li>JWT authenticatie</li>
+          <li>Brevo voor e-mailnotificaties</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Frontend</h3>
+        <ul>
+          <li>Expo React Native</li>
+          <li>React Navigation</li>
+          <li>TypeScript</li>
+          <li>Formik en Yup</li>
+          <li>Herbruikbare hooks en componenten</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Waarom deze stack?</h3>
+    <p>ASP.NET Core past goed bij een gestructureerde API met controllers, dependency injection, middleware en typed options. Entity Framework Core maakt het mogelijk om met C# entiteiten te werken en toch migraties naar MySQL te beheren. React Native met Expo past bij het frontendgedeelte omdat de applicatie op web kan draaien, maar de structuur ook dicht bij mobile development blijft.</p>
+    <p>TypeScript helpt om frontend types duidelijk te maken. Dat is belangrijk omdat statussen, categorieen en API responses overal dezelfde betekenis moeten hebben. Formik en Yup houden formulierstatus en validatie uit de screenbestanden, waardoor de schermen minder zwaar worden.</p>
+
+    <h3>Projectstructuur</h3>
+    <p>De backend is verdeeld in vier projecten: API, Services, Persistence en Domain. De frontend is verdeeld in folders zoals screens, hooks, forms, components, api, styles, utils, validation en types. Deze verdeling helpt mij om tijdens het ontwikkelen sneller te weten waar nieuwe code hoort.</p>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 5 van 14</span></div>
+  </section>
+
+  <section class="page">
+    <h2>5. Backend structuur en Single Responsibility</h2>
+    <p>Een belangrijk principe in dit project is Single Responsibility. Voor mij betekent dit dat een klasse of module een duidelijke hoofdtaak moet hebben. Dat maakt de code gemakkelijker om uit te leggen en om later aan te passen.</p>
+
+    <h3>API laag</h3>
+    <p>De API laag ontvangt HTTP requests. Controllers lezen routeparameters, body data, formulierdata en JWT claims. Daarna roepen ze een service aan. Een controller beslist niet zelf hoe de volledige ticket workflow werkt. Dat zou de controller te groot maken en de logica verspreiden.</p>
+    <p>Bij uploads gebruikt de API laag specifieke form request classes. Die bestaan omdat multipart form-data een HTTP-detail is. De service krijgt geen <code>IFormFile</code>, maar een gewone <code>FileUploadRequest</code>. Zo blijft ASP.NET-specifieke code aan de rand van het systeem.</p>
+
+    <h3>Services laag</h3>
+    <p>De services laag bevat de toepassinglogica. <code>TicketService</code> is daar een goed voorbeeld van. Deze service maakt tickets aan, laadt ticketdetails, voegt berichten toe, verandert statussen, bewaart bijlagen en beslist wanneer er e-mail moet worden verstuurd. De service kent wel de workflow, maar niet de details van HTTP responses.</p>
+
+    <h3>Domain en persistence</h3>
+    <p>De domain laag bevat de concepten van de applicatie. Een ticket heeft een status, berichten, bijlagen en regels. De persistence laag is verantwoordelijk voor EF Core en MySQL. Repositories verbergen de concrete queries voor de services. Daardoor moet een service niet telkens zelf weten welke <code>Include</code> nodig is om berichten, bijlagen en gebruikers mee te laden.</p>
+
+    <div class="note">
+      <p>Deze verdeling is niet perfect theoretisch, maar ze is voor dit project duidelijk genoeg. Ik kan per map uitleggen waarom de code daar staat.</p>
+    </div>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 6 van 14</span></div>
+  </section>
+
+  <section class="page">
+    <h2>6. Services, domain rules en ticket workflow</h2>
+    <p>De belangrijkste workflow in de applicatie is de levenscyclus van een ticket. Op basis van feedback is de workflow duidelijker gemaakt met de statussen <code>New</code>, <code>Open</code> en <code>Closed</code>.</p>
+
+    <h3>Statussen</h3>
+    <ul>
+      <li><strong>New:</strong> het ticket is nieuw en support heeft nog niet geantwoord.</li>
+      <li><strong>Open:</strong> de conversatie is actief of een gesloten ticket werd opnieuw geopend.</li>
+      <li><strong>Closed:</strong> het ticket is afgehandeld en er kan niet meer op geantwoord worden.</li>
+    </ul>
+
+    <p><code>New</code> is bewust alleen voor nieuw aangemaakte tickets. Een gebruiker kan een bestaand ticket niet terug op New zetten. Dat zou verwarrend zijn, omdat een bestaand ticket al geschiedenis heeft. Wanneer een gesloten ticket opnieuw geopend wordt, gaat het naar <code>Open</code> en niet naar <code>New</code>.</p>
+
+    <h3>Rol van TicketService</h3>
+    <p><code>TicketService</code> voert de use cases uit. Bij ticketcreatie controleert de service eerst of de klant bestaat en of categorie en onderwerp geldig zijn. Daarna maakt de domain entity het ticket aan. De eerste boodschap wordt toegevoegd als eerste <code>TicketMessage</code>. Bij antwoorden controleert de service toegang en statusregels voor het bericht wordt opgeslagen.</p>
+
+    <h3>Rol van TicketRules</h3>
+    <p><code>TicketRules</code> bevat regels zoals: wie mag een ticket bekijken, wie mag antwoorden en welke statuswijzigingen zijn toegelaten. Dit is belangrijk omdat de frontend niet de enige bescherming mag zijn. Een gebruiker kan altijd proberen om rechtstreeks de API aan te spreken. Daarom moet de backend de regels opnieuw controleren.</p>
+
+    <h3>Waarom status automatisch verandert</h3>
+    <p>Wanneer een administrator antwoordt op een New ticket, verandert het ticket automatisch naar Open. Dat past bij de betekenis van Open: support is ermee bezig. Deze overgang zit in de backendlogica, zodat de status ook correct verandert als een andere client dan de frontend de API gebruikt.</p>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 7 van 14</span></div>
+  </section>
+
+  <section class="page">
+    <h2>7. Persistence, database en startupcontrole</h2>
+    <p>De persistence laag bevat de databasecontext, configuraties, repositories en migraties. Entity Framework Core vertaalt de C# entiteiten naar tabellen in MySQL. De migraties bewaren hoe het datamodel doorheen de ontwikkeling veranderd is.</p>
+
+    <h3>Repositories</h3>
+    <p>Repositories zorgen ervoor dat services niet rechtstreeks met EF Core queries moeten werken. Bijvoorbeeld: voor een ticketdetail moeten ook berichten, afzenders, klantgegevens en bijlagen mee geladen worden. Door dat in een repositorymethode te plaatsen, blijft de service meer gefocust op de workflow.</p>
+
+    <h3>DTOs tegenover entiteiten</h3>
+    <p>De API stuurt geen volledige EF entiteiten naar de frontend. In plaats daarvan worden DTOs gebruikt. Een lijstitem bevat minder data dan een detailresponse. Dat is nuttig omdat overzichten niet alle berichten en bijlagen nodig hebben. Het maakt de API response ook stabieler wanneer de database intern verandert.</p>
+
+    <h3>Startupcontrole</h3>
+    <p>De backend controleert bij startup of MySQL bereikbaar is. Dat is bewust fail-fast gedrag. Zonder database kunnen login, tickets, berichten, bijlagen en de admin seed niet betrouwbaar werken. Een duidelijke startupfout is beter dan een API die opstart maar pas faalt wanneer iemand probeert in te loggen.</p>
+
+    <h3>Admin seed</h3>
+    <p>Voor development en demo's wordt een admin account uit configuratie aangemaakt als het nog niet bestaat. De seedlogica hoort bij startup en niet bij normale ticketfunctionaliteit. Daardoor blijft het duidelijk dat dit vooral demo- en ontwikkelgemak is.</p>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 8 van 14</span></div>
+  </section>
+
+  <section class="page">
+    <h2>8. Frontend structuur: screens, hooks en components</h2>
+    <p>In de frontend heb ik geprobeerd om schermen niet te zwaar te maken. Een screen moet vooral tonen wat er op de pagina staat. Het gedrag van een pagina staat zoveel mogelijk in hooks. Daardoor zijn bestanden zoals de homepagina, adminpagina en ticketdetailpagina gemakkelijker te lezen.</p>
+
+    <h3>Screens</h3>
+    <p>Screens zijn page-level componenten. Ze combineren formulieren, knoppen, lijsten, headers en components. Een screen mag weten hoe de pagina eruit ziet, maar niet alle details van data ophalen, filteren of verzenden hoeven daarin te staan.</p>
+
+    <h3>Hooks als gedragslaag</h3>
+    <p><code>useHomeScreen</code> beheert de tickets van een klant. Deze hook laadt tickets, bewaart zoektekst en filters, berekent groepen en geeft data terug aan het scherm. <code>useAdminScreen</code> doet iets gelijkaardigs voor administrators, maar met extra filters voor klant, status, categorie en onderwerp.</p>
+    <p>Het ticketdetail scherm gebruikt <code>useTicketDetailScreen</code>. Die hook laadt het ticket, verzendt antwoorden, verandert statussen, downloadt bijlagen en maakt image previews aan. De screen component moet daardoor niet zelf alle API details kennen.</p>
+
+    <h3>Components en utilities</h3>
+    <p>Herbruikbare UI staat in components. Voorbeelden zijn <code>AppHeader</code>, <code>PaginationControls</code> en <code>TicketGroupSection</code>. Utilities bevatten herbruikbare bewerkingen zoals ticket search, ticket grouping, datumformattering en attachment form-data. Hierdoor is de logica niet verspreid over meerdere schermen.</p>
+
+    <h3>Types</h3>
+    <p>TypeScript types helpen om frontend en backend op elkaar af te stemmen. De ticketstatussen in de frontend zijn bijvoorbeeld letterlijk <code>New</code>, <code>Open</code> en <code>Closed</code>. Dat voorkomt typfouten zoals "In progress" en maakt autocomplete nuttig tijdens ontwikkeling.</p>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 9 van 14</span></div>
+  </section>
+
+  <section class="page">
+    <h2>9. Dashboardlogica: zoeken, filteren en paginatie</h2>
+    <p>De dashboards zijn aangepast omdat lange lijsten snel onbruikbaar worden. Eerst was de clientlijst vooral een verzameling knoppen. Dat werkte technisch, maar niet goed wanneer er veel klanten zijn. Daarom zijn zoeken, filtering, visuele tellingen en paginatie toegevoegd.</p>
+
+    <h3>Derived state</h3>
+    <p>Een belangrijk frontendprincipe in dit project is derived state. De applicatie bewaart de ruwe data uit de API, bijvoorbeeld alle tickets. Zoekresultaten, filters, groepen en tellingen worden daarvan afgeleid. Dat is veiliger dan meerdere aparte lijsten bijhouden, want aparte lijsten kunnen uit sync raken.</p>
+
+    <div class="stack">
+      <p><strong>Admin dashboard pipeline:</strong></p>
+      <p><code>clients + tickets -> searched clients -> filtered tickets -> grouped sections -> paginated section items</code></p>
+    </div>
+
+    <div class="stack">
+      <p><strong>Client dashboard pipeline:</strong></p>
+      <p><code>tickets -> search/filter -> grouped New/Open/Closed sections -> paginated section items</code></p>
+    </div>
+
+    <h3>Zoeken en filteren</h3>
+    <p>Klanten kunnen hun tickets zoeken en filteren op status en categorie. Administrators kunnen klanten zoeken op naam, bedrijfsnaam of e-mail. Tickets kunnen op de adminpagina gezocht worden op titel, klant, categorie en onderwerp. Daarnaast zijn er filters voor status, categorie en onderwerp.</p>
+
+    <h3>Paginatie</h3>
+    <p>Voor paginatie is een algemene <code>usePagination</code> hook gemaakt. <code>PaginationControls</code> toont de knoppen en tekst. <code>TicketGroupSection</code> combineert ticketgroepen met paginatie. Daardoor gebruiken de admin- en klantpagina dezelfde basislogica. Elke groep heeft eigen paginatie, zodat bladeren in Closed tickets geen invloed heeft op New of Open tickets.</p>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 10 van 14</span></div>
+  </section>
+
+  <section class="page">
+    <h2>10. Bijlagen, previews, e-mail en beveiliging</h2>
+    <p>Bijlagen zijn belangrijk in een ticketing systeem omdat klanten vaak screenshots, documenten of zip-bestanden meesturen. In deze applicatie kunnen bijlagen toegevoegd worden bij ticketcreatie en bij antwoorden.</p>
+
+    <h3>Uploadflow</h3>
+    <p>De frontend gebruikt een attachment picker. Gebruikers kunnen meerdere keren bestanden toevoegen voor ze verzenden. Ze kunnen een bestand apart verwijderen of alles wissen. De frontend toont ook hoeveel van de 20 MB uploadlimiet al gebruikt is.</p>
+    <p>De backend controleert dezelfde limiet opnieuw. Dat is belangrijk omdat frontendcontrole alleen niet veilig genoeg is. De service bewaart het bestand via de file storage service en maakt metadata aan in de database.</p>
+
+    <h3>Previews en downloads</h3>
+    <p>PNG, JPG en JPEG bestanden krijgen een inline preview in de conversatie. De bestanden worden niet publiek bereikbaar gemaakt. De frontend haalt de preview op via een beschermde API route met JWT. Daarna maakt de browser tijdelijk een object URL. Oude object URLs worden opgeruimd zodat de browser geen geheugen blijft vasthouden.</p>
+
+    <h3>E-mailnotificaties</h3>
+    <p>Brevo wordt gebruikt om klanten te verwittigen wanneer een administrator antwoordt of de status wijzigt. Er worden geen e-mails naar administrators gestuurd wanneer klanten antwoorden. De reden is dat het dashboard de werkqueue van support is. Zo wordt de mailbox minder snel overspoeld.</p>
+
+    <h3>Beveiliging</h3>
+    <p>Downloads en previews gebruiken dezelfde tickettoegang als de rest van de applicatie. Een klant mag alleen eigen tickets en bijlagen zien. Administrators mogen alle tickets zien. Die controle hoort in de backend, omdat de frontend niet als beveiligingslaag beschouwd mag worden.</p>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 11 van 14</span></div>
+  </section>
+
+  <section class="page">
+    <h2>11. Validatie, foutafhandeling en logging</h2>
+    <p>De applicatie gebruikt verschillende soorten validatie. In de frontend zorgt Yup ervoor dat gebruikers snel feedback krijgen. In de backend blijven DTO-validatie, services en domain rules de echte bescherming. Frontendvalidatie is goed voor gebruiksgemak, maar backendvalidatie is nodig voor veiligheid en betrouwbaarheid.</p>
+
+    <h3>Authenticatie en autorisatie</h3>
+    <p>Gebruikers loggen in met e-mail en wachtwoord. Wachtwoorden worden niet als platte tekst bewaard, maar gehasht. Na login krijgt de frontend een JWT-token. Bij volgende API calls wordt dat token meegestuurd. De backend leest daaruit de user id en rol.</p>
+    <p>Autorisatie gebeurt op twee niveaus. Sommige routes zijn beschermd met rollen, bijvoorbeeld admin routes. Specifieke ticketregels staan in <code>TicketRules</code>. Zo kan een klant alleen eigen tickets bekijken, terwijl een administrator alle tickets kan zien.</p>
+
+    <h3>Foutafhandeling</h3>
+    <p>De backend gebruikt middleware voor centrale foutafhandeling. Services gooien betekenisvolle exceptions zoals NotFound, Forbidden of BadRequest. De middleware vertaalt die naar een consistente JSON response. Daardoor hoeven controllers niet overal dezelfde try/catch code te schrijven.</p>
+    <p>De frontend normaliseert API-fouten en toont duidelijke meldingen. Toast notifications geven feedback na acties zoals ticket aanmaken, antwoord verzenden of status wijzigen. Formulierfouten blijven dicht bij het veld staan.</p>
+
+    <h3>Logging</h3>
+    <p>De backend logt belangrijke acties zoals tickets aanmaken, berichten toevoegen en statussen wijzigen. Structured logging maakt het gemakkelijker om waarden zoals ticket id, user id en status terug te vinden. Tijdens ontwikkeling en demo's helpt dit om te begrijpen wat de backend precies gedaan heeft.</p>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 12 van 14</span></div>
+  </section>
+
+  <section class="page">
+    <h2>12. Kwaliteit, documentatie en testbaarheid</h2>
+    <p>Een belangrijk deel van dit project is niet alleen dat de applicatie werkt, maar ook dat ik kan uitleggen hoe ze werkt. Daarom zijn comments en documentatie mee onderhouden. De gewone README bevat vooral installatie en gebruik. De technische README legt architectuur, workflows en keuzes uit.</p>
+
+    <h3>Comments</h3>
+    <p>Ik heb geprobeerd comments niet te gebruiken om elke regel code te herhalen. Een comment moet vooral uitleggen waarom iets gebeurt of waarom een keuze gemaakt is. Bijvoorbeeld: waarom de eerste ticketbeschrijving een bericht wordt, waarom New creation-only is, of waarom uploaded files eerst naar een service DTO gemapt worden.</p>
+
+    <h3>Consistentie</h3>
+    <p>Consistentie is belangrijk omdat het project meerdere schermen en workflows heeft. Statusnamen moeten overal hetzelfde betekenen. De frontendtypes spiegelen daarom de backendstatussen. De ticketlijsten op de klant- en adminpagina gebruiken dezelfde groepstructuur. Ook de uploadlimiet wordt op frontend en backend bewaakt.</p>
+
+    <h3>Testbaarheid</h3>
+    <p>Er zijn nog niet genoeg automatische tests om het project production-ready te noemen. Toch helpt de structuur wel om later tests toe te voegen. Services kunnen getest worden rond use cases. Domain rules kunnen getest worden zonder HTTP. Repositories kunnen getest worden met databasegerichte tests. Frontend hooks en helpers kunnen apart getest worden voor filtering en paginatie.</p>
+
+    <h3>Handmatige controle</h3>
+    <p>Tijdens de ontwikkeling zijn linting, typechecking en backend builds gebruikt om fouten sneller te vinden. Voor functionele controle is de applicatie met testdata gebruikt: veel klanten, veel tickets, zoektermen, filters en langere conversaties. Dat was nodig om te zien of de paginatie en layout ook bruikbaar blijven met meer data.</p>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 13 van 14</span></div>
+  </section>
+
+  <section class="page">
+    <h2>13. Reflectie en toekomstig werk</h2>
+    <p>Ik heb in dit project vooral geleerd dat structuur belangrijker wordt naarmate een applicatie groeit. In het begin lijkt het sneller om logica rechtstreeks in een controller of screen te plaatsen. Later wordt dat moeilijker om te begrijpen. Door services, hooks, repositories, domain rules en utilities apart te houden, blijft het project beter verdedigbaar.</p>
+
+    <h3>Wat goed gelukt is</h3>
+    <p>De ticketworkflow is duidelijker geworden door de statussen New, Open en Closed. De chatweergave maakt de conversatie makkelijker leesbaar. De admin- en klantdashboards zijn bruikbaarder geworden door zoekvelden, filters, groepen en paginatie. Ook de bijlageflow is praktischer geworden door preview voor afbeeldingen en een duidelijke uploadlimiet.</p>
+
+    <h3>Wat ik anders zou aanpakken</h3>
+    <p>Als ik opnieuw zou starten, zou ik vroeger automatische tests toevoegen. Ik zou ook vroeger nadenken over server-side paginatie. Voor deze versie is client-side paginatie logisch omdat de lijsten nog beperkt zijn, maar in een echte productieomgeving kan de hoeveelheid tickets snel groeien.</p>
+
+    <h3>Toekomstig werk</h3>
+    <ul>
+      <li>Automatische integratietests voor de belangrijkste workflows.</li>
+      <li>Server-side paginatie voor grote ticket- en klantlijsten.</li>
+      <li>Betere productieconfiguratie voor secrets en logging.</li>
+      <li>Uitgebreider adminbeheer voor rollen en gebruikers.</li>
+      <li>Meer rapportage, bijvoorbeeld tickets per categorie of gemiddelde doorlooptijd.</li>
+    </ul>
+
+    <h3>Conclusie</h3>
+    <p>Forcebit Ticketing is een functionele ticketing applicatie met een duidelijke basisstructuur. De applicatie ondersteunt klanten en administrators in een realistische supportflow. De technische keuzes zijn niet gekozen om complex te zijn, maar om de code begrijpbaar te houden: HTTP in controllers, workflows in services, business rules in de domain laag, databasecode in repositories en schermgedrag in frontend hooks.</p>
+    <p>Voor mij is dit project vooral een oefening geweest in bewust structureren. Ik begrijp beter waarom Single Responsibility en een meerlagenstructuur nuttig zijn: niet omdat ze mooi klinken, maar omdat ze helpen om later uit te leggen, te verbeteren en veilig aan te passen.</p>
+
+    <div class="footer"><span>Forcebit Ticketing</span><span>Pagina 14 van 14</span></div>
+  </section>
+</body>
+</html>

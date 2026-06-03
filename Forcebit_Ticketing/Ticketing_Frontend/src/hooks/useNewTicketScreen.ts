@@ -1,4 +1,4 @@
-import { createTicket, createTicketWithAttachments } from "../api/ticketApi";
+import { createTicket, createTicketWithAttachments } from "../apis/ticketApi";
 import { useNotifications } from "../context/NotificationContext";
 
 import { useErrorHandler } from "./useErrorHandler";

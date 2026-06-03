@@ -6,13 +6,13 @@ import {
   createAttachmentPreviewUrl,
   downloadTicketAttachment,
   isPreviewableImageAttachment,
-} from "../api/attachmentApi";
+} from "../apis/attachmentApi";
 import {
   addTicketMessage,
   addTicketMessageWithAttachments,
   getTicketById,
   updateTicketStatus,
-} from "../api/ticketApi";
+} from "../apis/ticketApi";
 
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
@@ -270,11 +270,11 @@ export function useTicketDetailScreen(ticketId: string) {
   const clientStatusAction =
     user?.role === "Client" && ticket
       ? {
-          status: isTicketClosed
-            ? ("Open" as TicketStatus)
-            : ("Closed" as TicketStatus),
-          label: isTicketClosed ? "Reopen ticket" : "Close ticket",
-        }
+        status: isTicketClosed
+          ? ("Open" as TicketStatus)
+          : ("Closed" as TicketStatus),
+        label: isTicketClosed ? "Reopen ticket" : "Close ticket",
+      }
       : null;
 
   // Returning plain values/functions gives the screen a clean interface, almost
