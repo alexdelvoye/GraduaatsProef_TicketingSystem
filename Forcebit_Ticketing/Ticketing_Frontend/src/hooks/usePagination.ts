@@ -10,8 +10,8 @@ export function usePagination<T>(
   items: T[],
   { pageSize, initialPage = "first", resetKey }: UsePaginationOptions,
 ) {
-  // The hook is intentionally item-based instead of ticket-specific. Later the
-  // same state shape can drive paginated client lists and ticket lists.
+  // The hook is intentionally item-based instead of ticket-specific. The same
+  // state shape drives conversations, client rows, and ticket sections.
   const normalizedPageSize = Math.max(1, pageSize);
   const totalItems = items.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / normalizedPageSize));

@@ -4,16 +4,19 @@ import {
   RefreshControl,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
 import { AppHeader } from "../components/AppHeader";
+import { TicketGroupSection } from "../components/TicketGroupSection";
 import { useHomeScreen } from "../hooks/useHomeScreen";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
+import { categoryFilters, statusFilters } from "../types";
 import {
-  formatTicketDate,
+  formatTicketCategory,
   formatTicketStatus,
 } from "../utils/ticketFormatters";
 
@@ -24,13 +27,20 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     user,
     signOut,
     groupedTickets,
-    activeTicketCount,
+    ticketCounts,
+    ticketSearchText,
+    setTicketSearchText,
+    selectedStatus,
+    setSelectedStatus,
+    selectedCategory,
+    setSelectedCategory,
     isLoading,
     isRefreshing,
     errorMessage,
     loadTickets,
   } = useHomeScreen();
   const { isCompact, isNarrow } = useResponsiveLayout();
+  const ticketPageSize = isCompact ? 5 : 8;
 
   return (
     <ScrollView
@@ -63,9 +73,9 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           <Text style={[styles.title, isCompact ? styles.titleCompact : null]}>
             Tickets
           </Text>
-          <Text style={styles.muted}>
-            {activeTicketCount} active ticket
-            {activeTicketCount === 1 ? "" : "s"}
+          <Text style={styles.dashboardSummary}>
+            {ticketCounts.newTicketCount} new / {ticketCounts.openTicketCount}{" "}
+            open / {ticketCounts.closedTicketCount} closed
           </Text>
         </View>
 
@@ -88,6 +98,88 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         <Text style={styles.errorText}>{errorMessage}</Text>
       ) : null}
 
+      <View style={[styles.card, isCompact ? styles.cardCompact : null]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            isCompact ? styles.sectionTitleCompact : null,
+          ]}
+        >
+          Ticket filters
+        </Text>
+        <TextInput
+          style={[styles.input, styles.searchInput]}
+          placeholder="Search tickets by title, category, or subject"
+          placeholderTextColor={colors.muted}
+          value={ticketSearchText}
+          onChangeText={setTicketSearchText}
+        />
+
+        <View style={styles.filterBlock}>
+          <Text style={styles.filterBlockTitle}>Status</Text>
+          <View
+            style={[
+              styles.optionGrid,
+              isCompact ? styles.optionGridCompact : null,
+            ]}
+          >
+            {statusFilters.map((status) => (
+              <Pressable
+                key={status}
+                style={[
+                  styles.optionButton,
+                  isCompact ? styles.optionButtonCompact : null,
+                  selectedStatus === status && styles.optionButtonSelected,
+                ]}
+                onPress={() => setSelectedStatus(status)}
+              >
+                <Text
+                  style={[
+                    styles.optionButtonText,
+                    selectedStatus === status &&
+                      styles.optionButtonTextSelected,
+                  ]}
+                >
+                  {formatTicketStatus(status)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.filterBlock}>
+          <Text style={styles.filterBlockTitle}>Category</Text>
+          <View
+            style={[
+              styles.optionGrid,
+              isCompact ? styles.optionGridCompact : null,
+            ]}
+          >
+            {categoryFilters.map((category) => (
+              <Pressable
+                key={category}
+                style={[
+                  styles.optionButton,
+                  isCompact ? styles.optionButtonCompact : null,
+                  selectedCategory === category && styles.optionButtonSelected,
+                ]}
+                onPress={() => setSelectedCategory(category)}
+              >
+                <Text
+                  style={[
+                    styles.optionButtonText,
+                    selectedCategory === category &&
+                      styles.optionButtonTextSelected,
+                  ]}
+                >
+                  {category === "All" ? "All" : formatTicketCategory(category)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </View>
+
       {isLoading ? (
         <View style={styles.loadingState}>
           <ActivityIndicator color={colors.primary} />
@@ -96,84 +188,20 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         // groupedTickets is prepared by the hook so this screen only renders
         // each section.
         groupedTickets.map((group) => (
-          <View
+          <TicketGroupSection
             key={group.status}
-            style={[
-              styles.ticketSection,
-              isCompact ? styles.ticketSectionCompact : null,
-            ]}
-          >
-            <View
-              style={[
-                styles.sectionHeader,
-                isCompact ? styles.sectionHeaderCompact : null,
-              ]}
-            >
-              <View>
-                <Text
-                  style={[
-                    styles.sectionTitle,
-                    isCompact ? styles.sectionTitleCompact : null,
-                  ]}
-                >
-                  {group.title}
-                </Text>
-                <Text style={styles.muted}>{group.description}</Text>
-              </View>
-
-              <Text style={styles.countBadge}>{group.tickets.length}</Text>
-            </View>
-
-            {group.tickets.length === 0 ? (
-              <Text
-                style={[
-                  styles.emptyText,
-                  isCompact ? styles.emptyTextCompact : null,
-                ]}
-              >
-                No tickets in this collection.
-              </Text>
-            ) : (
-              group.tickets.map((ticket) => (
-                // Pressing a ticket opens the shared detail screen.
-                <Pressable
-                  key={ticket.id}
-                  style={[
-                    styles.ticketCard,
-                    isCompact ? styles.ticketCardCompact : null,
-                  ]}
-                  onPress={() =>
-                    navigation.navigate("TicketDetail", { ticketId: ticket.id })
-                  }
-                >
-                  <View
-                    style={[
-                      styles.ticketCardHeader,
-                      isCompact ? styles.ticketCardHeaderCompact : null,
-                    ]}
-                  >
-                    <Text style={styles.ticketTitle}>{ticket.title}</Text>
-                    <Text
-                      style={[
-                        styles.statusPill,
-                        isCompact ? styles.statusPillCompact : null,
-                        ticket.status === "Closed" && styles.statusPillClosed,
-                      ]}
-                    >
-                      {formatTicketStatus(ticket.status)}
-                    </Text>
-                  </View>
-
-                  <Text style={styles.ticketMeta}>
-                    {ticket.category} / {ticket.subject}
-                  </Text>
-                  <Text style={styles.ticketDate}>
-                    Updated {formatTicketDate(ticket.updatedAt)}
-                  </Text>
-                </Pressable>
-              ))
-            )}
-          </View>
+            group={group}
+            emptyMessage="No tickets in this collection."
+            getTicketMeta={(ticket) =>
+              `${formatTicketCategory(ticket.category)} / ${ticket.subject}`
+            }
+            isCompact={isCompact}
+            pageSize={ticketPageSize}
+            resetKey={`${ticketSearchText}:${selectedStatus}:${selectedCategory}`}
+            onOpenTicket={(ticketId) =>
+              navigation.navigate("TicketDetail", { ticketId })
+            }
+          />
         ))
       )}
     </ScrollView>

@@ -33,7 +33,8 @@ namespace Services.Services
             {
                 // Count tickets in the service because these counts are part of
                 // the admin use case, not properties stored on the user table.
-                var activeCount = client.Tickets.Count(t => t.Status != TicketStatus.Closed);
+                var newCount = client.Tickets.Count(t => t.Status == TicketStatus.New);
+                var openCount = client.Tickets.Count(t => t.Status == TicketStatus.Open);
                 var closedCount = client.Tickets.Count(t => t.Status == TicketStatus.Closed);
 
                 result.Add(new ClientListItemResponse
@@ -42,7 +43,8 @@ namespace Services.Services
                     Name = client.Name,
                     CompanyName = client.CompanyName,
                     Email = client.Email,
-                    ActiveTicketCount = activeCount,
+                    NewTicketCount = newCount,
+                    OpenTicketCount = openCount,
                     ClosedTicketCount = closedCount
                 });
             }

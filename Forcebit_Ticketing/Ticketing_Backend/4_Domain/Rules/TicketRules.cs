@@ -44,8 +44,8 @@ public static class TicketRules
 
         if (userRole == UserRole.Admin)
         {
-            // Admins can move tickets between active discussion and resolved.
-            // New is intentionally excluded because it is creation-only.
+            // Admins can move tickets between Open and Closed. New is
+            // intentionally excluded because it is creation-only.
             return true;
         }
 
@@ -63,7 +63,7 @@ public static class TicketRules
         if (newStatus == TicketStatus.Open)
         {
             // Reopening should not make the ticket look brand new again. It
-            // moves back to the active Open conversation state instead.
+            // moves back to the Open conversation state instead.
             return ticket.Status == TicketStatus.Closed;
         }
 
@@ -75,7 +75,7 @@ public static class TicketRules
     public static bool ShouldMoveToOpen(Ticket ticket, UserRole senderRole)
     {
         // An admin reply is the moment support has started handling a new
-        // ticket, so the ticket moves into the active Open conversation state.
+        // ticket, so the ticket moves into the Open conversation state.
         return ticket.Status == TicketStatus.New && senderRole == UserRole.Admin;
     }
 

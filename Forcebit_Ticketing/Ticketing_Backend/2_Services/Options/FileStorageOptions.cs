@@ -14,6 +14,8 @@ namespace Services.Options
         // ValidateDataAnnotations() for this options class.
         // Brevo transactional emails allow 20 MB total email size including
         // attachments and content. The local upload limit follows that ceiling.
+        // The frontend mirrors this value for user feedback, but this backend
+        // option remains the real enforcement point.
         [Range(1, 20 * 1024 * 1024)]
         public long MaxFileSizeInBytes { get; set; } = 20 * 1024 * 1024;
 

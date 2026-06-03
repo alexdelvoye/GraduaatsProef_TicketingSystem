@@ -40,6 +40,9 @@ namespace Persistence.Configurations
             builder.HasOne(a => a.UploadedBy)
                 .WithMany(u => u.Attachments)
                 .HasForeignKey(a => a.UploadedById)
+                // Keep uploader history stable. Account deletion removes ticket
+                // data through the service instead of letting this relationship
+                // cascade unexpectedly.
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

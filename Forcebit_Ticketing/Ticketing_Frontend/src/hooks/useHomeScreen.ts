@@ -4,50 +4,31 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import { getMyTickets } from "../api/ticketApi";
 import { useAuth } from "../context/AuthContext";
+import {
+  countTicketsByStatus,
+  ticketMatchesSearch,
+} from "../utils/ticketListHelpers";
+import {
+  clientTicketGroups,
+  groupTicketsByStatus,
+} from "../utils/ticketGroups";
 
 import { useErrorHandler } from "./useErrorHandler";
 
-import type { TicketGroup, TicketListItem } from "../types";
-
-// These groups describe the visual columns/sections on the home screen.
-// Keeping them as data makes the render code simpler and avoids repeating the
-// same status/title/description combinations.
-const ticketGroups: TicketGroup[] = [
-  {
-    status: "New",
-    title: "New",
-    description: "Waiting for a first support reply",
-  },
-  {
-    status: "Open",
-    title: "Open",
-    description: "Active conversation with Forcebit",
-  },
-  {
-    status: "Closed",
-    title: "Closed",
-    description: "Resolved tickets",
-  },
-];
-
-// Convert a flat API response into grouped data that the UI can render.
-// The backend returns tickets as a list; grouping is a presentation concern, so
-// it belongs in the frontend instead of the API.
-function groupTickets(tickets: TicketListItem[]) {
-  return ticketGroups.map((group) => ({
-    ...group,
-    tickets: tickets.filter((ticket) => ticket.status === group.status),
-  }));
-}
+import type { CategoryFilter, StatusFilter, TicketListItem } from "../types";
 
 // Home screen behavior hook. The screen component can render from these values
 // without needing to know how tickets are fetched or grouped.
 export function useHomeScreen() {
   const { user, signOut } = useAuth();
 
-  // The original ticket list is kept because other derived values, such as
-  // grouped tickets and active count, can be calculated from this one source.
+  // The original ticket list is kept because grouped tickets, search results,
+  // and status counts can all be calculated from this one source.
   const [tickets, setTickets] = useState<TicketListItem[]>([]);
+  const [ticketSearchText, setTicketSearchText] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("All");
+  const [selectedCategory, setSelectedCategory] =
+    useState<CategoryFilter>("All");
 
   // Initial loading and pull-to-refresh are separate states because they are
   // shown differently in the UI.
@@ -58,15 +39,34 @@ export function useHomeScreen() {
     "Could not load your tickets.",
   );
 
-  // useMemo recalculates only when tickets change. This is not only for
-  // performance; it also documents that groupedTickets is derived state.
-  const groupedTickets = useMemo(() => groupTickets(tickets), [tickets]);
+  // Client overview follows one derived-state pipeline: raw tickets -> enabled
+  // search/filter choices -> workflow groups -> paginated sections.
+  const filteredTickets = useMemo(
+    () =>
+      tickets.filter((ticket) => {
+        const statusMatches =
+          selectedStatus === "All" || ticket.status === selectedStatus;
+        const categoryMatches =
+          selectedCategory === "All" || ticket.category === selectedCategory;
 
-  // Closed tickets are not counted as active work. New and open conversation
-  // tickets both still need attention from either the client or support.
-  const activeTicketCount = tickets.filter(
-    (ticket) => ticket.status !== "Closed",
-  ).length;
+        return (
+          statusMatches &&
+          categoryMatches &&
+          ticketMatchesSearch(ticket, ticketSearchText)
+        );
+      }),
+    [selectedCategory, selectedStatus, ticketSearchText, tickets],
+  );
+
+  // useMemo recalculates only when filtered tickets change. This is not only
+  // for performance; it also documents that groupedTickets is derived state.
+  const groupedTickets = useMemo(
+    () =>
+      groupTicketsByStatus(filteredTickets, selectedStatus, clientTicketGroups),
+    [filteredTickets, selectedStatus],
+  );
+
+  const ticketCounts = useMemo(() => countTicketsByStatus(tickets), [tickets]);
 
   // showRefreshing chooses which loading indicator should appear. The same
   // function can be used for the first load and for pull-to-refresh.
@@ -112,7 +112,13 @@ export function useHomeScreen() {
     user,
     signOut,
     groupedTickets,
-    activeTicketCount,
+    ticketCounts,
+    ticketSearchText,
+    setTicketSearchText,
+    selectedStatus,
+    setSelectedStatus,
+    selectedCategory,
+    setSelectedCategory,
     isLoading,
     isRefreshing,
     errorMessage,

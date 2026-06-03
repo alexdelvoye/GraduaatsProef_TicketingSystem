@@ -37,8 +37,8 @@ namespace Persistence.Repositories
         public async Task<List<User>> GetClientsAsync()
         {
             return await _context.Users
-                // Include tickets because UserService calculates open/closed
-                // ticket counts for the admin client overview.
+                // Include tickets because UserService calculates New/Open/Closed
+                // counts for the admin client overview.
                 .Include(u => u.Tickets)
                 .Where(u => u.Role == UserRole.Client)
                 .OrderBy(u => u.CompanyName)

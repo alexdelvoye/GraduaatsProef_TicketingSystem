@@ -8,6 +8,8 @@ namespace Services.Options
     {
         // Brevo API key. Keep real values in user secrets or environment
         // variables, not in source-controlled appsettings files.
+        // This is not [Required] so local development can run without email;
+        // EmailService logs a warning and skips sending when the key is empty.
         public string ApiKey { get; set; } = string.Empty;
 
         // Brevo requires the sender address to be a verified sender/domain in

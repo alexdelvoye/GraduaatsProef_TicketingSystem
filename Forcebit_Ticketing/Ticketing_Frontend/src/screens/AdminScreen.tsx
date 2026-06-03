@@ -4,41 +4,186 @@ import {
   RefreshControl,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
 import { AppHeader } from "../components/AppHeader";
+import { PaginationControls } from "../components/PaginationControls";
+import { TicketGroupSection } from "../components/TicketGroupSection";
+import { usePagination } from "../hooks/usePagination";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import {
+  categoryFilters,
   getClientLabel,
   statusFilters,
+  subjectFilters,
   useAdminScreen,
 } from "../hooks/useAdminScreen";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
 import {
-  formatTicketDate,
+  formatTicketCategory,
   formatTicketStatus,
 } from "../utils/ticketFormatters";
 
+import type { ClientDashboardItem } from "../hooks/useAdminScreen";
 import type { AdminScreenProps } from "../types";
+import type { TicketStatusCounts } from "../utils/ticketListHelpers";
+
+type ClientStatusCountsProps = {
+  newTicketCount: number;
+  openTicketCount: number;
+  closedTicketCount: number;
+  isSelected: boolean;
+};
+
+type ClientStatusCountsData = Omit<ClientStatusCountsProps, "isSelected">;
+
+type ClientRowProps = {
+  clientId: string;
+  label: string;
+  subtitle: string;
+  counts: ClientStatusCountsData;
+  isCompact: boolean;
+  isSelected: boolean;
+  onPress: () => void;
+};
+
+function ClientStatusCounts({
+  newTicketCount,
+  openTicketCount,
+  closedTicketCount,
+  isSelected,
+}: ClientStatusCountsProps) {
+  const statusCounts = [
+    ["New", newTicketCount],
+    ["Open", openTicketCount],
+    ["Closed", closedTicketCount],
+  ] as const;
+
+  return (
+    <View style={styles.clientCountRow}>
+      {statusCounts.map(([label, count]) => (
+        <View
+          key={label}
+          style={[
+            styles.clientCountPill,
+            isSelected ? styles.clientCountPillSelected : null,
+          ]}
+        >
+          <Text
+            style={[
+              styles.clientCountText,
+              isSelected ? styles.clientCountTextSelected : null,
+            ]}
+          >
+            {label} {count}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function ClientRow({
+  clientId,
+  label,
+  subtitle,
+  counts,
+  isCompact,
+  isSelected,
+  onPress,
+}: ClientRowProps) {
+  return (
+    <Pressable
+      key={clientId}
+      style={[
+        styles.clientRow,
+        isCompact ? styles.clientRowCompact : null,
+        isSelected ? styles.clientRowSelected : null,
+      ]}
+      onPress={onPress}
+    >
+      <View style={styles.clientIdentity}>
+        <Text
+          style={[
+            styles.clientName,
+            isSelected ? styles.clientNameSelected : null,
+          ]}
+        >
+          {label}
+        </Text>
+        <Text
+          style={[
+            styles.clientEmail,
+            isSelected ? styles.clientEmailSelected : null,
+          ]}
+        >
+          {subtitle}
+        </Text>
+      </View>
+
+      <ClientStatusCounts {...counts} isSelected={isSelected} />
+    </Pressable>
+  );
+}
 
 export default function AdminScreen({ navigation }: AdminScreenProps) {
   const {
     signOut,
     clients,
+    filteredClients,
     selectedClientId,
     setSelectedClientId,
     selectedStatus,
     setSelectedStatus,
+    selectedCategory,
+    setSelectedCategory,
+    selectedSubject,
+    setSelectedSubject,
+    clientSearchText,
+    setClientSearchText,
+    ticketSearchText,
+    setTicketSearchText,
     filteredTickets,
-    activeTicketCount,
+    groupedTickets,
+    ticketCounts,
     isLoading,
     isRefreshing,
     errorMessage,
     loadDashboard,
   } = useAdminScreen();
   const { isCompact, isNarrow } = useResponsiveLayout();
+  const clientPageSize = isCompact ? 5 : 8;
+  const ticketPageSize = isCompact ? 6 : 10;
+  const clientPagination = usePagination(filteredClients, {
+    pageSize: clientPageSize,
+    resetKey: `${clientSearchText}:${filteredClients.length}`,
+  });
+  const ticketFilterResetKey = [
+    selectedClientId,
+    selectedStatus,
+    selectedCategory,
+    selectedSubject,
+    ticketSearchText,
+  ].join(":");
+
+  function getClientCounts(client: ClientDashboardItem) {
+    return {
+      newTicketCount: client.newTicketCount,
+      openTicketCount: client.openTicketCount,
+      closedTicketCount: client.closedTicketCount,
+    };
+  }
+
+  function getAllClientCounts(counts: TicketStatusCounts) {
+    return {
+      newTicketCount: counts.newTicketCount,
+      openTicketCount: counts.openTicketCount,
+      closedTicketCount: counts.closedTicketCount,
+    };
+  }
 
   return (
     <ScrollView
@@ -70,10 +215,10 @@ export default function AdminScreen({ navigation }: AdminScreenProps) {
           <Text style={[styles.title, isCompact ? styles.titleCompact : null]}>
             Client tickets
           </Text>
-          <Text style={styles.muted}>
+          <Text style={styles.dashboardSummary}>
             {clients.length} client{clients.length === 1 ? "" : "s"} /{" "}
-            {activeTicketCount} active ticket
-            {activeTicketCount === 1 ? "" : "s"}
+            {ticketCounts.newTicketCount} new / {ticketCounts.openTicketCount}{" "}
+            open / {ticketCounts.closedTicketCount} closed
           </Text>
         </View>
       </View>
@@ -97,67 +242,65 @@ export default function AdminScreen({ navigation }: AdminScreenProps) {
             >
               Clients
             </Text>
-            <View
-              style={[
-                styles.optionGrid,
-                isCompact ? styles.optionGridCompact : null,
-              ]}
-            >
-              {/* "All" is a frontend-only filter option. */}
-              <Pressable
-                style={[
-                  styles.optionButton,
-                  isCompact ? styles.optionButtonCompact : null,
-                  selectedClientId === "All" && styles.optionButtonSelected,
-                ]}
+            <TextInput
+              style={[styles.input, styles.searchInput]}
+              placeholder="Search clients by name, company, or email"
+              placeholderTextColor={colors.muted}
+              value={clientSearchText}
+              onChangeText={setClientSearchText}
+            />
+
+            <View style={styles.clientList}>
+              <ClientRow
+                clientId="All"
+                label="All clients"
+                subtitle={`${clients.length} total client${
+                  clients.length === 1 ? "" : "s"
+                }`}
+                counts={getAllClientCounts(ticketCounts)}
+                isCompact={isCompact}
+                isSelected={selectedClientId === "All"}
                 onPress={() => setSelectedClientId("All")}
-              >
+              />
+
+              {filteredClients.length === 0 ? (
                 <Text
                   style={[
-                    styles.optionButtonText,
-                    selectedClientId === "All" &&
-                      styles.optionButtonTextSelected,
+                    styles.emptyText,
+                    isCompact ? styles.emptyTextCompact : null,
                   ]}
                 >
-                  All clients
+                  No clients match this search.
                 </Text>
-              </Pressable>
-
-              {clients.map((client) => (
-                // Client buttons filter the ticket queue without another API
-                // request because all admin tickets are already loaded.
-                <Pressable
-                  key={client.id}
-                  style={[
-                    styles.optionButton,
-                    isCompact ? styles.optionButtonCompact : null,
-                    selectedClientId === client.id &&
-                      styles.optionButtonSelected,
-                  ]}
-                  onPress={() => setSelectedClientId(client.id)}
-                >
-                  <Text
-                    style={[
-                      styles.optionButtonText,
-                      selectedClientId === client.id &&
-                        styles.optionButtonTextSelected,
-                    ]}
-                  >
-                    {getClientLabel(client)}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.optionSubtext,
-                      selectedClientId === client.id &&
-                        styles.optionSubtextSelected,
-                    ]}
-                  >
-                    {client.activeTicketCount} active /{" "}
-                    {client.closedTicketCount} closed
-                  </Text>
-                </Pressable>
-              ))}
+              ) : (
+                clientPagination.pageItems.map((client) => (
+                  // Selecting a client filters the already-loaded ticket queue.
+                  <ClientRow
+                    key={client.id}
+                    clientId={client.id}
+                    label={getClientLabel(client)}
+                    subtitle={client.email}
+                    counts={getClientCounts(client)}
+                    isCompact={isCompact}
+                    isSelected={selectedClientId === client.id}
+                    onPress={() => setSelectedClientId(client.id)}
+                  />
+                ))
+              )}
             </View>
+
+            <PaginationControls
+              itemLabel="clients"
+              currentPage={clientPagination.currentPage}
+              totalPages={clientPagination.totalPages}
+              totalItems={clientPagination.totalItems}
+              startItem={clientPagination.startItem}
+              endItem={clientPagination.endItem}
+              canGoPrevious={clientPagination.canGoPrevious}
+              canGoNext={clientPagination.canGoNext}
+              onPrevious={clientPagination.goToPreviousPage}
+              onNext={clientPagination.goToNextPage}
+            />
           </View>
 
           <View style={[styles.card, isCompact ? styles.cardCompact : null]}>
@@ -167,46 +310,120 @@ export default function AdminScreen({ navigation }: AdminScreenProps) {
                 isCompact ? styles.sectionTitleCompact : null,
               ]}
             >
-              Status
+              Ticket filters
             </Text>
-            <View
-              style={[
-                styles.optionGrid,
-                isCompact ? styles.optionGridCompact : null,
-              ]}
-            >
-              {statusFilters.map((status) => (
-                // Status filters reuse backend status values plus the "All"
-                // frontend value.
-                <Pressable
-                  key={status}
-                  style={[
-                    styles.optionButton,
-                    isCompact ? styles.optionButtonCompact : null,
-                    selectedStatus === status && styles.optionButtonSelected,
-                  ]}
-                  onPress={() => setSelectedStatus(status)}
-                >
-                  <Text
+            <TextInput
+              style={[styles.input, styles.searchInput]}
+              placeholder="Search tickets by title, client, category, or subject"
+              placeholderTextColor={colors.muted}
+              value={ticketSearchText}
+              onChangeText={setTicketSearchText}
+            />
+
+            <View style={styles.filterBlock}>
+              <Text style={styles.filterBlockTitle}>Status</Text>
+              <View
+                style={[
+                  styles.optionGrid,
+                  isCompact ? styles.optionGridCompact : null,
+                ]}
+              >
+                {statusFilters.map((status) => (
+                  // Status filters reuse backend status values plus the "All"
+                  // frontend value.
+                  <Pressable
+                    key={status}
                     style={[
-                      styles.optionButtonText,
-                      selectedStatus === status &&
-                        styles.optionButtonTextSelected,
+                      styles.optionButton,
+                      isCompact ? styles.optionButtonCompact : null,
+                      selectedStatus === status && styles.optionButtonSelected,
                     ]}
+                    onPress={() => setSelectedStatus(status)}
                   >
-                    {formatTicketStatus(status)}
-                  </Text>
-                </Pressable>
-              ))}
+                    <Text
+                      style={[
+                        styles.optionButtonText,
+                        selectedStatus === status &&
+                          styles.optionButtonTextSelected,
+                      ]}
+                    >
+                      {formatTicketStatus(status)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.filterBlock}>
+              <Text style={styles.filterBlockTitle}>Category</Text>
+              <View
+                style={[
+                  styles.optionGrid,
+                  isCompact ? styles.optionGridCompact : null,
+                ]}
+              >
+                {categoryFilters.map((category) => (
+                  <Pressable
+                    key={category}
+                    style={[
+                      styles.optionButton,
+                      isCompact ? styles.optionButtonCompact : null,
+                      selectedCategory === category &&
+                        styles.optionButtonSelected,
+                    ]}
+                    onPress={() => setSelectedCategory(category)}
+                  >
+                    <Text
+                      style={[
+                        styles.optionButtonText,
+                        selectedCategory === category &&
+                          styles.optionButtonTextSelected,
+                      ]}
+                    >
+                      {category === "All"
+                        ? "All"
+                        : formatTicketCategory(category)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.filterBlock}>
+              <Text style={styles.filterBlockTitle}>Subject</Text>
+              <View
+                style={[
+                  styles.optionGrid,
+                  isCompact ? styles.optionGridCompact : null,
+                ]}
+              >
+                {subjectFilters.map((subject) => (
+                  <Pressable
+                    key={subject}
+                    style={[
+                      styles.optionButton,
+                      isCompact ? styles.optionButtonCompact : null,
+                      selectedSubject === subject &&
+                        styles.optionButtonSelected,
+                    ]}
+                    onPress={() => setSelectedSubject(subject)}
+                  >
+                    <Text
+                      style={[
+                        styles.optionButtonText,
+                        selectedSubject === subject &&
+                          styles.optionButtonTextSelected,
+                      ]}
+                    >
+                      {subject}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
             </View>
           </View>
 
-          <View
-            style={[
-              styles.ticketSection,
-              isCompact ? styles.ticketSectionCompact : null,
-            ]}
-          >
+          <View style={styles.ticketSection}>
             <View
               style={[
                 styles.sectionHeader,
@@ -229,56 +446,24 @@ export default function AdminScreen({ navigation }: AdminScreenProps) {
               </View>
             </View>
 
-            {filteredTickets.length === 0 ? (
-              <Text
-                style={[
-                  styles.emptyText,
-                  isCompact ? styles.emptyTextCompact : null,
-                ]}
-              >
-                No tickets match this filter.
-              </Text>
-            ) : (
-              filteredTickets.map((ticket) => (
-                // The same ticket detail screen is used by admin and client.
-                <Pressable
-                  key={ticket.id}
-                  style={[
-                    styles.ticketCard,
-                    isCompact ? styles.ticketCardCompact : null,
-                  ]}
-                  onPress={() =>
-                    navigation.navigate("TicketDetail", { ticketId: ticket.id })
-                  }
-                >
-                  <View
-                    style={[
-                      styles.ticketCardHeader,
-                      isCompact ? styles.ticketCardHeaderCompact : null,
-                    ]}
-                  >
-                    <Text style={styles.ticketTitle}>{ticket.title}</Text>
-                    <Text
-                      style={[
-                        styles.statusPill,
-                        isCompact ? styles.statusPillCompact : null,
-                        ticket.status === "Closed" && styles.statusPillClosed,
-                      ]}
-                    >
-                      {formatTicketStatus(ticket.status)}
-                    </Text>
-                  </View>
-
-                  <Text style={styles.ticketMeta}>
-                    {ticket.companyName || ticket.clientName} /{" "}
-                    {ticket.category} / {ticket.subject}
-                  </Text>
-                  <Text style={styles.ticketDate}>
-                    Updated {formatTicketDate(ticket.updatedAt)}
-                  </Text>
-                </Pressable>
-              ))
-            )}
+            {groupedTickets.map((group) => (
+              <TicketGroupSection
+                key={group.status}
+                group={group}
+                emptyMessage="No tickets match this filter."
+                getTicketMeta={(ticket) =>
+                  `${ticket.companyName || ticket.clientName} / ${formatTicketCategory(
+                    ticket.category,
+                  )} / ${ticket.subject}`
+                }
+                isCompact={isCompact}
+                pageSize={ticketPageSize}
+                resetKey={ticketFilterResetKey}
+                onOpenTicket={(ticketId) =>
+                  navigation.navigate("TicketDetail", { ticketId })
+                }
+              />
+            ))}
           </View>
         </>
       )}

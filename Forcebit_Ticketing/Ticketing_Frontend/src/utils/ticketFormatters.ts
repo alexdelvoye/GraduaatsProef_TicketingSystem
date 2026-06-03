@@ -32,3 +32,7 @@ const ticketStatusLabels: Record<StatusFilter | TicketStatus, string> = {
 export function formatTicketStatus(status: StatusFilter | TicketStatus) {
   return ticketStatusLabels[status];
 }
+
+export function formatTicketCategory(category: string) {
+  return category === "TechnicalProblem" ? "Technical" : category;
+}

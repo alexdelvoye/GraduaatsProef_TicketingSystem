@@ -131,8 +131,9 @@ export default function TicketDetailScreen({
             </View>
 
             {user?.role === "Admin" ? (
-              // Only admins can change status. The backend also enforces this,
-              // so the UI rule is for usability, not security.
+              // Only admins can use this Open/Closed status selector. The
+              // backend also enforces this, so the UI rule is for usability,
+              // not security.
               <View
                 style={[styles.card, isCompact ? styles.cardCompact : null]}
               >

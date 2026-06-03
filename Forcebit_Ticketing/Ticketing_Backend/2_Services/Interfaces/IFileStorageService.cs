@@ -2,6 +2,8 @@
 
 namespace Services.Interfaces
 {
+    // Contract for physical file storage. AttachmentService handles permission
+    // checks and metadata; this service only knows how to save/open/delete files.
     public interface IFileStorageService
     {
         // Returns the stored relative path that is saved in TicketAttachment.

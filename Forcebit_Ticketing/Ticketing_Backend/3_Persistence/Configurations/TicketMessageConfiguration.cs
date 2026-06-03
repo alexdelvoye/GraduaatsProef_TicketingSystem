@@ -26,7 +26,8 @@ namespace Persistence.Configurations
             builder.HasOne(m => m.Sender)
                 .WithMany(u => u.Messages)
                 .HasForeignKey(m => m.SenderId)
-                // Preserve messages if user deletion is considered later.
+                // Do not delete messages just because a sender row would be
+                // deleted. Ticket history should stay tied to the ticket.
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

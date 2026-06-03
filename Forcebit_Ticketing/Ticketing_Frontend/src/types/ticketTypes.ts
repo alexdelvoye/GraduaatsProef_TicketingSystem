@@ -22,16 +22,15 @@ export type TicketSubject =
 
 // "All" exists only in the frontend as a filter choice.
 export type StatusFilter = "All" | TicketStatus;
+export type CategoryFilter = "All" | TicketCategory;
+export type SubjectFilter = "All" | TicketSubject;
 
-// UI grouping shape used by the home screen.
+// UI grouping shape used by the client and admin ticket dashboards.
 export type TicketGroup = {
   status: TicketStatus;
   title: string;
   description: string;
 };
-
-// Arrays are used by forms/buttons when rendering selectable values.
-export const ticketStatuses: TicketStatus[] = ["New", "Open", "Closed"];
 
 // New is creation-only, so status update controls expose only actionable states.
 export const ticketStatusUpdateOptions: TicketStatus[] = ["Open", "Closed"];
@@ -55,6 +54,9 @@ export const ticketSubjects: TicketSubject[] = [
   "Account",
   "Other",
 ];
+
+export const categoryFilters: CategoryFilter[] = ["All", ...ticketCategories];
+export const subjectFilters: SubjectFilter[] = ["All", ...ticketSubjects];
 
 // Compact ticket shape for lists. It deliberately excludes heavy detail data
 // such as messages.
@@ -129,6 +131,7 @@ export type ClientListItem = {
   name: string;
   companyName: string;
   email: string;
-  activeTicketCount: number;
+  newTicketCount: number;
+  openTicketCount: number;
   closedTicketCount: number;
 };

@@ -35,8 +35,8 @@ export function PaginationControls({
   }
 
   return (
-    // Generic pagination controls keep conversation paging and future list
-    // paging visually and behaviorally consistent.
+    // Generic pagination controls keep conversations, client rows, and ticket
+    // sections visually and behaviorally consistent.
     <View
       style={[
         styles.paginationBar,

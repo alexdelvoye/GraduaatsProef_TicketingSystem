@@ -225,8 +225,9 @@ export function useTicketDetailScreen(ticketId: string) {
     }
   }
 
-  // Status action buttons call this with the target status. Admins can use the
-  // full set of statuses; clients use the same endpoint for close/reopen.
+  // Status action buttons call this with the target status. Admin controls use
+  // the actionable workflow states; clients use the same endpoint for
+  // close/reopen.
   async function handleUpdateStatus(status: TicketStatus) {
     try {
       clearError();
@@ -265,7 +266,7 @@ export function useTicketDetailScreen(ticketId: string) {
   const isTicketClosed = ticket?.status === "Closed";
 
   // Client status actions are limited to close/reopen. Reopening moves a closed
-  // ticket to the active conversation state, not to the brand-new "New" state.
+  // ticket to Open, not to the brand-new "New" state.
   const clientStatusAction =
     user?.role === "Client" && ticket
       ? {

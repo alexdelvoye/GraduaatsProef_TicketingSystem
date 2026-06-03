@@ -42,6 +42,10 @@ export async function appendAttachmentToFormData(
     return;
   }
 
+  // React Native accepts this object at runtime for multipart uploads, but the
+  // TypeScript DOM FormData type only knows about Blob/File. The cast keeps the
+  // platform-specific shape in one utility instead of spreading it through API
+  // calls.
   formData.append("files", {
     uri: attachment.uri,
     name: attachment.name,

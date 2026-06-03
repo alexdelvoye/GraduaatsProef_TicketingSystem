@@ -28,11 +28,6 @@ export function getClients() {
   return apiFetch<ClientListItem[]>("/admin/clients");
 }
 
-// Admin endpoint: tickets for one selected client.
-export function getClientTickets(clientId: string) {
-  return apiFetch<TicketListItem[]>(`/admin/clients/${clientId}/tickets`);
-}
-
 // Shared endpoint: service rules decide whether the current user may view it.
 export function getTicketById(ticketId: string) {
   return apiFetch<TicketDetail>(`/tickets/${ticketId}`);

@@ -16,6 +16,9 @@ namespace Persistence.Configurations
                 .IsRequired()
                 .HasMaxLength(150);
 
+            // HasConversion<string>() stores enum names such as "TechnicalProblem"
+            // and "Open" instead of numbers. That makes database rows readable
+            // during debugging and demos.
             builder.Property(t => t.Category)
                 .IsRequired()
                 .HasConversion<string>()

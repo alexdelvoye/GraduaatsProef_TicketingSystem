@@ -35,8 +35,8 @@ namespace Api.Controllers
         [HttpGet("clients/{clientId:guid}/tickets")]
         public async Task<ActionResult<List<TicketListItemResponse>>> GetClientTickets(Guid clientId)
         {
-            // This lets an admin inspect one client's tickets from the admin
-            // screen without changing the client-facing endpoint.
+            // Admin-only client drilldown endpoint. It reuses the client-ticket
+            // query without exposing the normal client-facing route to admins.
             var tickets = await _ticketService.GetTicketsForClientAsync(clientId);
 
             return Ok(tickets);

@@ -1,7 +1,7 @@
 import { colors } from "./theme";
 
-// Shared pagination styles are used first by the ticket conversation. The same
-// controls can later be placed under client and ticket lists.
+// Shared pagination styles keep conversations, client rows, and ticket sections
+// visually aligned.
 export const paginationStyleGroup = {
   paginationBar: {
     backgroundColor: colors.card,

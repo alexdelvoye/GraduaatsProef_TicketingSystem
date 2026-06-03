@@ -4,15 +4,30 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import { getAllTickets, getClients } from "../api/ticketApi";
 import { useAuth } from "../context/AuthContext";
-import { statusFilters } from "../types";
+import { categoryFilters, statusFilters, subjectFilters } from "../types";
+import {
+  clientMatchesSearch,
+  countTicketsByStatus,
+  ticketMatchesSearch,
+} from "../utils/ticketListHelpers";
+import { adminTicketGroups, groupTicketsByStatus } from "../utils/ticketGroups";
 
 import { useErrorHandler } from "./useErrorHandler";
 
-import type { ClientListItem, StatusFilter, TicketListItem } from "../types";
+import type {
+  CategoryFilter,
+  ClientListItem,
+  StatusFilter,
+  SubjectFilter,
+  TicketListItem,
+} from "../types";
+import type { TicketStatusCounts } from "../utils/ticketListHelpers";
+
+export type ClientDashboardItem = ClientListItem & TicketStatusCounts;
 
 // Re-export so the screen can import the hook and available filter values from
 // one file.
-export { statusFilters };
+export { categoryFilters, statusFilters, subjectFilters };
 
 // Display company name first because the admin usually thinks in customers, not
 // contact persons. Fall back to name for clients without a company.
@@ -33,6 +48,11 @@ export function useAdminScreen() {
   // backend enum values.
   const [selectedClientId, setSelectedClientId] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("All");
+  const [selectedCategory, setSelectedCategory] =
+    useState<CategoryFilter>("All");
+  const [selectedSubject, setSelectedSubject] = useState<SubjectFilter>("All");
+  const [clientSearchText, setClientSearchText] = useState("");
+  const [ticketSearchText, setTicketSearchText] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -77,34 +97,88 @@ export function useAdminScreen() {
     }, [loadDashboard]),
   );
 
+  // The clients endpoint already returns counts, but this page also owns the
+  // full ticket list. Recalculating from tickets keeps the client rows and the
+  // visible ticket queue based on the same refreshed source of truth.
+  const clientsWithTicketCounts = useMemo<ClientDashboardItem[]>(
+    () =>
+      clients.map((client) => ({
+        ...client,
+        ...countTicketsByStatus(
+          tickets.filter((ticket) => ticket.clientId === client.id),
+        ),
+      })),
+    [clients, tickets],
+  );
+
+  const filteredClients = useMemo(
+    () =>
+      clientsWithTicketCounts.filter((client) =>
+        clientMatchesSearch(client, clientSearchText),
+      ),
+    [clientSearchText, clientsWithTicketCounts],
+  );
+
   // Filtering is derived state: do not store it separately, calculate it from
-  // tickets and filter choices.
+  // tickets, search text, and filter choices.
   const filteredTickets = useMemo(() => {
     return tickets.filter((ticket) => {
       const clientMatches =
         selectedClientId === "All" || ticket.clientId === selectedClientId;
       const statusMatches =
         selectedStatus === "All" || ticket.status === selectedStatus;
+      const categoryMatches =
+        selectedCategory === "All" || ticket.category === selectedCategory;
+      const subjectMatches =
+        selectedSubject === "All" || ticket.subject === selectedSubject;
+      const searchMatches = ticketMatchesSearch(ticket, ticketSearchText);
 
-      // A ticket must match both selected filters to appear.
-      return clientMatches && statusMatches;
+      // A ticket must match every enabled filter to appear.
+      return (
+        clientMatches &&
+        statusMatches &&
+        categoryMatches &&
+        subjectMatches &&
+        searchMatches
+      );
     });
-  }, [selectedClientId, selectedStatus, tickets]);
+  }, [
+    selectedCategory,
+    selectedClientId,
+    selectedStatus,
+    selectedSubject,
+    ticketSearchText,
+    tickets,
+  ]);
 
-  // Gives the admin quick feedback about remaining active work.
-  const activeTicketCount = tickets.filter(
-    (ticket) => ticket.status !== "Closed",
-  ).length;
+  const ticketCounts = useMemo(() => countTicketsByStatus(tickets), [tickets]);
+  // The screen renders grouped workflow sections. TicketGroupSection owns the
+  // page state inside each visible New/Open/Closed section.
+  const groupedTickets = useMemo(
+    () =>
+      groupTicketsByStatus(filteredTickets, selectedStatus, adminTicketGroups),
+    [filteredTickets, selectedStatus],
+  );
 
   return {
     signOut,
     clients,
+    filteredClients,
     selectedClientId,
     setSelectedClientId,
     selectedStatus,
     setSelectedStatus,
+    selectedCategory,
+    setSelectedCategory,
+    selectedSubject,
+    setSelectedSubject,
+    clientSearchText,
+    setClientSearchText,
+    ticketSearchText,
+    setTicketSearchText,
     filteredTickets,
-    activeTicketCount,
+    groupedTickets,
+    ticketCounts,
     isLoading,
     isRefreshing,
     errorMessage,

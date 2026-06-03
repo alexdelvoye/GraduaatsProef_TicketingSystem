@@ -1,96 +1,68 @@
-# Forcebit Ticketing Technical Notes
+# Forcebit Ticketing Technical Deep Dive
 
-This document explains the project in a way that is useful for understanding, presenting, and defending the code. The normal `README.md` explains how to run the project. This file explains why the project is structured the way it is.
+This document explains how the project is structured and why the main design choices were made. The normal [README.md](README.md) is the practical run guide. This file is the educational version: architecture, theory, workflows, and defense notes.
 
-## High-Level Architecture
+## How To Read This Project
 
-The backend follows a layered architecture:
+When you need to understand a feature, start at the user action and follow the dependency direction inward:
+
+1. Frontend screen or form: what the user sees and can click.
+2. Frontend hook: state, loading, validation result handling, API calls, filtering, and navigation decisions.
+3. API controller: route, HTTP binding, JWT user id/role, and conversion from HTTP shapes to service DTOs.
+4. Service: the application use case and coordination point.
+5. Domain entity/rule: business behavior that should not depend on HTTP or EF Core.
+6. Repository and EF Core configuration: database queries, includes, relationships, and persistence details.
+
+This reading path is useful during a defense because it shows where each responsibility lives instead of jumping randomly between files.
+
+## Architecture Overview
+
+The backend uses a layered architecture. The normal request flow looks like this:
 
 ```text
 API layer -> Services layer -> Persistence layer -> Domain layer
 ```
 
-The dependency direction is important:
+The important idea is responsibility direction:
 
-- The API layer receives HTTP requests and returns HTTP responses.
-- The Services layer contains application use cases such as registering, logging in, creating tickets, replying, and changing status.
-- The Persistence layer talks to the database through Entity Framework Core.
-- The Domain layer contains business concepts such as `Ticket`, `User`, `TicketStatus`, and rule classes.
+- The API layer knows about HTTP.
+- The Services layer knows about use cases.
+- The Persistence layer knows about EF Core and MySQL.
+- The Domain layer knows about business concepts and rules.
 
-The goal is to prevent controllers from becoming too smart. Controllers should not know how ticket rules work, how passwords are hashed, or how files are stored. They should receive a request, ask a service to perform the action, and return a result.
+At project-reference level, the API project also references Persistence because it composes dependency injection. The service use cases still depend on repository interfaces, while the Persistence project provides the EF Core implementations.
 
-## Development Launcher
+Controllers should not contain ticket rules. Repositories should not decide who may reply to a ticket. Domain rules should not know about route names or `IFormFile`. Keeping those responsibilities separate makes the code easier to explain, test, and change.
 
-The repository contains `scripts/Start-Forcebit.ps1` for development and
-showcase demos. It starts the ASP.NET Core backend, starts the Expo web
-frontend, and lets Expo open the frontend URL in the browser.
+The frontend follows a similar separation:
 
-`Start-Forcebit.bat` is a Windows double-click entry point that delegates to the
-PowerShell script. This avoids duplicated startup logic while making the app
-easy to launch from File Explorer during a demonstration.
+```text
+Screen -> Hook -> API module -> Backend
+```
 
-The script is intentionally placed in `scripts` instead of inside the backend or
-frontend source folders. It is project automation, not application logic. This
-keeps the application layers focused while still making the demo startup
-repeatable.
-
-The launcher also checks for `dotnet`, `npm`, and installed frontend
-dependencies before starting the app. That makes setup problems visible at the
-beginning, which is safer during a presentation than discovering the issue after
-multiple terminal windows have opened.
-
-The launcher keeps running while the backend and frontend are active. Pressing
-any key in the launcher window stops the process trees that were started for the
-demo, which closes the backend and frontend terminal windows and prevents
-leftover `dotnet` or `npx expo` processes from continuing in the background.
-
-The backend and frontend are started in separate terminals so their logs stay
-separated by responsibility. Backend `ILogger` output remains in the backend
-terminal, while Expo/Metro output remains in the frontend terminal. The launcher
-does not redirect these streams to files, because terminal output is easier to
-watch during development and during a live project demonstration.
-
-Browser opening for the frontend is delegated to Expo's `--web` flag. The
-launcher does not open the frontend URL itself, because doing both would create
-two browser tabs for the same app.
-
-## Database Startup Check
-
-The backend depends on MySQL for authentication, tickets, conversation messages,
-attachments, profile data, and the seeded admin account. Because those workflows
-cannot work without persistence, the API verifies the database connection during
-startup.
-
-There are two checks:
-
-- `PersistenceServiceExtensions` wraps Pomelo's server-version detection so a
-  stopped MySQL service or invalid connection string produces a clear startup
-  exception.
-- `DatabaseStartupExtensions.EnsureDatabaseIsAvailableAsync` calls EF Core's
-  `CanConnectAsync` after the app is built and before requests are accepted.
-
-This is intentional fail-fast behavior. It is better for development and demos
-if the backend stops immediately with a database message than if login or ticket
-replies fail later with a less obvious provider exception.
+Screens compose UI. Hooks own behavior. API modules own endpoint calls. Shared utilities own reusable transformations such as search, grouping, formatting, and attachment form-data conversion.
 
 ## Single Responsibility Principle
 
-Single Responsibility Principle means that a class should have one main reason to change.
+Single Responsibility Principle means that a class or module should have one main reason to change.
 
-Examples in this project:
+In this project:
 
-- Controllers change when API routes or HTTP behavior changes.
+- Controllers change when routes or HTTP behavior change.
 - Services change when application workflows change.
 - Repositories change when database queries change.
 - Domain rules change when business rules change.
-- Options classes change when configuration settings change.
-- Middleware changes when cross-cutting request behavior changes.
+- Options classes change when configuration shape changes.
+- Frontend screens change when layout changes.
+- Frontend hooks change when screen behavior changes.
+- Frontend components change when reusable UI changes.
+- Frontend utilities change when reusable data transformations change.
 
-This keeps the code easier to explain. For example, ticket status validation is not spread across random screens and controllers. It belongs close to the ticket domain logic.
+This is why ticket status rules live close to the domain and service layer instead of being spread across controllers and React components.
 
 ## Backend Layers
 
-## API Layer
+### API Layer
 
 Location:
 
@@ -100,26 +72,26 @@ Ticketing_Backend/1_Api
 
 Main responsibilities:
 
-- Configure the application in `Program.cs`.
+- Configure the ASP.NET Core app in `Program.cs`.
 - Register dependency injection.
-- Configure authentication and authorization.
-- Configure Swagger.
+- Configure logging, Swagger, CORS, JWT authentication, and authorization.
 - Add middleware.
 - Expose HTTP endpoints through controllers.
-- Translate HTTP-specific request shapes into service DTOs.
+- Read route/body/form data.
+- Read authenticated user id and role from JWT claims.
+- Map HTTP-specific request shapes to service DTOs.
 
-Controllers inherit from `ApiControllerBase`. This base controller centralizes repeated claim-reading logic such as `CurrentUserId` and `CurrentUserRole`. That keeps individual controllers smaller and easier to read.
+Controllers inherit from `ApiControllerBase`, which centralizes claim reading through values such as `CurrentUserId` and `CurrentUserRole`. That matters because the frontend should not send a trusted user id. The authenticated user is determined by the JWT.
 
-API-only request models live in `1_Api/Requests`. These models exist when the
-shape is caused by HTTP itself, for example multipart form-data binding with
-`[FromForm]`. They are kept out of `2_Services/DTOs` because the services should
-not know whether data arrived as JSON, form-data, or another transport later.
+API-only request classes live in:
 
-`FormFileMapper` also lives in the API layer for the same reason. ASP.NET gives
-uploaded files to controllers as `IFormFile`, but the services receive
-`FileUploadRequest`, which contains only normal metadata and a `Stream`.
+```text
+Ticketing_Backend/1_Api/Requests
+```
 
-## Services Layer
+Those classes exist because HTTP sometimes has a special shape. Multipart form-data is the best example. ASP.NET receives uploaded files as `IFormFile`, but services should not depend on ASP.NET-specific types. The controller maps files through `FormFileMapper` into `FileUploadRequest`, which is a normal service DTO containing metadata and a stream.
+
+### Services Layer
 
 Location:
 
@@ -130,42 +102,26 @@ Ticketing_Backend/2_Services
 Main responsibilities:
 
 - Execute application use cases.
-- Validate request-specific rules.
+- Validate use-case input.
 - Call repositories.
+- Call domain rules and domain behavior.
 - Call file storage.
-- Create DTO responses.
+- Call email services.
+- Create response DTOs.
 - Throw meaningful custom exceptions.
-- Log important actions.
+- Log important workflow events.
 
-Example:
+`TicketService` is the main ticket workflow class. It creates tickets, loads ticket details, adds replies, changes status, coordinates attachments, and triggers email notifications. It does not return HTTP responses directly. Instead, it throws service exceptions such as `NotFoundException`, `ForbiddenException`, or `BadRequestException`; middleware turns those into consistent HTTP responses.
 
-`TicketService` is responsible for creating tickets, loading ticket details, adding messages, and changing status. It does not directly decide how HTTP errors should look. It throws service exceptions, and the exception middleware converts them into HTTP responses.
+Interfaces in `2_Services/Interfaces` are contracts between layers. For example:
 
-General use-case DTOs live in `2_Services/DTOs`. These are the contracts used by
-the service methods, such as `CreateTicketRequest`, `TicketDetailResponse`, and
-`TicketMessageResponse`. They are not EF entities and they are not HTTP-only
-form binding models. This is a practical 3-layer compromise: controllers and
-services share application DTOs, while domain entities and database models stay
-separate.
+- `ITicketService` describes ticket use cases.
+- `ITicketRepository` describes what ticket data the service needs.
+- `IFileStorageService` describes file storage behavior without tying the service to a local disk implementation.
 
-## Persistence Layer
+The service layer depends on abstractions. The persistence layer provides the EF Core implementations.
 
-Location:
-
-```text
-Ticketing_Backend/3_Persistence
-```
-
-Main responsibilities:
-
-- Entity Framework Core `DbContext`.
-- Repository implementations.
-- Database queries.
-- Saving changes.
-
-Repositories hide database details from the services. A service asks for tickets or users without needing to know the exact EF Core query every time.
-
-## Domain Layer
+### Domain Layer
 
 Location:
 
@@ -175,20 +131,60 @@ Ticketing_Backend/4_Domain
 
 Main responsibilities:
 
-- Core entities.
-- Enums.
-- Business rules.
+- Entities such as `Ticket`, `TicketMessage`, `TicketAttachment`, and `User`.
+- Enums such as `TicketStatus`, `TicketCategory`, `TicketSubject`, and `UserRole`.
+- Rule classes such as `TicketRules` and `UserRoleRules`.
 - Domain behavior that belongs to the business concept itself.
 
 Examples:
 
-- `Ticket.Create(...)` creates a valid ticket object.
-- `Ticket.AddMessage(...)` adds a message to a ticket.
-- `Ticket.ChangeStatus(...)` changes the ticket status.
-- `TicketRules` validates ticket-related business rules.
-- `UserRoleRules` validates role-related business rules.
+- `Ticket.Create(...)` creates a ticket in a valid initial state.
+- `Ticket.AddMessage(...)` adds a conversation message.
+- `Ticket.ChangeStatus(...)` updates status and keeps status-related timestamps consistent.
+- `TicketRules.CanAccess(...)` decides if a user may view a ticket.
+- `TicketRules.CanReply(...)` decides if a user may reply.
+- `TicketRules.CanChangeStatus(...)` protects the status workflow.
 
-This helps avoid an anemic domain model, where entities are only property bags and all rules are hidden somewhere else.
+This prevents an anemic domain model. An anemic model is where entities are only property bags and every rule is hidden in unrelated service code. This project still uses services for use cases, but the business concepts keep important behavior and rules close to the domain.
+
+### Persistence Layer
+
+Location:
+
+```text
+Ticketing_Backend/3_Persistence
+```
+
+Main responsibilities:
+
+- EF Core `AppDbContext`.
+- Entity configuration classes.
+- Repository implementations.
+- Migrations.
+- Database reads and writes.
+
+Repositories hide EF Core query details from services. For example, a service can ask for a ticket detail without repeating all the `Include(...)` logic needed to load messages, senders, client data, and attachments.
+
+This gives one clear place to change query behavior if the database access pattern changes later.
+
+## DTOs And Mapping
+
+DTO means Data Transfer Object. DTOs define the shape of data crossing a boundary.
+
+This project uses DTOs for three reasons:
+
+- Prevent EF/domain entities from leaking directly to the frontend.
+- Keep API responses stable even if database shape changes.
+- Make request and response contracts easy to read.
+
+Examples:
+
+- `TicketListItemResponse` is small and used for overview pages.
+- `TicketDetailResponse` includes messages and attachment metadata.
+- `CreateTicketRequest` describes what the service needs to create a ticket.
+- `ClientListItemResponse` includes client summary data and ticket counts for the admin dashboard.
+
+API-specific form request classes stay in the API layer because their shape is caused by HTTP binding. General use-case DTOs live in the Services layer because services own the application workflow.
 
 ## Options Pattern
 
@@ -198,419 +194,368 @@ The backend uses the Options pattern for grouped configuration:
 - `EmailOptions`
 - `FileStorageOptions`
 
-Instead of reading raw configuration strings everywhere, settings are bound once in `Program.cs` and injected where needed through `IOptions<T>`.
+Instead of reading raw configuration strings throughout the app, `Program.cs` binds configuration sections to strongly typed classes and validates them on startup.
 
 Benefits:
 
 - Related settings stay together.
-- Missing or invalid configuration can fail early on startup.
-- Services receive typed configuration instead of magic strings.
-- The code is easier to test.
+- Missing or invalid configuration fails early.
+- Services receive typed settings instead of magic strings.
+- Configuration becomes easier to explain and test.
 
-Example:
+The Brevo API key can come from appsettings, user secrets, or `BREVO_APIKEY`. Empty environment variable values are ignored so they do not accidentally override local user secrets.
 
-JWT settings belong in `JwtOptions`, not scattered through the authentication service and `Program.cs`.
+## Startup Behavior
 
-## Authentication Flow
+The backend does two important startup actions:
 
-The project uses JWT bearer authentication.
+1. It checks the database connection before accepting requests.
+2. It seeds a configured admin user if that user does not exist.
+
+The database check is fail-fast behavior. Authentication, tickets, messages, attachments, profile data, and the admin account all depend on MySQL. If MySQL is stopped, the API should fail during startup with a clear database error instead of appearing healthy and failing later during login or replies.
+
+The admin seed is development/demo support. Credentials come from configuration, not hard-coded service logic.
+
+## Authentication And Authorization
+
+The app uses JWT bearer authentication.
 
 Login flow:
 
-1. The user sends email and password.
-2. `AuthService` checks the credentials.
-3. If valid, the backend creates a JWT token.
+1. User submits email and password.
+2. `AuthService` finds the user and verifies the BCrypt password hash.
+3. `TokenService` creates a JWT.
 4. The frontend stores the token.
-5. Future API calls send the token in the `Authorization` header.
-6. ASP.NET Core validates the token before protected endpoints run.
+5. API calls send the token in the `Authorization` header.
+6. ASP.NET Core validates the token and fills the `User` claims.
+7. Controllers read the user id and role from claims.
 
-The token contains claims such as the user id, email, and role. Controllers can read those claims through `ApiControllerBase`.
+Authentication answers: who is this user?
 
-## Error Handling
+Authorization answers: may this user do this action?
 
-The backend uses `ExceptionMiddleware` as a central error handler.
+Role attributes such as `[Authorize(Roles = "Admin")]` protect admin-only routes. More specific ticket permissions live in `TicketRules`, because rules like "a client can only view their own ticket" are business rules, not just route rules.
 
-Instead of every controller having repeated `try/catch` blocks, services throw meaningful exceptions:
+## Error Handling And Logging
 
-- `ValidationException`
+The backend uses `ExceptionMiddleware` for central error handling.
+
+Services throw meaningful exceptions:
+
+- `BadRequestException`
 - `UnauthorizedException`
 - `ForbiddenException`
 - `NotFoundException`
 - `ConflictException`
 
-The middleware maps these exceptions to HTTP status codes and returns a consistent error response.
+The middleware maps them to consistent JSON responses. This keeps controllers small and gives the frontend one predictable error shape.
 
-Benefits:
+`Program.cs` also customizes model validation responses so DataAnnotations errors use the same general response style.
 
-- API errors look consistent.
-- Controllers stay simple.
-- Unexpected exceptions are logged.
-- Internal exception details are not leaked to the frontend.
-
-The frontend has a matching error handling approach:
-
-- API errors are normalized in one place.
-- Screens and hooks can show user-friendly messages.
-- Toast notifications give consistent success and error feedback.
-
-## Logging
-
-The backend uses ASP.NET Core logging with console output and request logging middleware.
-
-What gets logged:
-
-- Incoming HTTP requests.
-- Response status and duration.
-- Important service actions.
-- Validation and not-found cases at lower severity.
-- Unexpected exceptions at error severity.
-
-This is useful during development because it helps explain why a backend stopped, why a request failed, or which workflow was executed.
-
-Log levels matter:
-
-- `Information` for normal important events.
-- `Warning` for expected but important problems, such as invalid login.
-- `Error` for unexpected exceptions.
-
-## Email Notifications
-
-The backend sends ticket notifications through Brevo's transactional email API. `EmailOptions` is bound with the Options pattern, and `EmailService` receives a managed `HttpClient` through `AddHttpClient`. The API key can come from the `Email:ApiKey` setting, .NET user secrets, or from the `BREVO_APIKEY` environment variable. Empty `BREVO_APIKEY` values are ignored so they do not accidentally override the local user secret.
-
-Notification rules:
-
-- Admin sends a message: the ticket client receives the ticket title and message body.
-- Admin changes status: the ticket client receives the ticket title and new status. Closed tickets use a clearer `Ticket closed` subject because that is the most important client-facing status update.
-- Client creates a ticket, replies, closes, or reopens: no email is sent. Admins follow those actions from the dashboard.
-
-`TicketService` decides who should be notified because it knows the workflow and current user role. `EmailService` only formats and sends the email, which keeps provider-specific Brevo code out of the ticket use case. Brevo rejects unverified sender addresses, so `Email:FromEmail` must match a sender or domain configured in the Brevo account.
-
-The service logs Brevo's response body on successful sends so a test run can be matched with the provider message id. Email bodies use a simple table-free HTML layout with clear sections for the heading, ticket title, message/status content, and footer. User-entered ticket text is HTML-encoded before it is inserted into the email.
-
-Ticket messages are limited to 3000 characters. The frontend Yup schemas, backend request DTOs, and database column all use the same limit so long messages fail with a validation message instead of an unexpected database error.
-
-## Attachment Flow
-
-The attachment workflow follows the same three-layer structure as the rest of the project:
-
-1. `NewTicketForm` and `TicketReplyForm` let the user select files and send multipart form data only when files are present. The picker appends new selections so several files can be attached to the first message or a later reply.
-2. `attachmentFormData` builds the multipart request differently per platform: web uploads are converted to Blob/File values, while native uploads use the React Native `{ uri, name, type }` file shape.
-3. The API controller uses an API request model for the text fields, reads `Request.Form.Files` for files, and uses `FormFileMapper` to convert uploaded files into `FileUploadRequest` DTOs. Reading from `Request.Form.Files` is more reliable for React Native multipart uploads than depending on one exact action-parameter binding shape.
-4. `TicketService` creates the message, saves files through `IFileStorageService`, creates `TicketAttachment` metadata rows, and sends admin attachments through Brevo when the client should receive an email. During ticket creation, selected files are attached to the initial message because the description is stored as the first conversation message.
-5. `LocalFileStorageService` validates size and extension, writes the file to the configured upload folder, and returns the stored file path. It also owns protected file opening/deletion path resolution, so path safety stays inside the storage implementation instead of being repeated in controllers or workflow services.
-6. Existing attachments are downloaded through a protected API endpoint. `attachmentApi` fetches the file with the JWT token and creates a temporary browser download link, so the upload folder does not need to be publicly exposed.
-7. PNG and JPG/JPEG attachments use the same protected endpoint for inline previews. The frontend fetches the file with the JWT token, creates a temporary object URL, and revokes old preview URLs when the ticket data changes or the screen unmounts. This keeps the upload folder private while avoiding forced downloads for normal screenshots/photos.
-
-The database stores attachment metadata, not the binary file. The metadata fields are `Id`, `TicketId`, `MessageId`, `UploadedById`, `FileName`, `FilePath`, `ContentType`, and `UploadedAt`.
-
-Allowed local extensions are `.png`, `.jpg`, `.jpeg`, `.pdf`, and `.zip`. The configured upload limit is 20 MB per reply, which follows Brevo's documented transactional email size limit. The frontend mirrors this limit in `attachmentLimits` for immediate user feedback, including selected size and remaining size after files are added, while `LocalFileStorageService` remains the final backend check. On web, the document picker is configured with `base64: false` so it returns file metadata immediately instead of trying to read a huge file into memory before validation. Because Brevo receives base64 file content, large files should still be tested carefully: base64 makes the outgoing API payload larger than the raw file.
-
-## Frontend Form Structure
-
-The frontend separates page rendering, behavior, forms, reusable components,
-styles, and API calls.
-
-Main folders:
-
-- `src/navigation` contains the React Navigation stack. `App.tsx` only wires
-  providers and renders `AppNavigator`, so route decisions are not mixed with
-  provider setup.
-- `src/screens` contains page-level composition. Screens decide what appears on
-  a page, but data loading and submit behavior are moved into hooks.
-- `src/hooks` contains stateful behavior such as loading tickets, filtering the
-  admin dashboard, sending replies, profile actions, and attachment picking.
-- `src/forms` contains Formik form components and form-specific UI.
-- `src/components` contains reusable non-form UI, such as `AppHeader`.
-- `src/styles` contains React Native stylesheets split by UI responsibility and
-  shared theme values.
-- `src/api` contains endpoint calls and HTTP error normalization.
-- `src/utils` contains platform/data helpers such as date formatting and
-  multipart attachment conversion.
-
-`src/navigation/linkingConfig.ts` maps React Navigation route names to Expo web
-paths. Without this linking config, navigation only lives inside React
-Navigation's memory stack and the browser back/forward buttons do not know
-about screen changes. The configured paths make normal web routes such as
-`/tickets`, `/admin`, `/profile`, and `/tickets/:ticketId` work with browser
-history, refresh, and shareable ticket links.
-
-The frontend uses Formik and Yup for forms.
-
-Form components live in:
-
-```text
-Ticketing_Frontend/src/forms
-```
-
-Validation schemas live in:
-
-```text
-Ticketing_Frontend/src/validation
-```
-
-This separation matters because screen files should focus on screen layout and user flow. Form components handle form state, and validation schemas handle validation rules.
-
-Benefits:
-
-- Validation is consistent.
-- Form errors are shown close to the relevant input.
-- Screens are easier to read.
-- Rules can be reused.
-
-Attachment picking follows the same separation. `useAttachmentPicker` owns the
-stateful behavior: opening Expo DocumentPicker, converting picked assets into
-`SelectedAttachment` objects, removing duplicate selections, checking the shared
-20 MB limit, calculating known selected/remaining upload size, and showing
-attachment-specific errors. `AttachmentPicker` is only a presentational
-component that renders the buttons, help text, selected file names, per-file
-remove actions, upload usage summary, and validation message. `NewTicketForm`
-and `TicketReplyForm` can
-therefore reuse the same attachment behavior without duplicating picker logic in
-their JSX.
-
-Conversation pagination follows the same reusable pattern. `usePagination` owns
-page state, page bounds, current-page items, and previous/next navigation.
-`PaginationControls` renders the shared controls and range text. The ticket
-detail screen uses those generic pieces for messages and opens on the latest
-message page. It shows 20 messages per page on normal layouts and 15 messages
-on compact layouts, which keeps page counts realistic while still avoiding an
-overlong mobile conversation page with image previews. The same hook/component
-can later be reused for client and ticket lists. Pagination is currently
-client-side because the ticket detail API already returns the full conversation;
-server-side list pagination can reuse the same control surface later.
-
-The shared `AppHeader` component removes repeated FORCEBIT header JSX from the
-home, admin, profile, new-ticket, and ticket-detail screens. Screens still pass
-their own actions, such as profile navigation, logout, or back navigation. This
-keeps the component reusable without letting it know about specific screens.
-
-Import organization follows the same readability rule. Runtime imports and
-type-only imports are separated with blank lines, and type-only values use
-`import type`. This makes it easier to see which imports affect the JavaScript
-bundle and which imports only exist for TypeScript checking.
-
-## Toast Notifications
-
-The frontend uses a notification context to show success and error messages in a uniform way.
-
-Instead of every screen inventing its own alert style, the app has one system for:
-
-- Success confirmations.
-- Error messages.
-- Form validation submit errors.
-- Friendly feedback after actions.
-
-This makes the app feel more professional and also makes the code easier to maintain.
-
-Toasts are positioned at the bottom right on web so they behave like common
-desktop ticketing/admin systems and do not cover the page header or navigation.
-
-Formik still shows field errors inline. The shared `formErrorHelpers` submit
-path shows a toast when the user presses submit on an invalid form, while the
-inline text shows exactly which field needs attention.
-
-## Frontend Styling
-
-The frontend styling follows the Forcebit website direction: dark navy pages,
-rounded darker navigation/cards, white text, muted helper text, and lime action
-buttons. The shared tokens live in `theme.ts`, so colors and layout values do
-not have to be repeated across every stylesheet.
-
-The ticket detail conversation is styled like a chat thread. Client messages
-are aligned to the left with a dark bubble, while admin messages are aligned to
-the right with a lime bubble. This makes the sender role visible at a glance,
-which is easier to scan than a list of identical full-width message cards.
-
-Responsive layout decisions use the `useResponsiveLayout` hook. It exposes
-named `isCompact` and `isNarrow` breakpoints so screens, forms, the shared
-header, ticket cards, option buttons, and chat bubbles adjust consistently.
-Compact layouts reduce page padding, card padding, heading sizes, and preview
-heights. Narrow layouts let important actions use the full available width and
-allow chat bubbles to grow wider so messages remain readable.
-
-The authenticated ticket area uses `homeStyles` as a small public import for
-screens and components, but `homeStyles` is now only an aggregator. The actual
-style groups are split by responsibility:
-
-- `sharedStyles` for page layout, cards, section titles, empty states, loading
-  states, and common text.
-- `headerStyles` for the reusable `AppHeader`.
-- `buttonStyles` for primary, secondary, disabled, and logout buttons.
-- `formStyles` for labels, inputs, validation text, text areas, and option
-  buttons.
-- `ticketStyles` for ticket cards, status pills, and conversation messages.
-- `attachmentStyles` for selected files and attachment download buttons.
-- `profileStyles` for the profile details and account action area.
-
-Authentication styles are also separated. `loginStyles` and `registerStyles`
-keep their different container behavior because login uses `KeyboardAvoidingView`
-and register uses a scrollable layout. Their repeated card, input, link, error,
-and button styles come from `authSharedStyles`.
-
-The main content wrapper uses a maximum width and centered alignment. This keeps
-the app readable on wide desktop browsers while still allowing the same screens
-to shrink on smaller windows.
-
-## Profile Editing
-
-The profile screen lets the authenticated user edit only `Name` and `Email`.
-`CompanyName` and `Role` are shown as read-only values because those fields are
-business/admin data, not normal personal profile details.
-
-The frontend separates those concerns visually as well: editable contact fields
-live in the profile form, while company and role are grouped below as account
-details.
-
-The backend enforces this by using `UpdateProfileRequest`, which contains only
-`Name` and `Email`. Even if a malicious client sends company or role values,
-the controller/service do not bind or update those fields.
-
-Client users can also remove their own account from the profile screen. The
-backend exposes this as `DELETE /api/profile`, reads the account id from the
-JWT, refuses admin deletion, removes uploaded files for the client's tickets,
-removes the client's tickets, and then removes the user. This order is needed
-because tickets use a restrictive foreign key to the client user, while ticket
-messages and attachment rows cascade from the deleted tickets.
+Logging uses console/debug providers and structured messages. Structured logging stores values such as `TicketId`, `UserId`, and `Status` as fields instead of hiding them inside one long string. That makes logs easier to search during development or a demo.
 
 ## Ticket Workflow
 
 Ticket statuses:
 
-- `New` means a client has created a ticket and support has not replied yet.
-- `Open` means the conversation is active or a closed ticket was reopened.
-- `Closed` means the issue is resolved and the conversation is read-only.
-`New` is creation-only. Status update controls and domain rules allow moving
-tickets to `Open` or `Closed`, but not back to `New`.
+- `New`: the client created the ticket and support has not replied yet.
+- `Open`: the conversation is active, or a closed ticket was reopened.
+- `Closed`: the issue is resolved and the conversation is read-only for replies.
 
-Older development databases may still contain the old stored strings `Open` and
-`InProgress`. The `RenameTicketWorkflowStatuses` migration converts those rows
-to `New` and `Open` so database data, backend enum values, and frontend labels
-use the same workflow language.
+Important rules:
 
-Client ticket creation:
+- New tickets start as `New`.
+- `New` is creation-only and cannot be manually selected later.
+- When an admin replies to a `New` ticket, it becomes `Open`.
+- Admins can set tickets to `Open` or `Closed`.
+- Clients can close or reopen their own tickets.
+- Reopening a closed ticket uses `Open`, not `New`, because the ticket already has conversation history.
+- Users can view closed tickets, but replies to closed tickets are blocked.
 
-1. Client fills in the ticket form.
-2. Formik manages the input state.
-3. Yup validates required fields.
-4. The hook calls the API.
-5. The backend validates the user and ticket rules.
-6. The ticket container is created.
-7. The form description is saved as the first `TicketMessage`.
-8. The ticket starts with status `New`.
-9. The ticket and initial message are saved through the repository.
-10. The frontend shows a success toast.
+Older development databases may contain the previous strings `Open` and `InProgress`. The `RenameTicketWorkflowStatuses` migration maps old `Open` to `New` and old `InProgress` to `Open` so stored data matches the current workflow language.
 
-Admin reply:
+## Ticket Creation Flow
 
-1. Admin opens ticket detail.
-2. Admin writes a message.
-3. The frontend validates the message.
-4. The backend checks that the user is allowed to reply.
-5. The message is added to the ticket.
-6. If the ticket was `New`, the status changes to `Open`.
-7. The updated ticket is returned.
+1. The client fills in the new ticket form.
+2. Formik manages form state.
+3. Yup validates required fields and limits.
+4. The frontend hook chooses JSON or multipart based on selected attachments.
+5. The controller reads the authenticated client id from JWT claims.
+6. The controller maps HTTP/form data to service DTOs.
+7. `TicketService.CreateTicketAsync` validates client, category, and subject.
+8. `Ticket.Create(...)` creates the ticket container.
+9. The form description is saved as the first `TicketMessage`.
+10. Optional attachments are saved and connected to the first message.
+11. The repository saves the ticket and message graph.
+12. The frontend shows success feedback.
 
-Status update:
+The first description is a message by design. A ticket is treated as the full support conversation, so every piece of conversation text belongs in the messages list and can be displayed chronologically.
 
-1. Admin selects `Open` or `Closed`.
-2. The backend checks role and status rules.
-3. The ticket status changes through domain behavior.
-4. The database is updated.
-5. The frontend shows confirmation.
+## Reply Flow
 
-Client close/reopen:
+1. User writes a reply in `TicketReplyForm`.
+2. Yup validates the message.
+3. `useTicketDetailScreen.handleSendReply` sends JSON or multipart.
+4. `TicketMessagesController` reads the sender id/role from JWT claims.
+5. `TicketService.AddMessageAsync` checks access and reply permission.
+6. The message is added through domain behavior.
+7. Attachments are saved if present.
+8. Admin replies to `New` tickets move the ticket to `Open`.
+9. Admin replies trigger a Brevo email to the client.
+10. The frontend reloads ticket detail from the API.
 
-1. Client opens one of their own tickets.
-2. If the ticket is `New` or `Open`, the client can close it.
-3. If the ticket is closed, the client can reopen it.
-4. Reopening moves the ticket back to `Open`.
-5. Clients cannot set `New`, because that state is only for newly created tickets.
+Reloading after save avoids guessing local state. The UI displays the database result, including any status changes caused by the backend.
 
-## Development Documentation Rule
+## Attachment Flow
 
-Every code change should be treated as a documentation change candidate. When a
-feature, workflow, validation rule, configuration value, architectural choice,
-or user-facing behavior changes, the related comments and README sections must
-be updated in the same change.
+Attachments are supported during ticket creation and replies.
 
-This rule exists because the project is part of a graduaatsproef. The code must
-work, but it must also be explainable and defensible. Documentation should make
-clear:
+Frontend responsibilities:
 
-- What changed from the user's point of view.
-- Where the responsibility lives in the codebase.
-- Why the chosen implementation fits the project structure.
-- Which setup, test, or demo steps are affected.
+- `useAttachmentPicker` owns selected file state.
+- It appends new selections, avoids duplicate selections, checks the 20 MB total, and calculates selected/remaining size.
+- `AttachmentPicker` renders buttons, selected files, per-file remove actions, and validation text.
+- `attachmentFormData` builds platform-specific multipart requests.
 
-Inline comments are reserved for non-obvious implementation decisions. Simple
-code should stay readable by itself, while comments explain intent, trade-offs,
-or constraints that are useful during maintenance or a project defense.
+Backend responsibilities:
 
-## Defending The Design
+- Controllers read uploaded files from `Request.Form.Files`.
+- `FormFileMapper` converts `IFormFile` to `FileUploadRequest`.
+- `LocalFileStorageService` validates size and extension, saves the file, and protects path resolution.
+- `TicketService` creates attachment metadata rows and connects files to the correct message.
+- Attachment download endpoints are protected by JWT and ticket access rules.
 
-Useful explanation for a presentation:
+Allowed extensions:
 
-The project separates HTTP concerns, application workflows, database access, and business rules. This makes the system easier to test, easier to explain, and safer to change. If a ticket rule changes, I know to look in the domain rules. If a database query changes, I look in the repository. If the API response changes, I look in the controller or DTO. This follows Single Responsibility Principle and keeps the layers focused.
+```text
+.png
+.jpg
+.jpeg
+.pdf
+.zip
+```
 
-Why use middleware for exceptions:
+PNG and JPG/JPEG previews use the same protected download path. The frontend fetches the file with the JWT token, creates a temporary object URL, and revokes old object URLs when ticket data changes or the screen unmounts. This keeps the upload folder private while still making screenshots easy to inspect.
 
-Exception middleware prevents repeated error handling code in every controller. Services can throw meaningful exceptions, and the middleware converts them into consistent HTTP responses.
+The database stores attachment metadata, not file bytes. The local file path is stored in the database, while the binary file is stored on disk.
 
-Why use the Options pattern:
+## Email Notifications
 
-The Options pattern gives strongly typed configuration. Instead of reading individual strings from configuration in many places, the app binds settings once and injects typed objects.
+Brevo is used for transactional ticket emails.
 
-Why check the database on startup:
+Notification rules:
 
-The app cannot provide its main workflows without MySQL. Startup validation
-turns a hidden dependency into an explicit prerequisite. If MySQL is stopped,
-the backend fails before serving requests, which gives a clearer development
-and demo error than failing during login or while adding a reply.
+- Admin sends a reply: the ticket client receives an email.
+- Admin changes status: the ticket client receives an email.
+- Client creates, replies, closes, or reopens: no email is sent to admins.
 
-Why use Formik and Yup:
+This design keeps admin inboxes from being flooded. Admins use the dashboard as their work queue.
 
-Formik manages form state, while Yup defines validation rules. This keeps form screens cleaner and makes validation consistent for login, registration, ticket creation, and messages.
+`TicketService` decides when email should be sent because it knows the workflow and current user role. `EmailService` only formats and sends the message through Brevo. That separation keeps provider-specific API code out of the ticket use case.
 
-Why use a React Navigation linking config:
+User-entered message text is HTML-encoded before being placed into email HTML.
 
-Expo web runs the same React Navigation stack as the native app, but browser
-history is URL-based. The linking config is the bridge between route names and
-URLs, so the browser back/forward buttons, refresh, and direct ticket links
-behave like users expect from a web application.
+## Frontend Structure
 
-Why use repositories:
+Location:
 
-Repositories keep Entity Framework queries out of services. This makes services more focused on use cases and less focused on database details.
+```text
+Ticketing_Frontend/src
+```
 
-Why some request classes are in the API layer:
+Main folders:
 
-Classes such as `CreateTicketWithAttachmentsFormRequest` and
-`CreateMessageWithAttachmentsFormRequest` only exist because ASP.NET needs a
-shape for multipart `[FromForm]` binding. They are not business concepts and
-they are not service use-case contracts. The controller maps them to service
-DTOs before calling the service. This keeps HTTP binding details in the API
-layer.
+- `navigation`: route stack and Expo web linking config.
+- `screens`: page-level composition.
+- `hooks`: stateful behavior and API orchestration.
+- `forms`: Formik form components.
+- `components`: reusable non-form UI such as `AppHeader`, `PaginationControls`, and `TicketGroupSection`.
+- `api`: endpoint calls and HTTP error normalization.
+- `styles`: stylesheet groups and shared theme values.
+- `utils`: formatting, ticket grouping/search, and attachment conversion helpers.
+- `validation`: Yup schemas.
+- `types`: shared TypeScript types.
 
-Why most DTOs are in the Services layer:
+Screens should remain mostly presentational. When a screen becomes full of data loading, filtering, submit behavior, or side effects, that logic belongs in a hook.
 
-DTOs such as `TicketDetailResponse` and `CreateTicketRequest` are used by the
-application use cases themselves. They define what a service method needs or
-returns. Keeping those DTOs in the Services layer is acceptable for this
-3-layer project because the services own the application workflow. For a larger
-Clean Architecture project, the next step would be separate API contracts and
-service commands/results, but that would add extra boilerplate here.
+## Frontend State And Derived Data
 
-Why status rules are in the domain:
+The dashboard pages keep raw API results as the source of truth.
 
-Ticket status permissions are business rules. `New` is assigned only during ticket creation. Admins can move tickets between `Open` and `Closed`, while clients can only close or reopen their own tickets. Reopening uses `Open`, not `New`, because an existing conversation should not look like a brand-new ticket. Keeping this rule in `TicketRules` prevents the frontend and controller from becoming the only place where the rule exists.
+For the admin dashboard:
 
-Why the initial description is a message:
+```text
+clients + tickets
+-> searched clients
+-> filtered tickets
+-> grouped New/Open/Closed ticket sections
+-> paginated section items
+```
 
-The project treats a ticket as the complete support conversation. The ticket table stores the stable metadata such as client, title, category, subject, status, and timestamps. The text entered during creation is stored as the first `TicketMessage`, so every piece of conversation text lives in the same table and can be displayed chronologically.
+For the client dashboard:
 
-## Things Still To Improve
+```text
+tickets
+-> searched/filtered tickets
+-> grouped New/Open/Closed ticket sections
+-> paginated section items
+```
 
-- Move local secrets to user secrets or environment variables.
-- Add automated integration tests for the main ticket workflow.
-- Add pagination and filtering if the ticket list grows.
-- Add production logging sinks such as files or a monitoring service.
+Search results, filters, counts, and groups are derived state. They are calculated from the raw tickets instead of stored as separate state arrays. This avoids stale UI bugs where one list updates and another list accidentally keeps old data.
+
+`TicketGroupSection` owns pagination per workflow group. Moving through `Closed` tickets does not change the current page for `New` or `Open` tickets.
+
+Pagination is currently client-side because these overview APIs already return the full list needed by the screen. Server-side pagination is a logical future improvement if the dataset becomes too large.
+
+## Forms And Validation
+
+The frontend uses Formik and Yup.
+
+Formik:
+
+- Owns form state.
+- Tracks touched fields.
+- Handles submit state.
+
+Yup:
+
+- Describes validation rules.
+- Keeps validation separate from JSX layout.
+- Gives consistent field errors.
+
+Backend request DTOs and database configuration still remain the final authority. Frontend validation improves user experience, but backend validation protects the system.
+
+Ticket messages are limited to 3000 characters in the frontend validation, backend DTOs, and database column. Keeping those limits aligned prevents confusing "frontend allowed it, backend rejected it" behavior.
+
+## Navigation And Browser History
+
+Expo web uses the same React Navigation stack as the app, but the browser expects URL-based history. `linkingConfig.ts` maps route names to paths such as:
+
+```text
+/login
+/register
+/tickets
+/admin
+/profile
+/tickets/new
+/tickets/:ticketId
+```
+
+Without this config, the browser back and forward buttons do not understand app navigation. With it, refreshes and direct ticket links behave more like a normal web app.
+
+## Styling And Responsiveness
+
+Styles are split by responsibility:
+
+- `theme.ts` contains shared colors and layout values.
+- `sharedStyles` contains common page/card/text styles.
+- `headerStyles`, `buttonStyles`, `formStyles`, `ticketStyles`, `attachmentStyles`, `profileStyles`, and `dashboardStyles` own specific UI areas.
+- `homeStyles.ts` aggregates authenticated app styles so screens keep a simple import.
+
+`useResponsiveLayout` exposes named breakpoints such as `isCompact` and `isNarrow`. This keeps responsive decisions consistent across screens, forms, headers, ticket cards, option buttons, and chat bubbles.
+
+The ticket conversation is intentionally chat-like:
+
+- Client messages are aligned to one side.
+- Admin messages are aligned to the other.
+- Different background colors make sender role visible at a glance.
+- Image previews reduce unnecessary downloads for common screenshots/photos.
+
+## Profile Workflow
+
+Users can edit:
+
+- Name
+- Email
+
+Users cannot edit:
+
+- Company name
+- Role
+
+Those fields are business/admin data, not normal profile fields. The backend enforces this with `UpdateProfileRequest`, which contains only editable fields.
+
+Clients can delete their own account. Admin deletion is refused. The backend removes uploaded files and tickets before removing the client user because ticket/client relationships require a safe deletion order.
+
+## Development Launcher
+
+`Start-Forcebit.bat` delegates to `scripts/Start-Forcebit.ps1`.
+
+The launcher:
+
+- Checks for `dotnet`, `npm`, and `node_modules`.
+- Starts backend and frontend in separate terminals.
+- Lets Expo open the frontend browser tab.
+- Can open Swagger with `-OpenSwagger`.
+- Stops the started process trees when the launcher exits.
+
+This is development automation, not application logic, so it lives in `scripts` rather than inside a backend or frontend source folder.
+
+## Design Decisions To Defend
+
+### Why layered architecture?
+
+Layering separates HTTP concerns, application use cases, database access, and business rules. If a ticket rule changes, look in domain rules or ticket service. If a query changes, look in the repository. If a route changes, look in the controller.
+
+### Why repositories?
+
+Repositories keep EF Core query details out of services. Services can express use cases without repeating database include logic or persistence details.
+
+### Why DTOs?
+
+DTOs protect the API contract. The frontend receives exactly what it needs, not full EF entities with navigation properties and database-specific shape.
+
+### Why domain rules?
+
+Ticket status permissions are business rules. Keeping them in `TicketRules` prevents the frontend or controllers from becoming the only enforcement point.
+
+### Why is the initial description a message?
+
+The project treats a ticket as a conversation. The ticket table stores stable metadata; the messages table stores conversation text. This keeps the first message and later replies in one chronological list.
+
+### Why fail fast when MySQL is unavailable?
+
+The main workflows cannot work without persistence. A startup failure gives a clear setup error before the API accepts requests.
+
+### Why use hooks on the frontend?
+
+Hooks keep screen files readable. A screen should describe what is rendered; a hook should own behavior such as loading, filtering, submitting, refreshing, and showing notifications.
+
+### Why use derived state for filters and groups?
+
+Derived state reduces duplication. The app stores raw API results and calculates filtered/grouped/paginated views from them. This reduces the chance of inconsistent lists.
+
+### Why client-side pagination for now?
+
+The current APIs return the full lists needed by the dashboards, and the project size is still local/demo scale. Client-side pagination centralizes the UI pattern now. If the data grows, the same controls can be connected to server-side pagination later.
+
+## Documentation And Comment Rule
+
+Every meaningful code change should trigger a documentation check.
+
+Update comments or documentation when a change affects:
+
+- User-facing behavior.
+- Setup steps.
+- Architecture.
+- Validation rules.
+- Ticket workflow rules.
+- Security or authorization boundaries.
+- File upload behavior.
+- Email behavior.
+- Demo or defense explanation.
+
+Inline comments should explain intent, trade-offs, or non-obvious constraints. They should not narrate obvious code line by line.
+
+Use:
+
+- `README.md` for practical project setup.
+- `TECHNICAL_README.md` for deeper explanation and defense material.
+
+## Future Improvements
+
+- Move all local secrets to user secrets or environment variables.
+- Add automated integration tests for authentication, ticket creation, replies, status changes, and attachments.
+- Add server-side pagination if production ticket/client lists become large.
+- Add production logging sinks such as files or external monitoring.
+- Add role-management/admin user management instead of relying only on seed configuration.

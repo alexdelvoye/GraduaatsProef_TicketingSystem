@@ -1,45 +1,79 @@
 # Forcebit Ticketing
 
-Forcebit Ticketing is a small support ticket system with a .NET backend and an Expo React Native frontend. A client can register, log in, create tickets, send messages, and follow the ticket status. A ticket is treated as the full conversation: the text entered during ticket creation is stored as the first message. An admin can log in, view all tickets, reply, and update the status.
+Forcebit Ticketing is a support ticket system built with an ASP.NET Core backend, a MySQL database, and an Expo React Native frontend. Clients can create tickets, reply in a conversation, attach files, and follow the status. Admins can manage the support queue, reply to clients, and update ticket status.
+
+For architecture, workflow explanations, and graduaatsproef defense notes, see [TECHNICAL_README.md](TECHNICAL_README.md).
+
+## Features
+
+- Client registration, login, profile editing, and client account removal.
+- Seeded admin account for local development and demos.
+- Ticket creation with category, subject, title, first message, and optional attachments.
+- Conversation-style ticket detail with client/admin messages on opposite sides.
+- `New`, `Open`, and `Closed` ticket workflow.
+- Client close/reopen actions for their own tickets.
+- Admin dashboard with client search, ticket search, status/category/subject filters, grouped ticket sections, and pagination.
+- Client ticket overview with search, filtering, grouped sections, and pagination.
+- Attachments for ticket creation and replies.
+- PNG/JPG/JPEG inline previews and protected attachment downloads.
+- 20 MB upload limit per ticket message, shown in the frontend and enforced by the backend.
+- Brevo email notifications to clients for admin replies and status changes.
+- JWT authentication, central API error responses, and frontend toast notifications.
+- Expo web browser history support for normal routes and ticket detail links.
+
+## Tech Stack
+
+Backend:
+
+- .NET `net10.0`
+- ASP.NET Core Web API
+- Entity Framework Core
+- Pomelo MySQL provider
+- JWT bearer authentication
+- Brevo transactional email API
+
+Frontend:
+
+- Expo
+- React Native / React Native Web
+- React Navigation
+- TypeScript
+- Formik and Yup
+
+Database:
+
+- MySQL
 
 ## Project Structure
 
-- `Ticketing_Backend/1_Api` - ASP.NET Core Web API entry point, controllers, middleware, configuration.
-- `Ticketing_Backend/2_Services` - application services, DTOs, options, exceptions, service interfaces.
-- `Ticketing_Backend/3_Persistence` - Entity Framework Core database context, repositories, migrations.
-- `Ticketing_Backend/4_Domain` - domain entities, enums, and business rules.
-- `Ticketing_Frontend` - Expo React Native app.
-
-Frontend structure:
-
-- `src/navigation` - React Navigation stack setup, route guards, and Expo web browser paths.
-- `src/screens` - page-level components that compose hooks, forms, and UI components.
-- `src/forms` - reusable Formik/Yup form components.
-- `src/components` - reusable non-form UI components such as the shared app header.
-- `src/hooks` - screen behavior and reusable stateful logic.
-- `src/api` - API calls and HTTP error normalization.
-- `src/styles` - React Native stylesheets split by responsibility plus shared theme values.
-- `src/utils` - formatting, attachment, and helper functions.
-- `src/validation` - Yup validation schemas.
-- `src/types` - shared TypeScript request/response/navigation types.
-
-The style folder is intentionally split: `theme.ts` contains colors/layout
-tokens, `appStyles.ts` belongs to the navigation shell, `authSharedStyles.ts`
-contains repeated login/register card styles, and the ticket dashboard styles
-are grouped into header, button, form, ticket, attachment, profile, and shared
-definition files. `homeStyles.ts` combines those groups so screens can keep a
-simple import while the style code remains explainable.
+```text
+Forcebit_Ticketing
+|-- Ticketing_Backend
+|   |-- 1_Api          ASP.NET Core startup, controllers, middleware, API requests
+|   |-- 2_Services     use cases, DTOs, interfaces, options, exceptions
+|   |-- 3_Persistence  EF Core DbContext, repositories, migrations
+|   `-- 4_Domain       entities, enums, domain rules
+|-- Ticketing_Frontend Expo React Native app
+|-- scripts            local development launcher scripts
+|-- README.md
+`-- TECHNICAL_README.md
+```
 
 ## Requirements
 
-- .NET SDK 10 preview or the SDK version used by the project.
+- .NET SDK that supports `net10.0`.
 - Node.js and npm.
-- Expo tooling through `npx expo`.
 - MySQL running locally.
+- Optional: `dotnet-ef` tool for applying migrations from the command line.
 
-## Local Database
+## Configuration
 
-The development connection string is stored in `Ticketing_Backend/1_Api/appsettings.json`.
+Default local backend settings live in:
+
+```text
+Ticketing_Backend/1_Api/appsettings.json
+Ticketing_Backend/1_Api/appsettings.Development.json
+```
 
 Default local database:
 
@@ -47,16 +81,29 @@ Default local database:
 forcebit_ticketingdb
 ```
 
-The current development connection string uses the local MySQL `root` user. For a real deployment, move secrets such as database passwords and JWT keys into environment variables or user secrets.
+Default backend URL:
 
-The backend checks the MySQL connection during startup. If MySQL is not running
-or the connection string is wrong, the API stops immediately with a clear
-database connection error instead of starting and failing later during login or
-ticket actions.
+```text
+http://localhost:5047
+```
 
-## Email Notifications
+Default frontend API base URL:
 
-The backend uses Brevo for ticket notification emails. Configure these values in the `Email` section or with environment variables/user secrets:
+```text
+http://localhost:5047/api
+```
+
+The frontend base URL is centralized in:
+
+```text
+Ticketing_Frontend/src/api/apiClient.ts
+```
+
+When testing on a physical phone, `localhost` points to the phone itself. Change the frontend API base URL to the LAN IP address of the computer running the backend.
+
+## Email Setup
+
+The backend uses Brevo for email notifications. Configure:
 
 ```text
 Email:ApiKey
@@ -64,29 +111,43 @@ Email:FromEmail
 Email:FromName
 ```
 
-`Email:ApiKey` can also come from the `BREVO_APIKEY` environment variable. Keep real API keys out of source control. `Email:FromEmail` must be a sender address or domain that is verified in Brevo.
-
-For local development, store the Brevo key with .NET user secrets:
+For local development, keep the real API key out of source control:
 
 ```powershell
 dotnet user-secrets set "Email:ApiKey" "<your-brevo-api-key>" --project Ticketing_Backend/1_Api/1_Api.csproj
 ```
 
-The app only sends email notifications to clients. Admins use the dashboard to see new tickets and client replies, which prevents the support mailbox from being flooded when many clients are active.
+`Email:ApiKey` can also be provided through the `BREVO_APIKEY` environment variable. `Email:FromEmail` must be a sender address or domain verified in Brevo.
 
-Ticket descriptions and replies are limited to 3000 characters so they fit the database message column and return clear validation errors.
+## Install
 
-## Start The Full App
+Install frontend dependencies:
 
-For development and showcase demos, the repository includes a PowerShell launcher:
+```powershell
+cd Ticketing_Frontend
+npm install
+cd ..
+```
+
+Restore the backend:
+
+```powershell
+dotnet restore Ticketing_Backend/1_Api/1_Api.csproj
+```
+
+Apply database migrations:
+
+```powershell
+dotnet ef database update --project Ticketing_Backend/3_Persistence/3_Persistence.csproj --startup-project Ticketing_Backend/1_Api/1_Api.csproj
+```
+
+## Run The Full App
+
+The easiest local startup path is the launcher:
 
 ```powershell
 .\Start-Forcebit.bat
 ```
-
-On Windows, you can also double-click `Start-Forcebit.bat` from File Explorer.
-The batch file opens the PowerShell launcher with the correct execution policy
-for this local script.
 
 You can also run the PowerShell script directly:
 
@@ -94,32 +155,7 @@ You can also run the PowerShell script directly:
 .\scripts\Start-Forcebit.ps1
 ```
 
-If Windows blocks local scripts because of the execution policy, run it with:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\Start-Forcebit.ps1
-```
-
-The script starts the backend in one PowerShell window and starts the Expo web
-frontend in another window. Expo opens the frontend in the browser. Keep the
-launcher window open while developing or presenting. When you press any key in
-that launcher window, it stops both services and closes the backend/frontend
-terminal windows.
-
-Runtime logs stay visible in the matching service window:
-
-- Backend `ILogger` output appears in the backend PowerShell window.
-- Frontend Expo/Metro output appears in the frontend PowerShell window.
-
-Default URLs:
-
-```text
-Backend:  http://localhost:5047
-Frontend: http://localhost:8081
-Swagger:  http://localhost:5047/swagger
-```
-
-Optional parameters:
+Useful launcher options:
 
 ```powershell
 .\scripts\Start-Forcebit.ps1 -OpenSwagger
@@ -127,128 +163,41 @@ Optional parameters:
 .\scripts\Start-Forcebit.ps1 -FrontendPort 8082
 ```
 
-`-NoBrowser` starts Expo without the `--web` browser-open flag. This is useful
-when you want the servers running but do not want a browser tab opened
-automatically.
-
-The launcher expects frontend dependencies to be installed already. If
-`Ticketing_Frontend/node_modules` is missing, run `npm install` inside
-`Ticketing_Frontend` first.
-
-## Attachments
-
-Clients can add one or more attachments while creating a ticket, and clients/admins can add attachments to replies. The picker can be opened multiple times before sending; each new selection is added to the message. Selected files can be removed one by one or cleared all at once before sending. Attachments shown in the conversation can be clicked in the web app to download the stored file. PNG and JPG/JPEG attachments also show an inline preview in the conversation, so users can inspect screenshots or photos without downloading them first. The backend accepts:
+Default URLs:
 
 ```text
-.png
-.jpg / .jpeg
-.pdf
-.zip
+Backend:  http://localhost:5047
+Swagger:  http://localhost:5047/swagger
+Frontend: http://localhost:8081
 ```
 
-The local upload limit is `20 MB` per ticket message, matching Brevo's transactional email limit for the whole email including attachments and content. After files are selected, the frontend shows the selected upload size and how much of the 20 MB limit is still available. It also shows a clear error when the selected files exceed that limit, and the backend enforces the same rule. Attachment metadata is stored in the database, while the file itself is saved under the configured upload folder.
+The launcher opens separate backend and frontend terminals. Keep the launcher window open; pressing any key in that window stops both services.
 
-Stored metadata:
+## Run Services Manually
 
-```text
-Id
-TicketId
-MessageId
-UploadedById
-FileName
-FilePath
-ContentType
-UploadedAt
-```
-
-## Run The Backend
-
-From `cmd.exe`, run:
-
-```cmd
-cd /d C:\Users\alexd\Documents\Graduaat_Programmeren\Graduaatsproef\repo\Forcebit_Ticketing
-dotnet run --project Ticketing_Backend\1_Api\1_Api.csproj --launch-profile http
-```
-
-From PowerShell or another terminal already opened in the repository root:
+Backend:
 
 ```powershell
-dotnet restore Ticketing_Backend/1_Api/1_Api.csproj
-dotnet build Ticketing_Backend/1_Api/1_Api.csproj
 dotnet run --project Ticketing_Backend/1_Api/1_Api.csproj --launch-profile http
 ```
 
-Apply migrations when the database model changes:
-
-```powershell
-dotnet ef database update --project Ticketing_Backend/3_Persistence/3_Persistence.csproj --startup-project Ticketing_Backend/1_Api/1_Api.csproj
-```
-
-The ticket status workflow is:
-
-```text
-New -> Open -> Closed
-```
-
-`New` means the ticket is waiting for the first support reply. `Open` means the
-conversation is active. `Closed` means the issue is resolved. Reopening a closed
-ticket moves it back to `Open`, not `New`, because the ticket already has
-conversation history. `New` is assigned only during ticket creation and is not
-available as a manual status update.
-
-The API runs on:
-
-```text
-http://localhost:5047
-```
-
-Swagger is available during development at:
-
-```text
-http://localhost:5047/swagger
-```
-
-## Run The Frontend
-
-From `cmd.exe`, run:
-
-```cmd
-cd /d C:\Users\alexd\Documents\Graduaat_Programmeren\Graduaatsproef\repo\Forcebit_Ticketing\Ticketing_Frontend
-npm install
-npx expo start
-```
-
-From PowerShell or another terminal already opened in the repository root:
+Frontend:
 
 ```powershell
 cd Ticketing_Frontend
-npm install
-npx expo start
+npx expo start --web
 ```
 
-The frontend API client currently targets:
+## Default Admin Account
 
-```text
-http://localhost:5047/api
-```
-
-On Expo web, the frontend syncs React Navigation routes with browser history.
-This makes the browser back/forward buttons and refresh work for normal app
-routes such as `/login`, `/register`, `/tickets`, `/admin`, `/profile`,
-`/tickets/new`, and `/tickets/:ticketId`.
-
-When testing on a physical phone, `localhost` points to the phone itself. In that case, change the API base URL in `Ticketing_Frontend/src/api/apiClient.ts` to the LAN IP address of the computer that is running the backend.
-
-## Seeded Admin Account
-
-The backend seeds an admin account on startup:
+The backend seeds an admin account from `appsettings.Development.json` when the configured admin user does not exist:
 
 ```text
 Email: admin@forcebit.be
 Password: Admin123!
 ```
 
-Clients can register from the app.
+Clients can register from the frontend.
 
 ## Useful Checks
 
@@ -258,7 +207,7 @@ Backend build:
 dotnet build Ticketing_Backend/1_Api/1_Api.csproj
 ```
 
-Frontend lint and TypeScript checks:
+Frontend lint and typecheck:
 
 ```powershell
 cd Ticketing_Frontend
@@ -266,79 +215,30 @@ npm run lint
 npm run typecheck
 ```
 
-## Development Documentation Rule
-
-When code is added or changed, the matching documentation must be checked in
-the same change. Update comments, `README.md`, and `TECHNICAL_README.md` when a
-change affects behavior, setup, architecture, important design decisions, or
-anything that needs to be explained during the graduaatsproef defense.
-
-Comments should explain why code exists or why a non-obvious choice was made.
-They should not repeat simple code line by line. The goal is that the project
-stays maintainable and that every important feature can be defended from the
-repository documentation.
-
-## Practical Test Flow
-
-1. Start MySQL.
-2. Start the backend.
-3. Start the frontend.
-4. Register a new client account.
-5. Create a ticket.
-6. Log in as the seeded admin.
-7. Reply to the ticket.
-8. Switch back to the client and send another message.
-9. Update the ticket status as admin.
-10. Close the ticket as the client.
-11. Reopen the ticket as the client if the issue is not fixed.
-12. Check the database tables for the created user, ticket, messages, and status updates.
-
-## Current Scope
-
-Implemented:
-
-- Client registration and login.
-- Admin login with seeded account.
-- JWT authentication.
-- Client ticket creation, with the initial description saved as the first ticket message.
-- Ticket creation and replies with attachments.
-- Inline previews for PNG and JPG/JPEG conversation attachments.
-- Ticket list and ticket detail views.
-- Client and admin ticket messages.
-- Chat-style ticket conversation with client/admin messages on opposite sides.
-- Paginated ticket conversation view with larger pages for realistic support threads.
-- Expo web browser back/forward support for frontend routes.
-- Admin status updates with `New`, `Open`, and `Closed` workflow states.
-- Client close and reopen actions for their own tickets.
-- Profile editing for name and email, with company and role shown as read-only account details.
-- Client account removal from the profile screen.
-- Brevo email notifications to clients for admin messages and status updates.
-- Backend exception middleware with consistent error responses.
-- Frontend Formik/Yup validation for the main forms.
-- Frontend toast notifications for success and error feedback.
-- Responsive frontend layout for desktop, tablet-sized browser widths, and narrow screens.
-- Structured backend logging.
-
-Deferred for later:
-
-- Production secret management.
-
 ## Troubleshooting
 
-If the backend starts and then stops, check the console logs first. The project now logs startup, requests, unhandled exceptions, and important service actions.
+If the backend stops during startup, check the backend terminal first. The API validates the MySQL connection before accepting requests.
 
-If the backend reports that it cannot connect to MySQL, confirm that:
+Common database checks:
 
-- The MySQL service is running.
-- Port `3306` is listening locally.
-- The database name, user, and password in `DefaultConnection` are correct.
-- Migrations were applied to `forcebit_ticketingdb`.
+- MySQL service is running.
+- Port `3306` is available locally.
+- `DefaultConnection` points to the correct database, user, and password.
+- Migrations were applied.
 
-If the frontend cannot reach the API, confirm that:
+If the frontend cannot call the API:
 
-- The backend is still running.
-- The backend URL is `http://localhost:5047`.
-- The frontend base URL matches the device you are testing on.
-- CORS is configured for the frontend origin.
+- Confirm the backend is running on `http://localhost:5047`.
+- Confirm `Ticketing_Frontend/src/api/apiClient.ts` points to the right API base URL.
+- For physical device testing, use the computer LAN IP instead of `localhost`.
 
-If login fails after changing JWT settings, check `Jwt` values in `appsettings.json`. The issuer, audience, and key must match between token creation and token validation.
+If login fails after JWT configuration changes, check the `Jwt` settings used by token creation and validation.
+
+## Documentation Rule
+
+This project is part of a graduaatsproef. When code changes affect behavior, setup, architecture, or an important design decision, update the matching comments and documentation in the same change.
+
+Use:
+
+- `README.md` for practical setup and usage.
+- `TECHNICAL_README.md` for architecture, theory, workflows, and defense notes.

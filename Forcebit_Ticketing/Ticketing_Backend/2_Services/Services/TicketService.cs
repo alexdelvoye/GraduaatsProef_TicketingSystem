@@ -92,6 +92,9 @@ namespace Services.Services
             CreateTicketRequest request,
             IReadOnlyCollection<FileUploadRequest>? attachments = null)
         {
+            // Creation has three logical steps: validate the authenticated
+            // client/input, create the ticket plus first message, and
+            // optionally attach uploaded files to that first message.
             // Verify the authenticated client still exists before creating a
             // ticket connected to that user id.
             var client = await _userRepository.GetByIdAsync(clientId);
@@ -183,6 +186,9 @@ namespace Services.Services
             string currentUserRole,
             UpdateTicketStatusRequest request)
         {
+            // Status updates load the full detail graph because permission
+            // checks need the owner and admin notifications need the client
+            // email after the status has changed.
             var ticket = await _ticketRepository.GetDetailByIdAsync(ticketId);
 
             if (ticket == null)
@@ -194,8 +200,8 @@ namespace Services.Services
             if (!TicketRules.TryParseStatus(request.Status, out var status))
                 throw new BadRequestException("Invalid ticket status.");
 
-            // Status permissions are domain rules: admins manage the full
-            // workflow, while clients can close or reopen their own tickets.
+            // Status permissions are domain rules: admins manage Open/Closed
+            // workflow changes, while clients can close or reopen their own tickets.
             // Reopen uses Open, not New, because the ticket already has history.
             if (!TicketRules.CanChangeStatus(ticket, currentUserId, role, status))
                 throw new ForbiddenException("You are not allowed to set this ticket status.");
@@ -239,6 +245,9 @@ namespace Services.Services
             CreateTicketMessageRequest request,
             IReadOnlyCollection<FileUploadRequest>? attachments = null)
         {
+            // Reply flow mirrors ticket creation: authorize the sender, create
+            // the message, attach any files, save, then notify the client only
+            // when the sender is an admin.
             var ticket = await _ticketRepository.GetDetailByIdAsync(ticketId);
 
             if (ticket == null)
@@ -263,17 +272,22 @@ namespace Services.Services
             if (sender == null)
                 throw new NotFoundException("Sender not found.");
 
-            // Domain behavior: when an admin replies to a new ticket, the
-            // ticket becomes Open because the conversation is now active.
+            // Domain behavior: when an admin replies to a new ticket, support
+            // has started handling it and the ticket becomes Open.
             var message = ticket.AddMessage(
                 senderId,
                 request.Message,
                 TicketRules.ShouldMoveToOpen(ticket, role),
                 DateTime.UtcNow);
 
+            // Ticket.AddMessage updates the in-memory domain object. This
+            // repository call explicitly marks the new message row for insert.
             await _ticketRepository.AddMessageAsync(message);
 
             var savedAttachments = new List<TicketAttachment>();
+            // savedAttachments are mapped into the API response. The separate
+            // emailAttachments list contains raw bytes only when Brevo needs
+            // to send admin reply attachments to the client.
             var emailAttachments = new List<EmailAttachmentRequest>();
 
             foreach (var file in attachments ?? [])
@@ -412,6 +426,9 @@ namespace Services.Services
 
         private static async Task<byte[]> ReadFileContentAsync(FileUploadRequest file)
         {
+            // The same uploaded stream can be saved locally and then read for
+            // Brevo. Rewind before and after reading so each consumer sees the
+            // complete file.
             if (file.Content.CanSeek)
             {
                 file.Content.Position = 0;

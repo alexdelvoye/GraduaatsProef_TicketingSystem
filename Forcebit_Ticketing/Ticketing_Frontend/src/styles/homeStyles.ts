@@ -2,6 +2,7 @@ import { StyleSheet } from "react-native";
 
 import { attachmentStyleGroup } from "./attachmentStyles";
 import { buttonStyleGroup } from "./buttonStyles";
+import { dashboardStyleGroup } from "./dashboardStyles";
 import { formStyleGroup } from "./formStyles";
 import { headerStyleGroup } from "./headerStyles";
 import { paginationStyleGroup } from "./paginationStyles";
@@ -16,6 +17,7 @@ export const homeStyles = StyleSheet.create({
   ...sharedStyleGroup,
   ...headerStyleGroup,
   ...buttonStyleGroup,
+  ...dashboardStyleGroup,
   ...profileStyleGroup,
   ...ticketStyleGroup,
   ...formStyleGroup,

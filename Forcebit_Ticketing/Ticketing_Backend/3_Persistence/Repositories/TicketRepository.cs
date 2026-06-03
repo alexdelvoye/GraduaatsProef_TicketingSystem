@@ -46,7 +46,7 @@ namespace Persistence.Repositories
             return await _context.Tickets
                 .Include(t => t.Client)
                 .Where(t => t.ClientId == clientId)
-                // UpdatedAt gives the most recently active tickets first.
+                // UpdatedAt gives the most recently changed tickets first.
                 .OrderByDescending(t => t.UpdatedAt)
                 .ToListAsync();
         }

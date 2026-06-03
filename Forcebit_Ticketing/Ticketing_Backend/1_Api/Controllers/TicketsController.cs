@@ -100,8 +100,8 @@ namespace Api.Controllers
         }
 
         [HttpPatch("{ticketId:guid}/status")]
-        // Admins can manage the full workflow. Clients can close or reopen
-        // their own tickets. The service/domain layer enforces the exact rule.
+        // Admins can move tickets between Open and Closed. Clients can close or
+        // reopen their own tickets. The service/domain layer enforces the exact rule.
         public async Task<IActionResult> UpdateTicketStatus(Guid ticketId, UpdateTicketStatusRequest request)
         {
             await _ticketService.UpdateTicketStatusAsync(

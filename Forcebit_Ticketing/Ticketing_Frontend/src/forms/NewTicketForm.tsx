@@ -11,6 +11,7 @@ import { useAttachmentPicker } from "../hooks/useAttachmentPicker";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { ticketCategories, ticketSubjects } from "../types";
+import { formatTicketCategory } from "../utils/ticketFormatters";
 import { createTicketSchema } from "../validation/ticketSchema";
 
 import type { SelectedAttachment } from "../types";
@@ -30,12 +31,6 @@ const initialValues: CreateTicketFormValues = {
   subject: ticketSubjects[0],
   description: "",
 };
-
-function formatCategory(category: string) {
-  // The enum value is compact for the backend; the label is friendlier for the
-  // user. This keeps display text separate from stored values.
-  return category === "TechnicalProblem" ? "Technical" : category;
-}
 
 export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
   const { showError } = useNotifications();
@@ -85,7 +80,7 @@ export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
           <FormOptionGroup
             value={values.category}
             options={ticketCategories}
-            getLabel={formatCategory}
+            getLabel={formatTicketCategory}
             onChange={(value) => {
               // Option buttons do not trigger a normal TextInput blur event, so
               // we mark the field touched manually before changing the value.
@@ -111,7 +106,7 @@ export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
           />
 
           <Text style={styles.label}>Description</Text>
-          {/* The label stays user-friendly, but the submit hook sends this text
+          {/* The label stays user-friendly, but the screen hook sends this text
              as initialMessage so it becomes the first conversation message. */}
           <FormTextInput
             style={styles.textArea}

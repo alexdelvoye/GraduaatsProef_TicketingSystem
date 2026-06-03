@@ -2,7 +2,7 @@ import { colors, layout } from "./theme";
 
 // Page-level and typography styles shared by the ticket/admin/profile screens.
 // More specific groups such as buttons, forms and tickets live in their own
-// style definition files and are combined by homeStyles.
+// style group files and are combined by homeStyles.
 export const sharedStyleGroup = {
   container: {
     flex: 1,
