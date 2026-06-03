@@ -137,7 +137,7 @@ The launcher expects frontend dependencies to be installed already. If
 
 ## Attachments
 
-Clients can add one or more attachments while creating a ticket, and clients/admins can add attachments to replies. The picker can be opened multiple times before sending; each new selection is added to the message. Attachments shown in the conversation can be clicked in the web app to download the stored file. PNG and JPG/JPEG attachments also show an inline preview in the conversation, so users can inspect screenshots or photos without downloading them first. The backend accepts:
+Clients can add one or more attachments while creating a ticket, and clients/admins can add attachments to replies. The picker can be opened multiple times before sending; each new selection is added to the message. Selected files can be removed one by one or cleared all at once before sending. Attachments shown in the conversation can be clicked in the web app to download the stored file. PNG and JPG/JPEG attachments also show an inline preview in the conversation, so users can inspect screenshots or photos without downloading them first. The backend accepts:
 
 ```text
 .png
@@ -146,7 +146,7 @@ Clients can add one or more attachments while creating a ticket, and clients/adm
 .zip
 ```
 
-The local upload limit is `20 MB` per ticket message, matching Brevo's transactional email limit for the whole email including attachments and content. The frontend shows a clear error when the selected files exceed that limit, and the backend enforces the same rule. Attachment metadata is stored in the database, while the file itself is saved under the configured upload folder.
+The local upload limit is `20 MB` per ticket message, matching Brevo's transactional email limit for the whole email including attachments and content. After files are selected, the frontend shows the selected upload size and how much of the 20 MB limit is still available. It also shows a clear error when the selected files exceed that limit, and the backend enforces the same rule. Attachment metadata is stored in the database, while the file itself is saved under the configured upload folder.
 
 Stored metadata:
 

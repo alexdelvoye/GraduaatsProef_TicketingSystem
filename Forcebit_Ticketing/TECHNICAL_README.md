@@ -303,7 +303,7 @@ The attachment workflow follows the same three-layer structure as the rest of th
 
 The database stores attachment metadata, not the binary file. The metadata fields are `Id`, `TicketId`, `MessageId`, `UploadedById`, `FileName`, `FilePath`, `ContentType`, and `UploadedAt`.
 
-Allowed local extensions are `.png`, `.jpg`, `.jpeg`, `.pdf`, and `.zip`. The configured upload limit is 20 MB per reply, which follows Brevo's documented transactional email size limit. The frontend mirrors this limit in `attachmentLimits` for immediate user feedback, while `LocalFileStorageService` remains the final backend check. On web, the document picker is configured with `base64: false` so it returns file metadata immediately instead of trying to read a huge file into memory before validation. Because Brevo receives base64 file content, large files should still be tested carefully: base64 makes the outgoing API payload larger than the raw file.
+Allowed local extensions are `.png`, `.jpg`, `.jpeg`, `.pdf`, and `.zip`. The configured upload limit is 20 MB per reply, which follows Brevo's documented transactional email size limit. The frontend mirrors this limit in `attachmentLimits` for immediate user feedback, including selected size and remaining size after files are added, while `LocalFileStorageService` remains the final backend check. On web, the document picker is configured with `base64: false` so it returns file metadata immediately instead of trying to read a huge file into memory before validation. Because Brevo receives base64 file content, large files should still be tested carefully: base64 makes the outgoing API payload larger than the raw file.
 
 ## Frontend Form Structure
 
@@ -360,9 +360,11 @@ Benefits:
 Attachment picking follows the same separation. `useAttachmentPicker` owns the
 stateful behavior: opening Expo DocumentPicker, converting picked assets into
 `SelectedAttachment` objects, removing duplicate selections, checking the shared
-20 MB limit, and showing attachment-specific errors. `AttachmentPicker` is only
-a presentational component that renders the buttons, help text, selected file
-names, and validation message. `NewTicketForm` and `TicketReplyForm` can
+20 MB limit, calculating known selected/remaining upload size, and showing
+attachment-specific errors. `AttachmentPicker` is only a presentational
+component that renders the buttons, help text, selected file names, per-file
+remove actions, upload usage summary, and validation message. `NewTicketForm`
+and `TicketReplyForm` can
 therefore reuse the same attachment behavior without duplicating picker logic in
 their JSX.
 

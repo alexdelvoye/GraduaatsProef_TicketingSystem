@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import * as DocumentPicker from "expo-document-picker";
 
 import { useNotifications } from "../context/NotificationContext";
-import { getAttachmentSizeError } from "../utils/attachmentLimits";
+import {
+  getAttachmentSizeError,
+  getAttachmentUploadUsage,
+} from "../utils/attachmentLimits";
 
 import type { SelectedAttachment } from "../types";
 
@@ -42,6 +45,10 @@ export function useAttachmentPicker(limitContext = "per message") {
   // files as plain data and do not need to know how Expo's document picker works.
   const [attachments, setAttachments] = useState<SelectedAttachment[]>([]);
   const [attachmentError, setAttachmentError] = useState("");
+  const attachmentUsage = useMemo(
+    () => getAttachmentUploadUsage(attachments),
+    [attachments],
+  );
 
   async function pickAttachments() {
     const result = await DocumentPicker.getDocumentAsync({
@@ -87,10 +94,23 @@ export function useAttachmentPicker(limitContext = "per message") {
     setAttachmentError("");
   }
 
+  function removeAttachment(attachmentToRemove: SelectedAttachment) {
+    const attachmentKey = getAttachmentKey(attachmentToRemove);
+
+    setAttachments((currentAttachments) =>
+      currentAttachments.filter(
+        (attachment) => getAttachmentKey(attachment) !== attachmentKey,
+      ),
+    );
+    setAttachmentError("");
+  }
+
   return {
     attachments,
     attachmentError,
+    attachmentUsage,
     pickAttachments,
     clearAttachments,
+    removeAttachment,
   };
 }

@@ -37,8 +37,14 @@ export function TicketReplyForm({
 }: TicketReplyFormProps) {
   const { showError } = useNotifications();
   const { isCompact, isNarrow } = useResponsiveLayout();
-  const { attachments, attachmentError, pickAttachments, clearAttachments } =
-    useAttachmentPicker("per reply");
+  const {
+    attachments,
+    attachmentError,
+    attachmentUsage,
+    pickAttachments,
+    clearAttachments,
+    removeAttachment,
+  } = useAttachmentPicker("per reply");
 
   // The hook returns a boolean so this reusable form can decide whether to
   // clear the textarea. A failed API request keeps the typed message in place.
@@ -101,10 +107,12 @@ export function TicketReplyForm({
           <AttachmentPicker
             attachments={attachments}
             attachmentError={attachmentError}
+            attachmentUsage={attachmentUsage}
             disabled={disabled}
             limitLabel="per reply"
             onPickAttachments={pickAttachments}
             onClearAttachments={clearAttachments}
+            onRemoveAttachment={removeAttachment}
           />
 
           {/* Wrapping Formik's handleSubmit prevents the press event from being

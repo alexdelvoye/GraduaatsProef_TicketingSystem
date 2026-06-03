@@ -40,8 +40,14 @@ function formatCategory(category: string) {
 export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
   const { showError } = useNotifications();
   const { isCompact, isNarrow } = useResponsiveLayout();
-  const { attachments, attachmentError, pickAttachments, clearAttachments } =
-    useAttachmentPicker("per ticket");
+  const {
+    attachments,
+    attachmentError,
+    attachmentUsage,
+    pickAttachments,
+    clearAttachments,
+    removeAttachment,
+  } = useAttachmentPicker("per ticket");
 
   return (
     // Category and subject are enum-like choices, so this form uses option
@@ -126,9 +132,11 @@ export function NewTicketForm({ errorMessage, onSubmit }: NewTicketFormProps) {
           <AttachmentPicker
             attachments={attachments}
             attachmentError={attachmentError}
+            attachmentUsage={attachmentUsage}
             limitLabel="per ticket"
             onPickAttachments={pickAttachments}
             onClearAttachments={clearAttachments}
+            onRemoveAttachment={removeAttachment}
           />
 
           <Pressable
