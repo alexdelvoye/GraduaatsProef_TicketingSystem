@@ -2,7 +2,7 @@ import { colors } from "./theme";
 
 // Attachment UI is used in both ticket creation and replies, so these styles
 // live with the shared style groups instead of inside one screen stylesheet.
-export const attachmentStyleDefinitions = {
+export const attachmentStyleGroup = {
   attachmentActions: {
     flexDirection: "row",
     flexWrap: "wrap",

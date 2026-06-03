@@ -327,6 +327,13 @@ Main folders:
 - `src/utils` contains platform/data helpers such as date formatting and
   multipart attachment conversion.
 
+`src/navigation/linkingConfig.ts` maps React Navigation route names to Expo web
+paths. Without this linking config, navigation only lives inside React
+Navigation's memory stack and the browser back/forward buttons do not know
+about screen changes. The configured paths make normal web routes such as
+`/tickets`, `/admin`, `/profile`, and `/tickets/:ticketId` work with browser
+history, refresh, and shareable ticket links.
+
 The frontend uses Formik and Yup for forms.
 
 Form components live in:
@@ -358,6 +365,17 @@ a presentational component that renders the buttons, help text, selected file
 names, and validation message. `NewTicketForm` and `TicketReplyForm` can
 therefore reuse the same attachment behavior without duplicating picker logic in
 their JSX.
+
+Conversation pagination follows the same reusable pattern. `usePagination` owns
+page state, page bounds, current-page items, and previous/next navigation.
+`PaginationControls` renders the shared controls and range text. The ticket
+detail screen uses those generic pieces for messages and opens on the latest
+message page. It shows 20 messages per page on normal layouts and 15 messages
+on compact layouts, which keeps page counts realistic while still avoiding an
+overlong mobile conversation page with image previews. The same hook/component
+can later be reused for client and ticket lists. Pagination is currently
+client-side because the ticket detail API already returns the full conversation;
+server-side list pagination can reuse the same control surface later.
 
 The shared `AppHeader` component removes repeated FORCEBIT header JSX from the
 home, admin, profile, new-ticket, and ticket-detail screens. Screens still pass
@@ -410,7 +428,7 @@ allow chat bubbles to grow wider so messages remain readable.
 
 The authenticated ticket area uses `homeStyles` as a small public import for
 screens and components, but `homeStyles` is now only an aggregator. The actual
-style definitions are split by responsibility:
+style groups are split by responsibility:
 
 - `sharedStyles` for page layout, cards, section titles, empty states, loading
   states, and common text.
@@ -550,6 +568,13 @@ and demo error than failing during login or while adding a reply.
 Why use Formik and Yup:
 
 Formik manages form state, while Yup defines validation rules. This keeps form screens cleaner and makes validation consistent for login, registration, ticket creation, and messages.
+
+Why use a React Navigation linking config:
+
+Expo web runs the same React Navigation stack as the native app, but browser
+history is URL-based. The linking config is the bridge between route names and
+URLs, so the browser back/forward buttons, refresh, and direct ticket links
+behave like users expect from a web application.
 
 Why use repositories:
 

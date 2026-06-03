@@ -1,7 +1,7 @@
 import { colors } from "./theme";
 
 // Profile-specific layout stays out of the generic ticket/dashboard styles.
-export const profileStyleDefinitions = {
+export const profileStyleGroup = {
   profilePageActions: {
     flexDirection: "row",
     flexWrap: "wrap",

@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-import { authSharedStyleDefinitions } from "./authSharedStyles";
+import { authSharedStyleGroup } from "./authSharedStyles";
 import { colors } from "./theme";
 
 // Login uses a KeyboardAvoidingView, so its container fills and centers the
@@ -18,5 +18,5 @@ export const loginStyles = StyleSheet.create({
     padding: 16,
   },
 
-  ...authSharedStyleDefinitions,
+  ...authSharedStyleGroup,
 });

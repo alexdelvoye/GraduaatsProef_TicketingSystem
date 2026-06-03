@@ -2,7 +2,7 @@ import { colors, layout } from "./theme";
 
 // Header styles belong to AppHeader. They are kept separate from screen styles
 // because the same branded header appears on several pages.
-export const headerStyleDefinitions = {
+export const headerStyleGroup = {
   header: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -1,7 +1,7 @@
 import { colors, layout } from "./theme";
 
 // Styles for ticket lists, status pills and conversation messages.
-export const ticketStyleDefinitions = {
+export const ticketStyleGroup = {
   ticketSection: {
     marginBottom: 24,
   },

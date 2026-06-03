@@ -12,7 +12,7 @@ Forcebit Ticketing is a small support ticket system with a .NET backend and an E
 
 Frontend structure:
 
-- `src/navigation` - React Navigation stack setup and route guards.
+- `src/navigation` - React Navigation stack setup, route guards, and Expo web browser paths.
 - `src/screens` - page-level components that compose hooks, forms, and UI components.
 - `src/forms` - reusable Formik/Yup form components.
 - `src/components` - reusable non-form UI components such as the shared app header.
@@ -232,6 +232,11 @@ The frontend API client currently targets:
 http://localhost:5047/api
 ```
 
+On Expo web, the frontend syncs React Navigation routes with browser history.
+This makes the browser back/forward buttons and refresh work for normal app
+routes such as `/login`, `/register`, `/tickets`, `/admin`, `/profile`,
+`/tickets/new`, and `/tickets/:ticketId`.
+
 When testing on a physical phone, `localhost` points to the phone itself. In that case, change the API base URL in `Ticketing_Frontend/src/api/apiClient.ts` to the LAN IP address of the computer that is running the backend.
 
 ## Seeded Admin Account
@@ -301,6 +306,8 @@ Implemented:
 - Ticket list and ticket detail views.
 - Client and admin ticket messages.
 - Chat-style ticket conversation with client/admin messages on opposite sides.
+- Paginated ticket conversation view with larger pages for realistic support threads.
+- Expo web browser back/forward support for frontend routes.
 - Admin status updates with `New`, `Open`, and `Closed` workflow states.
 - Client close and reopen actions for their own tickets.
 - Profile editing for name and email, with company and role shown as read-only account details.

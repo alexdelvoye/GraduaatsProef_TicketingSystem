@@ -10,11 +10,13 @@ import {
 } from "react-native";
 
 import { AppHeader } from "../components/AppHeader";
+import { PaginationControls } from "../components/PaginationControls";
 import { TicketReplyForm } from "../forms/TicketReplyForm";
 import {
   ticketStatusUpdateOptions,
   useTicketDetailScreen,
 } from "../hooks/useTicketDetailScreen";
+import { usePagination } from "../hooks/usePagination";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 import { homeStyles as styles } from "../styles/homeStyles";
 import { colors } from "../styles/theme";
@@ -24,6 +26,11 @@ import {
 } from "../utils/ticketFormatters";
 
 import type { TicketDetailScreenProps } from "../types";
+
+const conversationPageSizes = {
+  compact: 15,
+  default: 20,
+} as const;
 
 export default function TicketDetailScreen({
   navigation,
@@ -50,6 +57,17 @@ export default function TicketDetailScreen({
   // Compact and narrow layout flags keep the ticket detail readable on small
   // screens without changing the desktop visual structure.
   const { isCompact, isNarrow } = useResponsiveLayout();
+  const conversationMessages = ticket?.messages ?? [];
+  const conversationPagination = usePagination(conversationMessages, {
+    // Ticket conversations can become long. Keep normal pages large enough for
+    // real support work, with a slightly smaller compact page for image previews
+    // and narrow screens.
+    pageSize: isCompact
+      ? conversationPageSizes.compact
+      : conversationPageSizes.default,
+    initialPage: "last",
+    resetKey: `${ticketId}:${conversationMessages.length}`,
+  });
 
   return (
     <KeyboardAvoidingView
@@ -210,7 +228,7 @@ export default function TicketDetailScreen({
                 Conversation
               </Text>
 
-              {ticket.messages.length === 0 ? (
+              {conversationMessages.length === 0 ? (
                 <Text
                   style={[
                     styles.emptyText,
@@ -220,103 +238,119 @@ export default function TicketDetailScreen({
                   No replies yet.
                 </Text>
               ) : (
-                ticket.messages.map((message) => (
-                  // The conversation uses role-based bubbles: client messages
-                  // stay left and admin/support replies stay right.
-                  <View
-                    key={message.id}
-                    style={[
-                      styles.messageRow,
-                      message.senderRole === "Admin" && styles.adminMessageRow,
-                    ]}
-                  >
+                <>
+                  {conversationPagination.pageItems.map((message) => (
+                    // The conversation uses role-based bubbles: client messages
+                    // stay left and admin/support replies stay right.
                     <View
+                      key={message.id}
                       style={[
-                        styles.messageCard,
-                        styles.clientMessageCard,
-                        isCompact ? styles.messageCardCompact : null,
-                        isNarrow ? styles.messageCardNarrow : null,
+                        styles.messageRow,
                         message.senderRole === "Admin" &&
-                          styles.adminMessageCard,
+                          styles.adminMessageRow,
                       ]}
                     >
                       <View
                         style={[
-                          styles.messageHeader,
-                          isCompact ? styles.messageHeaderCompact : null,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.messageSender,
-                            message.senderRole === "Admin" &&
-                              styles.adminMessageSender,
-                          ]}
-                        >
-                          {message.senderName || message.senderRole}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.ticketDate,
-                            message.senderRole === "Admin" &&
-                              styles.adminMessageDate,
-                          ]}
-                        >
-                          {formatTicketDateTime(message.createdAt)}
-                        </Text>
-                      </View>
-                      <Text
-                        style={[
-                          styles.messageText,
+                          styles.messageCard,
+                          styles.clientMessageCard,
+                          isCompact ? styles.messageCardCompact : null,
+                          isNarrow ? styles.messageCardNarrow : null,
                           message.senderRole === "Admin" &&
-                            styles.adminMessageText,
+                            styles.adminMessageCard,
                         ]}
                       >
-                        {message.message}
-                      </Text>
+                        <View
+                          style={[
+                            styles.messageHeader,
+                            isCompact ? styles.messageHeaderCompact : null,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.messageSender,
+                              message.senderRole === "Admin" &&
+                                styles.adminMessageSender,
+                            ]}
+                          >
+                            {message.senderName || message.senderRole}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.ticketDate,
+                              message.senderRole === "Admin" &&
+                                styles.adminMessageDate,
+                            ]}
+                          >
+                            {formatTicketDateTime(message.createdAt)}
+                          </Text>
+                        </View>
+                        <Text
+                          style={[
+                            styles.messageText,
+                            message.senderRole === "Admin" &&
+                              styles.adminMessageText,
+                          ]}
+                        >
+                          {message.message}
+                        </Text>
 
-                      {message.attachments.length > 0 ? (
-                        <View style={styles.attachmentList}>
-                          {message.attachments.map((attachment) => (
-                            <View
-                              key={attachment.id}
-                              style={styles.messageAttachment}
-                            >
-                              {/* Preview URLs only exist for protected PNG/JPG
+                        {message.attachments.length > 0 ? (
+                          <View style={styles.attachmentList}>
+                            {message.attachments.map((attachment) => (
+                              <View
+                                key={attachment.id}
+                                style={styles.messageAttachment}
+                              >
+                                {/* Preview URLs only exist for protected PNG/JPG
                                  attachments. Other file types keep the same
                                  download button without an empty preview box. */}
-                              {attachmentPreviewUrls[attachment.id] ? (
-                                <Image
-                                  source={{
-                                    uri: attachmentPreviewUrls[attachment.id],
-                                  }}
-                                  style={[
-                                    styles.attachmentPreviewImage,
-                                    isCompact
-                                      ? styles.attachmentPreviewImageCompact
-                                      : null,
-                                  ]}
-                                  resizeMode="cover"
-                                />
-                              ) : null}
+                                {attachmentPreviewUrls[attachment.id] ? (
+                                  <Image
+                                    source={{
+                                      uri: attachmentPreviewUrls[attachment.id],
+                                    }}
+                                    style={[
+                                      styles.attachmentPreviewImage,
+                                      isCompact
+                                        ? styles.attachmentPreviewImageCompact
+                                        : null,
+                                    ]}
+                                    resizeMode="cover"
+                                  />
+                                ) : null}
 
-                              <Pressable
-                                style={styles.attachmentDownloadButton}
-                                onPress={() =>
-                                  handleDownloadAttachment(attachment)
-                                }
-                              >
-                                <Text style={styles.attachmentDownloadText}>
-                                  {attachment.fileName}
-                                </Text>
-                              </Pressable>
-                            </View>
-                          ))}
-                        </View>
-                      ) : null}
+                                <Pressable
+                                  style={styles.attachmentDownloadButton}
+                                  onPress={() =>
+                                    handleDownloadAttachment(attachment)
+                                  }
+                                >
+                                  <Text style={styles.attachmentDownloadText}>
+                                    {attachment.fileName}
+                                  </Text>
+                                </Pressable>
+                              </View>
+                            ))}
+                          </View>
+                        ) : null}
+                      </View>
                     </View>
-                  </View>
-                ))
+                  ))}
+
+                  <PaginationControls
+                    itemLabel="messages"
+                    currentPage={conversationPagination.currentPage}
+                    totalPages={conversationPagination.totalPages}
+                    totalItems={conversationPagination.totalItems}
+                    startItem={conversationPagination.startItem}
+                    endItem={conversationPagination.endItem}
+                    canGoPrevious={conversationPagination.canGoPrevious}
+                    canGoNext={conversationPagination.canGoNext}
+                    onPrevious={conversationPagination.goToPreviousPage}
+                    onNext={conversationPagination.goToNextPage}
+                  />
+                </>
               )}
             </View>
 

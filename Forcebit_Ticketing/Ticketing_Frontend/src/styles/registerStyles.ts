@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-import { authSharedStyleDefinitions } from "./authSharedStyles";
+import { authSharedStyleGroup } from "./authSharedStyles";
 import { colors } from "./theme";
 
 // Register is inside a ScrollView so the longer form stays reachable on smaller
@@ -18,5 +18,5 @@ export const registerStyles = StyleSheet.create({
     padding: 16,
   },
 
-  ...authSharedStyleDefinitions,
+  ...authSharedStyleGroup,
 });

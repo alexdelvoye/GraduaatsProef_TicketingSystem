@@ -2,7 +2,7 @@ import { colors, layout } from "./theme";
 
 // Shared visual language for anonymous auth pages. Login and register keep
 // their own container styles because one is keyboard-centered and one scrolls.
-export const authSharedStyleDefinitions = {
+export const authSharedStyleGroup = {
   card: {
     width: "100%",
     maxWidth: layout.formMaxWidth,

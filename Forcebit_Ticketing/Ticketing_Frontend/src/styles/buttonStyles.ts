@@ -1,7 +1,7 @@
 import { colors } from "./theme";
 
 // Shared button styles used by screens and reusable components.
-export const buttonStyleDefinitions = {
+export const buttonStyleGroup = {
   logoutButton: {
     borderColor: colors.primary,
     borderWidth: 1,

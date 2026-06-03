@@ -13,6 +13,7 @@ import RegisterScreen from "../screens/RegisterScreen";
 import TicketDetailScreen from "../screens/TicketDetailScreen";
 import { appStyles } from "../styles/appStyles";
 import { colors } from "../styles/theme";
+import { navigationLinkingConfig } from "./linkingConfig";
 
 import type { RootStackParamList } from "../types";
 
@@ -34,7 +35,7 @@ export function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={navigationLinkingConfig}>
       <StatusBar style="light" />
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {token ? (

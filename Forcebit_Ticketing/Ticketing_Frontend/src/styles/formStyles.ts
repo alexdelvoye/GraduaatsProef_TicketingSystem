@@ -1,7 +1,7 @@
 import { colors } from "./theme";
 
 // Form control styles shared by ticket/profile forms and small option groups.
-export const formStyleDefinitions = {
+export const formStyleGroup = {
   label: {
     color: colors.muted,
     marginTop: 14,
