@@ -1,0 +1,80 @@
+\chapter{\IfLanguageName{dutch}{Stand van zaken}{State of the art}}%
+\label{ch:stand-van-zaken}
+
+% Tip: Begin elk hoofdstuk met een paragraaf inleiding die beschrijft hoe
+% dit hoofdstuk past binnen het geheel van de graduaatsproef. Geef in het
+% bijzonder aan wat de link is met het vorige en volgende hoofdstuk.
+%
+% Pas na deze inleidende paragraaf komt de eerste sectiehoofding.
+%
+% Dit hoofdstuk bevat je literatuurstudie. De inhoud gaat verder op de
+% inleiding, maar zal het onderwerp van de graduaatsproef diepgaand uitspitten.
+% De bedoeling is dat de lezer na lezing van dit hoofdstuk voldoende vertrouwd
+% is met het onderzoeksdomein om de rest van het verhaal te kunnen volgen
+% \autocite{Pollefliet2011}.
+%
+% Je verwijst bij elke bewering die je doet, vakterm die je introduceert, enz.
+% naar je bronnen. In LaTeX kan dat met \texttt{\textbackslash textcite\{\}}
+% of \texttt{\textbackslash autocite\{\}}.
+
+Dit hoofdstuk bespreekt de belangrijkste concepten achter Forcebit Ticketing. De focus ligt niet op een volledige theoretische bespreking van elk framework. De nadruk ligt op de onderdelen die nodig zijn om de gemaakte keuzes te plaatsen: ticketing, web API's, gelaagde architectuur, frontend state en beveiliging. Die concepten keren later terug in de functionele analyse en in de technische implementatie.
+
+\Needspace{4\baselineskip}
+\section{Ticketing als ondersteuning van supportprocessen}
+
+Een ticketingsysteem heeft als doel om vragen, problemen, antwoorden en bijlagen centraal bij te houden. In plaats van losse communicatie bevat elk ticket de context van een vraag. Binnen IT service management sluiten zulke tickets aan bij het opvolgen van incidenten en service requests, waarbij structuur en traceerbaarheid belangrijk zijn~\autocite{Axelos2019ITIL4Foundation,ISOIEC20000One2018}. Voor dit project betekent dat: een klant maakt een ticket aan, support reageert, de status evolueert en alle berichten blijven gekoppeld aan hetzelfde ticket.
+
+Een belangrijk voordeel is traceerbaarheid. Een ticketingtool brengt aanvragen samen op een centrale plaats, zodat opvolging en communicatie niet over losse kanalen verspreid blijven~\autocite{AtlassianTicketingSystem2026}. Wanneer een ticket later opnieuw bekeken wordt, staat de geschiedenis op een plaats. Dat is vooral nuttig wanneer een probleem meerdere antwoorden of bijlagen bevat. In Forcebit Ticketing wordt daarom de eerste beschrijving van de klant niet als apart tekstveld op het ticket bewaard, maar als eerste bericht in de conversatie. Zo volgt elk ticket hetzelfde conversatiemodel vanaf het begin.
+
+\Needspace{4\baselineskip}
+\section{Web API en backendstructuur}
+
+ASP.NET Core is een framework om webapplicaties en API's te bouwen. De documentatie beschrijft onder meer controllers, dependency injection, middleware en configuratie als vaste onderdelen van de applicatiestructuur~\autocite{MicrosoftASPNetCore2026}. Die onderdelen passen bij dit project omdat de backend verschillende verantwoordelijkheden heeft: HTTP requests verwerken, authenticatie controleren, services aanroepen en foutafhandeling centraliseren.
+
+Entity Framework Core wordt gebruikt als object-relational mapper. Het laat toe om met C\# entiteiten te werken en die via configuraties en migraties aan een relationele databank te koppelen~\autocite{MicrosoftEFCore2026}. Voor Forcebit Ticketing is dat nuttig omdat tickets, berichten, bijlagen en gebruikers duidelijke relaties hebben. De databankstructuur kan daardoor aansluiten bij de domeinobjecten in de code.
+
+\Needspace{4\baselineskip}
+\section{Single Responsibility en lagen}
+
+Single Responsibility betekent dat een klasse of module een duidelijke hoofdreden heeft om te veranderen. Robert C. Martin, auteur van \textit{Clean Architecture}, koppelt dit principe aan onderhoudbare softwarestructuur: code blijft beter aanpasbaar wanneer verantwoordelijkheden niet door elkaar lopen~\autocite{Martin2017CleanArchitecture}. In een ticketingapplicatie is dit belangrijk omdat dezelfde workflow meerdere technische onderdelen raakt. Een antwoord toevoegen betekent bijvoorbeeld: rechten controleren, statusregels toepassen, het bericht bewaren, bijlagen koppelen en eventueel een e-mail sturen.
+
+Als al die logica rechtstreeks in een controller zou staan, wordt de code moeilijk te onderhouden. Daarom verdeelt een gelaagde structuur de verantwoordelijkheden: controllers behandelen HTTP en geven de nodige gegevens door via Data Transfer Objects (DTOs), objecten die volgens Fowler data over een grens transporteren~\autocite{Fowler2003DataTransferObject}. Services voeren use cases uit: afgebakende gebruikersdoelen of systeemgedrag dat door de applicatie wordt ondersteund~\autocite{Jacobson1992UseCaseDriven}. Repositories verzorgen databanktoegang. Domain rules bevatten businessregels zoals toegang en statusovergangen. De lagen maken de applicatie niet automatisch correct, maar ze geven wel een duidelijke plaats aan elke soort logica.
+
+\Needspace{4\baselineskip}
+\section{Frontend state en herbruikbaarheid}
+
+De frontend is gebouwd met Expo React Native. React Native is bedoeld om interfaces te bouwen met componenten, terwijl Expo extra tooling aanbiedt om sneller te ontwikkelen en ook web te ondersteunen~\autocite{ReactNative2026,ExpoDocs2026}. React Navigation wordt gebruikt voor schermnavigatie en web routes~\autocite{ReactNavigation2026}.
+
+In moderne frontendapplicaties is state management een belangrijk aandachtspunt. In Forcebit Ticketing worden ruwe API-resultaten bewaard als bron van waarheid. Zoekresultaten, filters, tellingen, groepen en paginatie worden daarvan afgeleid. Dit wordt derived state genoemd. Het voorkomt dat meerdere lijsten apart bijgehouden moeten worden en uit sync kunnen raken. Herbruikbare hooks, componenten en utility-functies zorgen er daarnaast voor dat dezelfde logica niet opnieuw in elk scherm geschreven moet worden.
+
+\Needspace{4\baselineskip}
+\section{Beveiliging en validatie}
+
+Omdat tickets klantgegevens en bijlagen kunnen bevatten, mag de frontend niet de enige beveiligingslaag zijn. De backend moet opnieuw controleren of de gebruiker een ticket mag zien, beantwoorden of wijzigen. OWASP benadrukt dat toegangscontrole aan serverzijde moet worden afgedwongen en niet mag afhangen van client-side controles~\autocite{OWASPAccessControl2026}.
+
+Forcebit Ticketing gebruikt JWT authenticatie en role-based authorization. Een JSON Web Token is een compact tokenformaat waarmee claims tussen partijen kunnen worden doorgegeven~\autocite{JwtRFC7519}. In dit project bevat het token onder andere de gebruikersidentiteit en rol. Frontendvalidatie met Yup helpt de gebruiker sneller fouten te zien, maar backendvalidatie blijft noodzakelijk voor betrouwbaarheid en veiligheid.
+
+\vspace*{\fill}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    concept/.style={draw=title!70, rounded corners=3pt, fill=title!8, align=center, font=\small\bfseries, text width=3.45cm, minimum height=1.0cm, inner sep=4pt},
+    result/.style={draw=title, rounded corners=3pt, fill=title!16, align=center, font=\small\bfseries, text width=3.45cm, minimum height=1.0cm, inner sep=4pt},
+    arrow/.style={->, thick, draw=title!70, shorten <=2pt, shorten >=2pt}
+  ]
+    \node[concept] (ticketing) at (0,2.0) {Ticketing\\{\scriptsize centrale context}};
+    \node[concept] (backend) at (-5.0,0) {Gelaagde backend\\{\scriptsize API, services, domain, persistence}};
+    \node[concept] (frontend) at (5.0,0) {Frontend state\\{\scriptsize zoeken, filters, paginatie}};
+    \node[concept] (security) at (0,-2.0) {Beveiliging\\{\scriptsize JWT, rollen, servercontrole}};
+    \node[result] (workflow) at (0,0) {Onderhoudbare\\supportworkflow};
+
+    \draw[arrow] (ticketing.south) -- (workflow.north);
+    \draw[arrow] (backend.east) -- (workflow.west);
+    \draw[arrow] (frontend.west) -- (workflow.east);
+    \draw[arrow] (security.north) -- (workflow.south);
+  \end{tikzpicture}
+  \caption[Samenvatting stand van zaken]{Visuele samenvatting van de stand van zaken. De literatuurstudie toont hoe ticketing, een gelaagde backend, herbruikbare frontendlogica en beveiliging samen bijdragen aan een onderhoudbare supportworkflow.}
+  \label{fig:stand-van-zaken-samenvatting}
+\end{figure}
+\vspace*{\fill}

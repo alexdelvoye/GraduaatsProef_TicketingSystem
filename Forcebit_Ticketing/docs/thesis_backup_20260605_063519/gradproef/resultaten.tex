@@ -1,0 +1,34 @@
+%%=============================================================================
+%% Resultaten
+%%=============================================================================
+
+\chapter{Resultaten en evaluatie}%
+\label{ch:resultaten}
+
+Dit hoofdstuk evalueert het eindresultaat van Forcebit Ticketing. De vorige hoofdstukken beschreven vooral hoe de applicatie is opgebouwd. Hier ligt de nadruk op wat de applicatie oplevert, welke keuzes bijdragen aan onderhoudbaarheid en welke verbeteringen logisch zijn voor een volgende versie.
+
+\section{Werkend resultaat}
+
+De applicatie ondersteunt de basisflow waarvoor ze gebouwd werd. Een klant kan zich registreren, inloggen, een ticket aanmaken, antwoorden plaatsen, bijlagen toevoegen, een ticket sluiten en een gesloten ticket opnieuw openen. Een administrator kan tickets opvolgen, beantwoorden, zoeken, filteren en van status veranderen. Daardoor staat de communicatie niet meer verspreid over losse mails of telefoongesprekken: vraag, antwoord, status en bijlagen blijven samen in hetzelfde ticket.
+
+De statusflow is duidelijker geworden door de keuze voor \texttt{New}, \texttt{Open} en \texttt{Closed}. \texttt{New} betekent dat support nog niet gereageerd heeft. \texttt{Open} betekent dat de conversatie loopt. Een heropend ticket wordt opnieuw \texttt{Open}, omdat het al een geschiedenis heeft. Deze regel maakt het overzicht logischer dan wanneer elk heropend ticket opnieuw als nieuw zou verschijnen.
+
+Mentorfeedback heeft vooral de bruikbaarheid verbeterd. De conversatie kreeg een chatweergave, afbeeldingsbijlagen kregen een preview en overzichten kregen zoekvelden, filters en paginatie. Zo blijft de basisworkflow eenvoudig, maar werkt de applicatie beter met realistische testdata.
+
+\section{Onderhoudbaarheid}
+
+Een belangrijk resultaat is dat de applicatie niet alleen werkt, maar ook een duidelijke structuur heeft. In de backend hebben controllers, services, repositories, domain rules en DTOs elk een eigen verantwoordelijkheid. Daardoor is het meestal duidelijk waar een wijziging thuishoort. Een controller behandelt HTTP, een service voert de workflow uit, een repository haalt data op en een domain rule bewaakt een businessregel.
+
+Die scheiding maakte wijzigingen tijdens het project eenvoudiger. De statusregels konden aangepast worden in de domain rules en service-laag. Bijlagen werden toegevoegd zonder de ticketlogica afhankelijk te maken van concrete bestandsopslag, omdat opslag achter \texttt{IFileStorageService} zit. Ook e-mail blijft apart: \texttt{TicketService} beslist wanneer een notificatie nodig is, terwijl \texttt{EmailService} de providergerichte details afhandelt.
+
+De frontend volgt hetzelfde idee. Screens tonen pagina's, hooks beheren gedrag, API modules praten met de backend en componenten bevatten herbruikbare UI. De generieke paginatiehook toont het voordeel daarvan: dezelfde logica wordt gebruikt voor gesprekken, tickets en klantenlijsten. Documentatie en gerichte comments ondersteunen dit, omdat ze uitleggen waarom bepaalde keuzes gemaakt zijn en niet alleen wat de code doet.
+
+\section{Beperkingen en verdere ontwikkeling}
+
+De huidige versie blijft een prototype en geen volledige productieomgeving. Bijlagen worden lokaal op de API-server opgeslagen. Dat is voldoende voor ontwikkeling en demo, maar voor productie zou een aparte bestandsserver of object storage beter zijn. Dan kunnen back-ups, toegangsrechten, schaalbaarheid en opslaglimieten apart beheerd worden. De bestaande interface \texttt{IFileStorageService} maakt zo'n vervanging technisch haalbaar.
+
+Ook het adminbeheer kan verder groeien. Op dit moment kan een administrator alle tickets beheren. In een grotere organisatie zou het nuttig zijn om administrators te koppelen aan categorieën, onderwerpen of concrete tickets. Dan kan een ticket automatisch bij de juiste persoon of het juiste team terechtkomen.
+
+Voor grotere datasets zou server-side paginatie beter zijn dan alleen client-side paginatie. De frontend haalt dan enkel de nodige pagina op in plaats van de volledige lijst. Daarnaast zouden automatische tests rond statusregels, autorisatie, uploads en notificaties extra zekerheid geven bij toekomstige wijzigingen.
+
+Omdat de frontend in Expo React Native geschreven is, blijft verdere ontwikkeling richting een mobiele applicatie mogelijk. De huidige webversie gebruikt al React Native componenten en schermlogica. Voor een mobiele versie zouden vooral navigatie, layoutdetails en platformafhankelijke interacties verder getest moeten worden. Samen met betere logging, sterker secret management en eventueel een audit trail zijn dat logische stappen richting langdurig gebruik.

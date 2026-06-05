@@ -1,0 +1,87 @@
+%%=============================================================================
+%% Backendarchitectuur en beveiliging
+%%=============================================================================
+
+\chapter{Backendarchitectuur en beveiliging}%
+\label{ch:backendarchitectuur}
+\label{ch:architectuur-implementatie}
+
+Dit hoofdstuk bespreekt de backend van Forcebit Ticketing. De nadruk ligt op de gelaagde structuur, de verdeling van verantwoordelijkheden, de gebruikte patronen en de manier waarop toegang tot tickets wordt gecontroleerd.
+
+\section{Gelaagde structuur}
+
+De backend bestaat uit vier projecten. Elke laag heeft een duidelijke hoofdtaak:
+
+\begin{itemize}[itemsep=0.2\baselineskip, topsep=0.25\baselineskip]
+  \item \textbf{\texttt{1\_Api}}: ontvangt HTTP-verzoeken, leest JWT-claims, mapt requestdata en registreert afhankelijkheden.
+  \item \textbf{\texttt{2\_Services}}: voert de use cases uit, gebruikt DTO's en bevat interfaces voor externe onderdelen zoals repositories en e-mail.
+  \item \textbf{\texttt{3\_Persistence}}: bevat Entity Framework Core, repositories, configuraties en migraties.
+  \item \textbf{\texttt{4\_Domain}}: bevat entities, enums en domeinregels. Deze laag hangt niet af van de andere projectlagen.
+\end{itemize}
+
+De requestflow loopt meestal van API naar Services en daarna naar repositories. De projectreferenties tonen ook hoe de lagen technisch gekoppeld zijn: de API kent Persistence voor dependency injection, terwijl Persistence de repository interfaces uit Services implementeert.
+
+\clearpage
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{Backend_architecture.png}
+  \caption[Backendlagen]{Backendlagen en belangrijkste projectafhankelijkheden.}
+  \label{fig:backend-lagen}
+\end{figure}
+
+\section{Controllers en DTO's}
+
+Controllers blijven bewust dun. Zij lezen routeparameters, request bodies, form-data en JWT-claims, maar voeren zelf geen ticketlogica uit. Daarna geven ze DTO's door aan de service-laag. Dit zorgt ervoor dat HTTP-details niet verspreid raken door de rest van de applicatie.
+
+In dit project wordt het DTO-principe vooral gebruikt tussen de HTTP-laag en de service-laag: controllers vertalen requests naar DTO's, waarna services verder werken met een eenvoudiger contract.
+
+Een voorbeeld is uploadfunctionaliteit. ASP.NET Core ontvangt bestanden via HTTP. In de controller is dat \texttt{IFormFile}, maar de service-laag gebruikt \texttt{FileUploadRequest}. Daardoor blijft de service niet afhankelijk van een specifiek HTTP-type.
+
+\section{Services als use cases}
+
+\texttt{TicketService} is de belangrijkste use-caseklasse. Deze service maakt tickets aan, laadt ticketdetails, voegt berichten toe, wijzigt statussen, bewaart bijlagen en beslist wanneer een e-mail verstuurd wordt. De klasse coördineert dus meerdere onderdelen, maar laat HTTP-antwoorden over aan controllers en databasequeries aan repositories.
+
+Dit is een voorbeeld van Single Responsibility op projectniveau. De service heeft als hoofdtaak het uitvoeren van ticket-use-cases. De concrete opslag van bestanden, het verzenden van e-mails en het ophalen van databankgegevens zitten in aparte services of repositories.
+
+\section{Domeinregels}
+
+Businessregels rond tickets staan in de domain-laag. Daardoor kunnen controllers en services dezelfde regels gebruiken zonder ze te kopiëren. De statusregel hieronder toont bijvoorbeeld dat \texttt{New} alleen door ticketcreatie mag ontstaan. Een gebruiker kan een bestaand ticket dus niet terug naar \texttt{New} zetten.
+
+\begin{listing}[htbp]
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.9]{csharp}
+public static bool CanChangeStatus(
+    Ticket ticket,
+    Guid userId,
+    UserRole userRole,
+    TicketStatus newStatus)
+{
+    if (newStatus == TicketStatus.New)
+    {
+        return false;
+    }
+
+    if (userRole == UserRole.Admin)
+    {
+        return true;
+    }
+
+    if (userRole != UserRole.Client || ticket.ClientId != userId)
+    {
+        return false;
+    }
+
+    return newStatus == TicketStatus.Closed
+        ? ticket.Status != TicketStatus.Closed
+        : newStatus == TicketStatus.Open && ticket.Status == TicketStatus.Closed;
+}
+\end{minted}
+\caption[Statuscontrole in TicketRules]{Statuscontrole in \texttt{TicketRules}.}
+\label{lst:ticket-rules-status}
+\end{listing}
+
+\section{Authenticatie en autorisatie}
+
+De applicatie gebruikt JWT-authenticatie. Na login bevat het token onder andere de gebruikersidentiteit en rol. Controllers kunnen routes afschermen met rollen, maar de service-laag controleert ook tickettoegang via domeinregels. Dat is belangrijk omdat een klant alleen eigen tickets mag zien, terwijl een administrator alle tickets mag beheren.
+
+De combinatie van JWT, rollen en domeinregels voorkomt dat de frontend de enige beveiligingslaag wordt. Zelfs als een gebruiker manueel een API-aanroep zou proberen, blijft de backend controleren of die gebruiker de gevraagde actie mag uitvoeren.

@@ -1,0 +1,51 @@
+%%=============================================================================
+%% Aanvullende functionaliteiten
+%%=============================================================================
+
+\chapter{Aanvullende functionaliteiten}%
+\label{ch:aanvullende-functionaliteiten}
+
+Naast de basisflow bevat de applicatie enkele extra functies die belangrijk zijn in een realistische supportomgeving. Dit hoofdstuk bespreekt e-mailnotificaties, bijlagen en documentatie.
+
+\section{E-mailnotificaties met Brevo}
+
+Wanneer een administrator antwoordt of een status wijzigt, krijgt de klant een e-mail. De backend gebruikt hiervoor Brevo, een provider die via zijn API transactionele berichten kan versturen~\autocite{BrevoApiDocs2026}. \texttt{TicketService} beslist wanneer een notificatie nodig is. \texttt{EmailService} bouwt de e-mail en stuurt ze naar de provider. Daardoor blijft de ticketlogica gescheiden van provider-specifieke code.
+
+\begin{listing}[htbp]
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.9]{csharp}
+if (role == UserRole.Admin && ticket.Client != null)
+{
+    await _emailService.SendTicketMessageEmailAsync(
+        ticket.Client.Email,
+        ticket.Title,
+        request.Message,
+        role.ToString(),
+        emailAttachments);
+}
+\end{minted}
+\caption[E-mail bij adminantwoord]{Een adminantwoord triggert een e-mail naar de klant.}
+\label{lst:admin-email}
+\end{listing}
+
+In lokale ontwikkeling mag de applicatie ook werken zonder Brevo API key. Bij een ontbrekende sleutel logt \texttt{EmailService} een waarschuwing en slaat het verzenden over. De ticketflow loopt daardoor niet vast door e-mailconfiguratie.
+
+\clearpage
+
+\section{Bijlagen en uploadlimiet}
+
+Bijlagen kunnen toegevoegd worden bij ticketcreatie en bij antwoorden. De frontend gebruikt Expo DocumentPicker en toont meteen hoeveel van de 20~MB uploadlimiet al gebruikt is. De backend controleert dezelfde limiet opnieuw, omdat frontendvalidatie alleen niet betrouwbaar genoeg is.
+
+Bestanden worden lokaal op de API-server opgeslagen. De databank bewaart enkel metadata zoals bestandsnaam, content type, relatief bestandspad, ticket en bericht. Afbeeldingen krijgen een preview in de conversatie. Daardoor kan een gebruiker screenshots bekijken zonder ze eerst te downloaden.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth,height=0.495\textheight,keepaspectratio]{Attachment_picker.png}
+  \caption[Bijlagen selecteren]{Attachment picker met geselecteerde bestanden, uploadlimiet en verwijderknoppen.}
+  \label{fig:attachment-picker}
+\end{figure}
+
+\section{Documentatie}
+
+De documentatie is onderdeel van het eindresultaat. De gewone README beschrijft hoe het project gestart wordt. De technische README legt architectuur, workflows en belangrijke keuzes uit. Op enkele plaatsen in de code staan comments waar de intentie niet vanzelfsprekend is.
+
+Deze documentatie ondersteunt onderhoudbaarheid. Een volgende ontwikkelaar moet niet alleen zien wat de code doet, maar ook waarom bepaalde keuzes gemaakt zijn.

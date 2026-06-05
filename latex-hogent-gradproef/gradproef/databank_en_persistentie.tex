@@ -1,0 +1,55 @@
+%%=============================================================================
+%% Databank en persistentie
+%%=============================================================================
+
+\chapter{Databank en persistentie}%
+\label{ch:databank-persistentie}
+
+Dit hoofdstuk bespreekt hoe data wordt bewaard. Forcebit Ticketing gebruikt een MySQL-databank met Entity Framework Core als Object-Relational Mapper (ORM). EF Core werkt met C\# entiteiten en vertaalt queries naar databankbewerkingen, zodat de applicatie met objecten kan werken in plaats van rechtstreeks met SQL-tabellen~\autocite{MicrosoftEFCore2026}.
+
+\section{Datamodel}
+
+Het datamodel draait rond vier hoofdtabellen: gebruikers, tickets, berichten en bijlagen. Een gebruiker kan meerdere tickets hebben. Een ticket heeft meerdere berichten. Bijlagen horen bij een ticket en kunnen ook aan een specifiek bericht gekoppeld worden.
+
+\begin{figure}[H]
+  \centering
+  \vspace{-0.35\baselineskip}
+  \includegraphics[width=0.95\linewidth,height=0.33\textheight,keepaspectratio]{Database_schema.png}
+  \vspace{-0.35\baselineskip}
+  \caption[Databankschema]{Databankschema van de belangrijkste tabellen en relaties.}
+  \label{fig:database-schema}
+\end{figure}
+
+\clearpage
+
+\section{DbContext en configuraties}
+
+\texttt{AppDbContext} is de centrale EF Core klasse. De \texttt{DbSet} properties tonen welke tabellen de applicatie gebruikt. De detailconfiguratie staat in aparte configuratieklassen, zodat de context kort blijft en elke tabelmapping apart onderhoudbaar is.
+
+\begin{listing}[htbp]
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.9]{csharp}
+public DbSet<User> Users => Set<User>();
+public DbSet<Ticket> Tickets => Set<Ticket>();
+public DbSet<TicketMessage> TicketMessages => Set<TicketMessage>();
+public DbSet<TicketAttachment> TicketAttachments => Set<TicketAttachment>();
+
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    base.OnModelCreating(modelBuilder);
+    modelBuilder.ApplyConfigurationsFromAssembly(
+        typeof(AppDbContext).Assembly);
+}
+\end{minted}
+\caption[DbContext met configuraties]{\texttt{AppDbContext} laadt configuraties uit de persistence-laag.}
+\label{lst:appdbcontext}
+\end{listing}
+
+\section{Enumwaarden en relaties}
+
+Ticketstatus, categorie en onderwerp zijn enums in de domain-laag. Een enum groepeert vaste, benoemde waarden binnen een eigen type~\autocite{MicrosoftCSharpEnums2026}. In de databank worden deze waarden als tekst opgeslagen. Dat maakt de inhoud leesbaarder tijdens testen en controle. Een rij met status \texttt{Open} is duidelijker dan een numerieke waarde zoals \texttt{1}.
+
+De relatie tussen ticket en klant gebruikt \texttt{DeleteBehavior.Restrict}. Daardoor kan een gebruiker niet zomaar verwijderd worden als tickets nog naar die gebruiker verwijzen. Voor een supportapplicatie is dat logisch, omdat ticketgeschiedenis belangrijk blijft.
+
+\section{Repository pattern}
+
+Repositories schermen querydetails af van de service-laag. \texttt{TicketService} vraagt bijvoorbeeld een ticketdetail op, maar hoeft niet te weten welke relaties mee geladen worden. Dat maakt de service beter leesbaar: de service beschrijft de workflow, de repository beschrijft de databankquery.

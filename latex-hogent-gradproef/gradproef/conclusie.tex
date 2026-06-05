@@ -1,0 +1,23 @@
+%%=============================================================================
+%% Conclusie
+%%=============================================================================
+
+\chapter{Conclusie}%
+\label{ch:conclusie}
+
+% TODO: Trek een duidelijke conclusie, in de vorm van een antwoord op de
+% onderzoeksvra(a)g(en). Wat was jouw bijdrage aan het onderzoeksdomein en
+% hoe biedt dit meerwaarde aan het vakgebied/doelgroep?
+% Reflecteer kritisch over het resultaat. In Engelse teksten wordt deze sectie
+% ``Discussion'' genoemd. Had je deze uitkomst verwacht? Zijn er zaken die nog
+% niet duidelijk zijn?
+% Heeft het onderzoek geleid tot nieuwe vragen die uitnodigen tot verder
+%onderzoek?
+
+De centrale onderzoeksvraag was hoe een onderhoudbare ticketingapplicatie gebouwd kan worden waarin klant en administrator een duidelijke supportworkflow volgen, met aandacht voor Single Responsibility, gelaagde structuur en herbruikbare frontendlogica. Het antwoord is dat onderhoudbaarheid vooral ontstaat door verantwoordelijkheden consequent te scheiden. In de backend krijgen HTTP, use cases, databanktoegang en businessregels elk een vaste plaats: controllers, services, repositories en domeinregels. DTO's zorgen ervoor dat data gecontroleerd tussen lagen en API wordt doorgegeven.
+
+Ook de deelvragen sluiten daarbij aan. De statusflow met \texttt{New}, \texttt{Open} en \texttt{Closed} wordt in de backend bewaakt, zodat een nieuw, lopend, heropend of afgesloten ticket overal dezelfde betekenis heeft. De frontend blijft leesbaar doordat screens, hooks, API-modules en herbruikbare componenten apart blijven. Daardoor konden zoeken, filtering, paginatie, uploads en bijlagen toegevoegd worden zonder dat alle logica in de schermen terechtkwam.
+
+De documentatie ondersteunt die structuur door de belangrijkste keuzes, verantwoordelijkheden en uitbreidingspunten vast te leggen. Mijn conclusie is daarom dat Forcebit Ticketing binnen de scope van dit proof of concept een werkbare oplossing biedt voor het communicatieprobleem en aantoont dat een supportapplicatie onderhoudbaar kan blijven wanneer functionaliteit, regels en verantwoordelijkheden bewust gescheiden worden.
+
+Kritisch bekeken blijft het project een proof of concept. Voor echt dagelijks gebruik zijn onder andere automatische tests, productiegerichte opslag en verdere uitwerking van beheerrollen nodig. De applicatie toont wel aan dat de gekozen workflow werkt en dat de technische basis duidelijk genoeg is om later verder op te bouwen.

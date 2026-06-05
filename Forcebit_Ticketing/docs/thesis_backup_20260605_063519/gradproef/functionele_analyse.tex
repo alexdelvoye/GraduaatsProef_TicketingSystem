@@ -1,0 +1,53 @@
+﻿%%=============================================================================
+%% Functionele analyse
+%%=============================================================================
+
+\chapter{Functionele analyse}%
+\label{ch:functionele-analyse}
+
+Dit hoofdstuk beschrijft wat de applicatie functioneel moet doen. De focus ligt op de gebruikersrollen, de belangrijkste schermen en de ticket workflow.
+
+\section{Gebruikersrollen}
+
+De applicatie heeft twee rollen: klant en administrator. Een klant gebruikt de applicatie om supportvragen te melden en op te volgen. Een administrator gebruikt de applicatie om tickets te beheren en te beantwoorden.
+
+\subsection{Klant}
+
+Een klant kan zich registreren, inloggen en een profiel beheren. Daarna kan de klant tickets aanmaken. Bij een ticket kiest de klant een categorie, onderwerp en titel. De beschrijving die de klant invult, wordt opgeslagen als eerste bericht in de conversatie. De klant kan later antwoorden en bijlagen toevoegen zolang het ticket niet gesloten is.
+
+Een klant kan een eigen ticket sluiten wanneer het probleem opgelost is. Als het probleem toch terugkomt, kan de klant het ticket opnieuw openen. Het ticket krijgt dan de status \texttt{Open}, niet \texttt{New}, omdat het geen nieuw ticket meer is.
+
+\subsection{Administrator}
+
+Een administrator kan alle tickets bekijken. Het adminoverzicht bevat een klantenlijst en een ticketlijst. Omdat die lijsten snel lang worden, zijn er zoekvelden, filters en paginatie toegevoegd. Administrators kunnen tickets beantwoorden en de status wijzigen naar \texttt{Open} of \texttt{Closed}.
+
+\clearpage
+\section{Ticketstatussen}
+
+De ticketstatussen zijn bewust beperkt tot drie waarden:
+
+\begin{itemize}
+  \item \texttt{New}: het ticket is aangemaakt, maar support heeft nog niet geantwoord.
+  \item \texttt{Open}: de conversatie is actief of een gesloten ticket werd heropend.
+  \item \texttt{Closed}: het ticket is afgehandeld en er kan niet meer geantwoord worden.
+\end{itemize}
+
+Deze namen zijn gekozen omdat ze duidelijker zijn voor de gebruiker. \texttt{New} toont dat een ticket nog wacht op de eerste supportreactie. \texttt{Open} toont dat er een actieve conversatie loopt. \texttt{Closed} toont dat het probleem als opgelost beschouwd wordt.
+
+\section{Bijlagen}
+
+Bijlagen kunnen toegevoegd worden bij ticketcreatie en bij antwoorden. De toegelaten extensies zijn PNG, JPG, JPEG, PDF en ZIP. De uploadlimiet is 20~MB per bericht. De frontend toont hoeveel van die limiet al gebruikt is. De backend controleert dezelfde limiet opnieuw.
+
+Afbeeldingen krijgen een preview in de conversatie. Screenshots komen vaak voor bij supportvragen. De gebruiker hoeft een afbeelding dan niet eerst te downloaden om te zien wat erin staat.
+
+\section{Notificaties}
+
+Wanneer een administrator antwoordt of de status wijzigt, krijgt de klant een e-mailnotificatie. Klantacties sturen geen e-mail naar administrators. Administrators gebruiken het dashboard als werkqueue. Dit voorkomt dat een mailbox overspoeld wordt wanneer veel klanten antwoorden.
+
+\vfill
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.78\linewidth]{Client_list.png}
+  \caption[Klantenlijst in het adminoverzicht]{Klantenlijst in het adminoverzicht met een zoekveld en paginatie.}
+  \label{fig:client-list}
+\end{figure}

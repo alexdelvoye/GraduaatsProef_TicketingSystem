@@ -1,0 +1,108 @@
+﻿%%=============================================================================
+%% Samenvatting
+%%=============================================================================
+
+% TODO: De "abstract" of samenvatting is een kernachtige (~ 1 blz. voor een
+% thesis) synthese van het document.
+%
+% Een goede abstract biedt een kernachtig antwoord op volgende vragen:
+%
+% 1. Waarover gaat de graduaatsproef?
+% 2. Waarom heb je er over geschreven?
+% 3. Hoe heb je het onderzoek uitgevoerd?
+% 4. Wat waren de resultaten? Wat blijkt uit je onderzoek?
+% 5. Wat betekenen je resultaten? Wat is de relevantie voor het werkveld?
+%
+% Daarom bestaat een abstract uit volgende componenten:
+%
+% - inleiding + kaderen thema
+% - probleemstelling
+% - (centrale) onderzoeksvraag
+% - onderzoeksdoelstelling
+% - methodologie
+% - resultaten (beperk tot de belangrijkste, relevant voor de onderzoeksvraag)
+% - conclusies, aanbevelingen, beperkingen
+%
+% LET OP! Een samenvatting is GEEN voorwoord!
+
+%%---------- Nederlandse samenvatting -----------------------------------------
+%
+% TODO: Als je je graduaatsproef in het Engels schrijft, moet je eerst een
+% Nederlandse samenvatting invoegen. Haal daarvoor onderstaande code uit
+% commentaar.
+% Wie zijn/haar graduaatsproef in het Nederlands schrijft, kan dit negeren, de inhoud
+% wordt niet in het document ingevoegd.
+
+\IfLanguageName{english}{%
+\selectlanguage{dutch}
+\chapter*{Samenvatting}
+Forcebit Ticketing is een webapplicatie voor het opvolgen van supporttickets. Klanten kunnen tickets aanmaken, beantwoorden en opvolgen. Administrators beheren tickets via een dashboard met zoeken, filters, statusgroepen en paginatie.
+\selectlanguage{english}
+}{}
+
+%%---------- Samenvatting -----------------------------------------------------
+% De samenvatting in de hoofdtaal van het document
+
+\chapter*{\IfLanguageName{dutch}{Samenvatting}{Summary}}
+
+Forcebit Ticketing is een webapplicatie voor het opvolgen van supporttickets. Het project bestaat uit een ASP.NET Core backend, een MySQL-databank en een Expo React Native frontend. Klanten kunnen zich registreren, inloggen, tickets aanmaken, antwoorden sturen en bijlagen uploaden. Administrators beheren tickets via een dashboard met zoeken, filtering, statusgroepen en paginatie.
+
+\smallskip
+
+De aanleiding voor dit project is het probleem dat klantcommunicatie bij Forcebit verspreid stond over telefoon en e-mail. Daardoor werd het moeilijker om supportvragen centraal op te volgen. De applicatie brengt deze communicatie samen in tickets met vaste metadata zoals titel, categorie, onderwerp en status. De volledige conversatie blijft per ticket bewaard, inclusief geuploade attachments. Afbeeldingen kunnen rechtstreeks bekeken worden, terwijl andere bestanden als download beschikbaar blijven.
+
+\smallskip
+
+De centrale onderzoeksvraag is hoe een onderhoudbare applicatie gebouwd kan worden waarin klant en administrator een duidelijke workflow volgen terwijl de functionaliteit blijft groeien. Hiervoor werd het project opgebouwd in lagen. De API-laag behandelt HTTP-verkeer en authenticatieclaims, de service-laag voert de use cases uit, de persistence-laag beheert Entity Framework Core en MySQL, en de domain-laag bevat entiteiten en regels rond tickets, berichten en attachments.
+
+\smallskip
+
+Tijdens de uitwerking lag de nadruk op Single Responsibility. Controllers verwerken geen ticketregels, services coördineren workflows en repositories vormen de grens met de databank. In de frontend werd dezelfde scheiding toegepast met aparte schermen, custom hooks, API-modules, formulieren, componenten, validatieschema's en utility-functies. Zo blijven zoeken, groeperen, pagineren, foutafhandeling en attachmentlogica herbruikbaar.
+
+\smallskip
+
+Het resultaat is een werkende eerste versie van Forcebit Ticketing met een realistische supportflow. Tickets starten als \texttt{New}, worden \texttt{Open} wanneer support antwoordt en kunnen \texttt{Closed} worden wanneer het probleem opgelost is. Wanneer een gesloten ticket opnieuw geopend wordt, gaat het terug naar \texttt{Open} en niet naar \texttt{New}. Daarnaast krijgen klanten e-mailnotificaties wanneer een administrator een antwoord plaatst of de status van een ticket wijzigt.
+
+\smallskip
+
+Belangrijke toekomstige verbeteringen zijn een uitgebreidere automatische testset, server-side paginatie en productiegerichte logging. Toch toont het project aan dat een gelaagde structuur en duidelijke verantwoordelijkheden helpen om een supportapplicatie overzichtelijk, onderhoudbaar en uitbreidbaar te maken.
+
+\vfill
+
+\noindent\textbf{Broncode:} \href{https://github.com/alexdelvoye/GraduaatsProef_TicketingSystem.git}{alexdelvoye/GraduaatsProef\_TicketingSystem.git}
+
+\IfLanguageName{dutch}{%
+\selectlanguage{english}
+\chapter*{Summary}
+
+Forcebit Ticketing is a web application for managing support tickets. The project consists of an ASP.NET Core backend, a MySQL database, and an Expo React Native frontend. Clients can register, log in, create tickets, reply to conversations, and upload attachments. Administrators manage tickets through a dashboard with search, filtering, status groups, and pagination.
+
+\smallskip
+
+The project was created to solve a practical communication problem at Forcebit. Client communication was spread across phone calls and e-mails, which made follow-up harder to manage centrally. The application stores this communication in tickets with fixed metadata such as title, category, subject, and status. The full conversation remains linked to the ticket, including uploaded attachments. Images can be previewed directly, while other files remain available as downloads.
+
+\smallskip
+
+The central research question is how to build a maintainable ticketing application in which clients and administrators follow a clear workflow while the feature set continues to grow. The backend was therefore divided into layers. The API layer handles HTTP traffic and authentication claims, the service layer executes use cases, the persistence layer manages Entity Framework Core and MySQL, and the domain layer contains entities and rules for tickets, messages, and attachments.
+
+\smallskip
+
+Single Responsibility was an important design guideline. Controllers do not contain ticket rules, services coordinate workflows, and repositories form the boundary with the database. The frontend follows a similar structure with separate screens, custom hooks, API modules, forms, components, validation schemas, and utility functions. This keeps search, grouping, pagination, error handling, and attachment logic reusable.
+
+\smallskip
+
+The result is a working first version of a ticketing application with a realistic support workflow. Tickets start as \texttt{New}, become \texttt{Open} when support replies, and can be marked \texttt{Closed} when the issue is solved. When a closed ticket is reopened, it returns to \texttt{Open} instead of \texttt{New}. Clients also receive e-mail notifications when an administrator replies or changes the status of a ticket.
+
+\smallskip
+
+Important future improvements include a broader automated test suite, server-side pagination, and production-oriented logging. Even so, the project shows that layered structure and clear responsibilities help keep a support application organized, maintainable, and extendable.
+
+\vfill
+
+\noindent\textbf{Source code:} \href{https://github.com/alexdelvoye/GraduaatsProef_TicketingSystem.git}{alexdelvoye/GraduaatsProef\_TicketingSystem.git}
+
+\selectlanguage{dutch}
+}{}
+
+
+

@@ -1,0 +1,135 @@
+%==============================================================================
+% Poster graduaatsproef
+%==============================================================================
+
+\documentclass[a0,portrait]{hogent-poster}
+
+% Sampled from graphics/forcebit_logo.jpeg so the poster headings match the project branding.
+\definecolor{forcebit-blue}{RGB}{82,107,138}
+\colorlet{title}{forcebit-blue}
+
+% Info over de opleiding
+\course{Graduaatsproef}
+\studyprogramme{Graduaat in het Programmeren}
+\academicyear{2025-2026}
+\institution{Hogeschool Gent, Valentin Vaerwyckweg 1, 9000 Gent}
+
+% Info over de graduaatsproef
+\title{FORCEBIT TICKETING}
+\subtitle{Een support ticketing applicatie met een gelaagde\\architectuur}
+\author{Alex Delvoye}
+\email{alexdelvoye@outlook.be}
+\supervisor{Emlin Oguz Inci}
+\cosupervisor{Sacha De Maere (Forcebit)}
+
+\specialisation{Programmeren}
+\keywords{Ticketing, ASP.NET Core, React Native, MySQL, onderhoudbaarheid}
+\projectrepo{https://github.com/alexdelvoye/GraduaatsProef_TicketingSystem.git}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Forcebit Ticketing is een proof of concept voor een centrale supportworkflow.
+Het project brengt klantvragen, antwoorden, statussen en bijlagen samen in tickets.
+De nadruk ligt op onderhoudbaarheid: een gelaagde backend, duidelijke domeinregels
+en een herbruikbare frontendstructuur.
+\end{abstract}
+
+\begin{multicols}{2}
+\small
+
+\section{Probleem}
+
+Bij Forcebit verliep klantcommunicatie vooral via telefoon en e-mail. Daardoor
+stonden antwoorden, screenshots, bijlagen en statussen verspreid over verschillende
+kanalen. De onderzoeksvraag was daarom hoe een onderhoudbare ticketingapplicatie
+gebouwd kan worden waarin klant en administrator een duidelijke supportworkflow
+volgen.
+
+\begin{center}
+  \includegraphics[width=0.25\linewidth]{forcebit_logo}
+\end{center}
+
+\section{Oplossing}
+
+Elke supportvraag wordt centraal bewaard als ticket. De eerste beschrijving van de
+klant wordt meteen het eerste bericht in de conversatie. Daarna kunnen klant en
+administrator antwoorden en bijlagen toevoegen zolang het ticket niet gesloten is.
+
+\textbf{Workflow}
+\begin{itemize}
+  \item \texttt{New}: support heeft nog niet geantwoord.
+  \item \texttt{Open}: de conversatie loopt of het ticket werd heropend.
+  \item \texttt{Closed}: het ticket is afgehandeld.
+\end{itemize}
+
+Een heropend ticket wordt opnieuw \texttt{Open}, niet \texttt{New}, omdat het al een
+geschiedenis heeft.
+
+\section{Gelaagde backend}
+
+De backend is gebouwd met ASP.NET Core en opgesplitst in vier projecten:
+
+\begin{itemize}
+  \item \textbf{API}: HTTP-verzoeken, JWT-claims en requestdata.
+  \item \textbf{Services}: use cases zoals antwoorden en statussen wijzigen.
+  \item \textbf{Persistence}: EF Core, repositories, configuraties en migraties.
+  \item \textbf{Domain}: entiteiten, enums en domeinregels.
+\end{itemize}
+
+Deze verdeling houdt controllers dun. Toegang, statusovergangen en antwoorden op
+gesloten tickets worden centraal bewaakt door services en domeinregels.
+
+\begin{center}
+  \captionsetup{type=figure}
+  \includegraphics[width=0.82\linewidth]{Backend_architecture}
+  \captionof{figure}{Backendlagen en belangrijkste afhankelijkheden.}
+\end{center}
+
+\section{Frontend en gebruiksgemak}
+
+De frontend is gebouwd met Expo React Native. Screens tonen pagina's, hooks beheren
+gedrag, API-modules communiceren met de backend en componenten houden UI
+herbruikbaar. Dezelfde paginatiehook wordt gebruikt voor gesprekken, klanten en
+ticketgroepen.
+
+\textbf{Belangrijke UI-keuzes}
+\begin{itemize}
+  \item zoeken, filters, statusgroepen en paginatie;
+  \item chatbubbels met onderscheid tussen klant en admin;
+  \item preview voor PNG/JPG-afbeeldingen;
+  \item uploadfeedback voor de 20 MB selectiegrens;
+  \item e-mailnotificaties via Brevo bij adminacties.
+\end{itemize}
+
+\begin{center}
+  \captionsetup{type=figure}
+  \includegraphics[width=0.82\linewidth]{Ticket_conversation}
+  \captionof{figure}{Ticketdetail met chatbubbels en afbeeldingspreview.}
+\end{center}
+
+\section{Onderhoudbaarheid}
+
+De belangrijkste technische keuze is Single Responsibility. Controllers behandelen
+HTTP, services voeren workflows uit, repositories halen data op en domeinregels
+bewaken businessregels. In de frontend geldt hetzelfde principe: schermen, hooks,
+API-modules, validatie en componenten blijven gescheiden.
+
+\section{Resultaat en vervolg}
+
+Het resultaat is een werkend proof of concept voor een realistische supportflow:
+registreren, inloggen, tickets aanmaken, antwoorden, bijlagen toevoegen, zoeken,
+filteren, pagineren, sluiten, heropenen en notificeren.
+
+\textbf{Logische vervolgstappen}
+\begin{itemize}
+  \item productiegerichte opslag voor bijlagen, zoals object storage;
+  \item admins koppelen aan categorieën, onderwerpen of tickets;
+  \item server-side paginatie en automatische tests;
+  \item verdere uitwerking richting mobiele app.
+\end{itemize}
+
+\end{multicols}
+\end{document}

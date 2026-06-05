@@ -1,0 +1,94 @@
+﻿%%=============================================================================
+%% Inleiding
+%%=============================================================================
+
+\chapter{\IfLanguageName{dutch}{Inleiding}{Introduction}}%
+\label{ch:inleiding}
+
+% De inleiding moet de lezer net genoeg informatie verschaffen om het onderwerp
+% te begrijpen en in te zien waarom de onderzoeksvraag de moeite waard is om te
+% onderzoeken. In de inleiding ga je literatuurverwijzingen beperken, zodat de
+% tekst vlot leesbaar blijft. Je kan de inleiding verder onderverdelen in
+% secties als dit de tekst verduidelijkt. Zaken die aan bod kunnen komen in de
+% inleiding~\autocite{Pollefliet2011}:
+%
+% \begin{itemize}
+%   \item context, achtergrond
+%   \item afbakenen van het onderwerp
+%   \item verantwoording van het onderwerp, methodologie
+%   \item probleemstelling
+%   \item onderzoeksdoelstelling
+%   \item onderzoeksvraag
+%   \item \ldots
+% \end{itemize}
+
+Supportcommunicatie is in veel organisaties een terugkerende uitdaging. Klanten melden problemen, stellen vragen of sturen bestanden door, maar die informatie staat vaak verspreid over telefoon, e-mail en losse documenten. Daardoor is het niet altijd duidelijk welke vragen nieuw zijn, welke al behandeld worden en welke opgelost zijn. Forcebit Ticketing vertrekt vanuit die nood en centraliseert supportvragen in tickets met een titel, categorie, onderwerp, status en volledige conversatie.
+
+Op die manier kan de klant de stand van zaken opvolgen en kan de administrator tickets beheren vanuit een overzichtelijk dashboard. Het project is daarom niet alleen een oefening in functionaliteit, maar ook in structuur: de applicatie moet bruikbaar blijven wanneer er extra schermen, regels of workflows bijkomen.
+
+\Needspace{4\baselineskip}
+\section{\IfLanguageName{dutch}{Probleemstelling}{Problem Statement}}%
+\label{sec:probleemstelling}
+
+% Uit je probleemstelling moet duidelijk zijn dat je onderzoek een meerwaarde
+% heeft voor een concrete doelgroep. De doelgroep moet goed gedefinieerd en
+% afgelijnd zijn.
+
+Wanneer supportvragen niet centraal worden bijgehouden, verliest zowel klant als administrator overzicht. De klant weet niet altijd of een probleem al wordt opgevolgd. De administrator moet zoeken in verschillende berichten, bestanden of oude mails. Ook bijlagen zoals screenshots zijn minder bruikbaar wanneer ze los van de oorspronkelijke vraag worden doorgestuurd.
+
+Een ticketingsysteem brengt structuur in die communicatie, maar het bouwen ervan is meer dan enkel schermen maken. De applicatie moet duidelijke regels bevatten rond rechten, antwoorden, statusovergangen en bestandsopslag. Zonder duidelijke structuur komt die logica snel verspreid terecht in controllers, schermen of losse hulpfuncties, waardoor latere aanpassingen moeilijker worden.
+
+\Needspace{4\baselineskip}
+\section{\IfLanguageName{dutch}{Onderzoeksvraag}{Research question}}%
+\label{sec:onderzoeksvraag}
+
+% Wees zo concreet mogelijk bij het formuleren van je onderzoeksvraag. Een
+% onderzoeksvraag is trouwens iets waar nog niemand op dit moment een antwoord
+% heeft (voor zover je kan nagaan). Je kan de onderzoeksvraag verder
+% specificeren in deelvragen.
+
+De centrale onderzoeksvraag van deze graduaatsproef luidt:
+
+\begin{quote}\small
+Hoe kan een onderhoudbare ticketingapplicatie gebouwd worden waarin klant en administrator een duidelijke supportworkflow volgen, met aandacht voor Single Responsibility, gelaagde structuur en herbruikbare frontendlogica?
+\end{quote}
+
+Daaruit volgen enkele deelvragen:
+
+\begin{itemize}[itemsep=0.1\baselineskip, topsep=0.25\baselineskip]
+  \item Hoe krijgen HTTP, workflow, databanktoegang en businessregels elk een duidelijke plaats in de backend?
+  \item Hoe blijft de frontend leesbaar wanneer zoeken, filtering, paginatie en uploads toegevoegd worden?
+  \item Hoe kan de ticketworkflow met \texttt{New}, \texttt{Open} en \texttt{Closed} logisch en consequent afgedwongen worden?
+  \item Hoe kan documentatie technische keuzes, verantwoordelijkheden en uitbreidingspunten vastleggen?
+\end{itemize}
+
+\Needspace{4\baselineskip}
+\section{\IfLanguageName{dutch}{Onderzoeksdoelstelling}{Research objective}}%
+\label{sec:onderzoeksdoelstelling}
+
+% Wat is het beoogde resultaat van je graduaatsproef? Wat zijn de criteria voor
+% succes? Beschrijf die zo concreet mogelijk.
+
+Het doel is een werkend proof of concept te bouwen van een supportapplicatie. Klanten moeten tickets kunnen aanmaken, beantwoorden, sluiten en heropenen. Administrators moeten tickets kunnen zoeken, filteren, beantwoorden en van status veranderen. Succes wordt niet alleen bepaald door functionaliteit: de codebase moet ook onderhoudbaar blijven. Daarom worden lagen, Single Responsibility, DTO's, domeinregels, repositories, hooks en herbruikbare componenten bewust ingezet.
+
+\Needspace{4\baselineskip}
+\section{\IfLanguageName{dutch}{Opzet van deze graduaatsproef}{Structure of this associate thesis}}%
+\label{sec:opzet-graduaatsproef}
+
+% Het is gebruikelijk aan het einde van de inleiding een overzicht te
+% geven van de opbouw van de rest van de tekst. Deze sectie bevat al een aanzet
+% die je kan aanvullen/aanpassen in functie van je eigen tekst.
+
+De rest van deze graduaatsproef is opgebouwd rond analyse, uitwerking en evaluatie:
+
+\begin{itemize}[nosep, leftmargin=*]
+  \item Hoofdstuk~\ref{ch:stand-van-zaken}: concepten rond ticketing, web API's, gelaagde architectuur, frontend state en basisbeveiliging.
+  \item Hoofdstuk~\ref{ch:methodologie}: de gevolgde aanpak tijdens de ontwikkeling.
+  \item Hoofdstuk~\ref{ch:functionele-analyse}: gebruikersrollen, ticketstatussen, bijlagen en notificaties.
+  \item Hoofdstuk~\ref{ch:backendarchitectuur}: de backendarchitectuur, lagen, patronen en autorisatie.
+  \item Hoofdstuk~\ref{ch:databank-persistentie}: de MySQL databank, EF Core configuratie en relaties.
+  \item Hoofdstuk~\ref{ch:frontendarchitectuur}: de frontendstructuur, herbruikbare hooks, componenten en schermen.
+  \item Hoofdstuk~\ref{ch:aanvullende-functionaliteiten}: e-mailnotificaties, bijlagen en documentatie.
+  \item Hoofdstuk~\ref{ch:resultaten}: het resultaat, de evaluatie en de belangrijkste beperkingen.
+  \item Hoofdstuk~\ref{ch:conclusie}: het antwoord op de onderzoeksvraag.
+\end{itemize}
