@@ -45,7 +45,7 @@ Forcebit Ticketing is een webapplicatie voor het opvolgen van supporttickets. Kl
 
 \chapter*{\IfLanguageName{dutch}{Samenvatting}{Summary}}
 
-Forcebit Ticketing is een webapplicatie voor het opvolgen van supporttickets. Het project bestaat uit een ASP.NET Core backend, een MySQL-databank en een Expo React Native frontend. Klanten kunnen zich registreren, inloggen, tickets aanmaken, antwoorden sturen en bijlagen uploaden. Administrators beheren tickets via een dashboard met zoeken, filtering, statusgroepen en paginatie.
+Forcebit Ticketing is een webapplicatie voor het opvolgen van supporttickets. Het project bestaat uit een ASP.NET Core backend, een MySQL-databank en een Expo React Native frontend. Klanten kunnen zich registreren, inloggen, tickets aanmaken, antwoorden sturen en bijlagen uploaden. Administrators beheren tickets via een dashboard met zoeken, filters, statusgroepen en paginatie.
 
 \smallskip
 
@@ -53,11 +53,11 @@ De aanleiding voor dit project is het probleem dat klantcommunicatie bij Forcebi
 
 \smallskip
 
-De centrale onderzoeksvraag is hoe een onderhoudbare applicatie gebouwd kan worden waarin klant en administrator een duidelijke workflow volgen terwijl de functionaliteit blijft groeien. Hiervoor werd het project opgebouwd in lagen. De API-laag behandelt HTTP-verkeer en authenticatieclaims, de service-laag voert de use cases uit, de persistence-laag beheert Entity Framework Core en MySQL, en de domain-laag bevat entiteiten en regels rond tickets, berichten en bijlagen.
+De centrale onderzoeksvraag is hoe een onderhoudbare applicatie gebouwd kan worden waarin klant en administrator een duidelijke workflow volgen terwijl de functionaliteit blijft groeien. Hiervoor werd het project opgebouwd in lagen. De API-laag behandelt HTTP-verkeer en authenticatieclaims, de service-laag voert de use cases uit, de Persistence-laag beheert Entity Framework Core en MySQL, en de Domain-laag bevat entiteiten en regels rond tickets, berichten en bijlagen.
 
 \smallskip
 
-Tijdens de uitwerking lag de nadruk op Single Responsibility. Controllers verwerken geen ticketregels, services coördineren workflows en repositories vormen de grens met de databank. In de frontend werd dezelfde scheiding toegepast met aparte schermen, custom hooks, API-modules, formulieren, componenten, validatieschema's en utility-functies. Zo blijven zoeken, groeperen, pagineren, foutafhandeling en bijlagelogica herbruikbaar.
+Tijdens de uitwerking lag de nadruk op Single Responsibility. Controllers verwerken geen ticketregels, services sturen workflows aan en repositories vormen de grens met de databank. In de frontend werd dezelfde scheiding toegepast met aparte schermen, eigen hooks, API-modules, formulieren, componenten, validatieschema's en hulpfuncties. Zo blijven zoeken, groeperen, pagineren, foutafhandeling en bijlagelogica herbruikbaar.
 
 \smallskip
 
@@ -75,7 +75,7 @@ Belangrijke toekomstige verbeteringen zijn een uitgebreidere automatische testse
 \selectlanguage{english}
 \chapter*{Summary}
 
-Forcebit Ticketing is a web application for managing support tickets. The project consists of an ASP.NET Core backend, a MySQL database, and an Expo React Native frontend. Clients can register, log in, create tickets, reply to conversations, and upload attachments. Administrators manage tickets through a dashboard with search, filtering, status groups, and pagination.
+Forcebit Ticketing is a web application for managing support tickets. The project consists of an ASP.NET Core backend, a MySQL database, and an Expo React Native frontend. Clients can register, log in, create tickets, reply to conversations, and upload attachments. Administrators manage tickets through a dashboard with search, filters, status groups, and pagination.
 
 \smallskip
 

@@ -25,41 +25,14 @@
 %%
 %% Maak voor elke fase (behalve het literatuuronderzoek) een NIEUW HOOFDSTUK aan
 %% en geef het een gepaste titel.
-Dit hoofdstuk beschrijft hoe Forcebit Ticketing werd aangepakt. Het oorspronkelijke plan van aanpak was een compacte planning voor een eerste proof of concept. Tijdens de uitvoering werd die planning aangepast wanneer mentorfeedback, technische keuzes of onderhoudbaarheid daar aanleiding toe gaven. Per fase worden doel, werkwijze en resultaat samengevat.
 
-\section{Oorspronkelijke planning}
+Dit hoofdstuk beschrijft de aanpak op hoofdlijnen. Het oorspronkelijke plan vertrok van basis naar uitbreiding: requirements, databankontwerp, backend, authenticatie, ticketbeheer, berichten, frontend, adminschermen, uploads, e-mail, testen en documentatie. Tijdens de uitvoering werd dit bijgestuurd op basis van mentorfeedback, technische keuzes en onderhoudbaarheid.
 
-Het oorspronkelijke plan vertrok van een korte ontwikkelperiode waarin eerst de basisstructuur en daarna de belangrijkste functionaliteit werd gebouwd:
+\section{Aanpak in fasen}
 
-\begin{center}
-\footnotesize
-\begin{tabular}{@{}p{0.47\linewidth}p{0.47\linewidth}@{}}
-\textbf{Dag 1:} requirements, databankontwerp en wireframes & \textbf{Dag 6:} React Native login, registratie en navigatie \\
-\textbf{Dag 2:} backendproject, MySQL databank en modellen & \textbf{Dag 7:} klantenschermen voor overzicht, aanmaken en detail \\
-\textbf{Dag 3:} authenticatie en rollen & \textbf{Dag 8:} adminschermen \\
-\textbf{Dag 4:} ticket CRUD & \textbf{Dag 9:} bestandsuploads en e-mailnotificaties \\
-\textbf{Dag 5:} berichten en antwoorden & \textbf{Dag 10:} testen, fouten oplossen, documentatie en demo
-\end{tabular}
-\end{center}
-
-De uitvoering volgde deze planning op hoofdlijnen, maar sommige onderdelen kregen meer aandacht dan eerst voorzien. Vooral chatweergave, zoekfilters, paginatie, responsive layout en documentatie werden later uitgebreid.
-
-\clearpage
-\section{Fase 1: scope en analyse}
-
-\textbf{Doel.} De eerste fase moest duidelijk maken welke rollen, gegevens en workflows nodig waren.\par\noindent\textbf{Werkwijze.} Hiervoor werden requirements en wireframes opgesteld vanuit drie perspectieven: klant, administrator en systeem.\par\noindent\textbf{Resultaat.} De kern werd vastgelegd als gebruikers, tickets, berichten en bijlagen. De statusflow werd later verfijnd van \texttt{Open}, \texttt{In Progress} en \texttt{Closed} naar \texttt{New}, \texttt{Open} en \texttt{Closed}, waarbij \texttt{New} alleen voor pas aangemaakte tickets dient.
-
-\Needspace{2\baselineskip}
-\section{Fase 2: technische basis}
-
-\textbf{Doel.} De tweede fase moest een backend opleveren waarop de ticketflow betrouwbaar kon steunen.\par\noindent\textbf{Werkwijze.} Er werd een eerste proof of concept gebouwd met ASP.NET Core, Entity Framework Core en MySQL. De code werd meteen gelaagd opgezet om verantwoordelijkheden te scheiden.\par\noindent\textbf{Resultaat.} De belangrijkste deliverables waren entities, DTO's, controllers, repositories, services, configuratie, migraties, JWT-authenticatie, centrale foutafhandeling en het Options Pattern \autocite{MicrosoftOptionsPattern2026}.
-
-\Needspace{2\baselineskip}
-\section{Fase 3: frontend en feedback}
-
-\textbf{Doel.} De derde fase moest de backend bruikbaar maken voor klanten en administrators.\par\noindent\textbf{Werkwijze.} De wireframes werden omgezet naar frontend-schermen. Expo werd gebruikt als ontwikkelplatform \autocite{ExpoDocs2026}. Formik werd gebruikt voor formulierstate en Yup voor schema-validatie \autocite{FormikDocs2026,YupDocs2026}. Herbruikbare logica werd verplaatst naar hooks, API-modules, componenten, stijlen en utilities.\par\noindent\textbf{Resultaat.} De basisflow werd aangevuld met mentorfeedback: chatbubbels, afbeeldingspreview, uploadlimiet, responsive layout, browsernavigatie, zoekvelden, filters en paginatie.
-
-\Needspace{2\baselineskip}
-\section{Fase 4: controle en documentatie}
-
-\textbf{Doel.} De laatste fase moest nagaan of de applicatie ook bij realistische data en langere gesprekken bruikbaar en onderhoudbaar bleef.\par\noindent\textbf{Werkwijze.} Er werd realistische testdata toegevoegd voor meerdere klanten, tickets en langere gesprekken. Daarna werden zoekfilters, statusgroepen, paginatie, database-startup en documentatie gecontroleerd.\par\noindent\textbf{Resultaat.} Code, comments en README-bestanden werden opgeschoond. Zo sluit deze fase aan bij de onderzoeksvraag rond onderhoudbaarheid: de applicatie blijft niet alleen werkend, maar ook uitbreidbaar en onderhoudbaar.
+\begin{itemize}[itemsep=0.25\baselineskip, topsep=0.25\baselineskip, leftmargin=*]
+  \item \textbf{Scope en analyse.} Eerst werden rollen, gegevens en workflows bepaald vanuit klant, administrator en systeem. Dit leverde de basis op voor gebruikers, tickets, berichten, bijlagen en de statusflow.
+  \item \textbf{Technische basis.} Daarna werd het proof of concept opgebouwd met ASP.NET Core, Entity Framework Core en MySQL. De backend kreeg meteen lagen, DTO's, repositories, services, migraties, JWT-authenticatie, foutafhandeling en het Options Pattern~\autocite{MicrosoftOptionsPattern2026}.
+  \item \textbf{Frontend en feedback.} De frontend werd gebouwd met Expo~\autocite{ExpoDocs2026}. Formik en Yup ondersteunden formulieren en validatie~\autocite{FormikDocs2026,YupDocs2026}. Mentorfeedback leidde tot chatbubbels, afbeeldingspreview, uploadlimiet, responsieve lay-out, browsernavigatie, zoekvelden, filters en paginatie.
+  \item \textbf{Controle en documentatie.} Ten slotte werd realistische testdata toegevoegd voor meerdere klanten, tickets en langere gesprekken. Filters, statusgroepen, paginatie, databankopstart, codecommentaar en README-bestanden werden gecontroleerd, zodat de applicatie makkelijker te onderhouden blijft.
+\end{itemize}

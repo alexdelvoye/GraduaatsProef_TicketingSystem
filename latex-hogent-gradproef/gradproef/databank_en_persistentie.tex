@@ -5,11 +5,11 @@
 \chapter{Databank en persistentie}%
 \label{ch:databank-persistentie}
 
-Dit hoofdstuk bespreekt hoe data wordt bewaard. Forcebit Ticketing gebruikt een MySQL-databank met Entity Framework Core als Object-Relational Mapper (ORM). EF Core werkt met C\# entiteiten en vertaalt queries naar databankbewerkingen, zodat de applicatie met objecten kan werken in plaats van rechtstreeks met SQL-tabellen~\autocite{MicrosoftEFCore2026}.
+Dit hoofdstuk bespreekt hoe data wordt bewaard. Forcebit Ticketing gebruikt een MySQL-databank met Entity Framework Core als Object-Relational Mapper (ORM). EF Core koppelt C\#-entiteiten aan databankbewerkingen~\autocite{MicrosoftEFCore2026}. Daardoor kan de applicatie met domeinobjecten werken zonder overal rechtstreeks SQL te schrijven.
 
 \section{Datamodel}
 
-Het datamodel draait rond vier hoofdtabellen: gebruikers, tickets, berichten en bijlagen. Een gebruiker kan meerdere tickets hebben. Een ticket heeft meerdere berichten. Bijlagen horen bij een ticket en kunnen ook aan een specifiek bericht gekoppeld worden.
+Het datamodel draait rond gebruikers, tickets, berichten en bijlagen. Een gebruiker kan meerdere tickets hebben, een ticket heeft meerdere berichten en bijlagen horen bij een ticket of specifiek bericht. De eerste beschrijving van een ticket wordt als eerste bericht bewaard. Daardoor blijft de volledige conversatie in hetzelfde model zitten.
 
 \begin{figure}[H]
   \centering
@@ -20,14 +20,12 @@ Het datamodel draait rond vier hoofdtabellen: gebruikers, tickets, berichten en 
   \label{fig:database-schema}
 \end{figure}
 
-\clearpage
+\section{DbContext, configuraties en repositories}
 
-\section{DbContext en configuraties}
+\texttt{AppDbContext} is de centrale EF Core-klasse. De \texttt{DbSet}-properties tonen welke tabellen bestaan. De detailconfiguratie staat in aparte configuratieklassen, zodat de context kort blijft en elke tabelmapping apart onderhouden kan worden.
 
-\texttt{AppDbContext} is de centrale EF Core klasse. De \texttt{DbSet} properties tonen welke tabellen de applicatie gebruikt. De detailconfiguratie staat in aparte configuratieklassen, zodat de context kort blijft en elke tabelmapping apart onderhoudbaar is.
-
-\begin{listing}[htbp]
-\begin{minted}[fontsize=\scriptsize,baselinestretch=0.9]{csharp}
+\begin{listing}[H]
+\begin{minted}[fontsize=\tiny,baselinestretch=0.82]{csharp}
 public DbSet<User> Users => Set<User>();
 public DbSet<Ticket> Tickets => Set<Ticket>();
 public DbSet<TicketMessage> TicketMessages => Set<TicketMessage>();
@@ -36,20 +34,17 @@ public DbSet<TicketAttachment> TicketAttachments => Set<TicketAttachment>();
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
     base.OnModelCreating(modelBuilder);
-    modelBuilder.ApplyConfigurationsFromAssembly(
-        typeof(AppDbContext).Assembly);
+    modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 }
 \end{minted}
-\caption[DbContext met configuraties]{\texttt{AppDbContext} laadt configuraties uit de persistence-laag.}
+\caption[DbContext met configuraties]{\texttt{AppDbContext} laadt configuraties uit de Persistence-laag.}
 \label{lst:appdbcontext}
 \end{listing}
 
+Repositories schermen querydetails af van de service-laag. \texttt{TicketService} vraagt bijvoorbeeld ticketdetails op, maar hoeft niet te weten welke relaties met \texttt{Include} geladen worden. Daardoor beschrijft de service de workflow en werkt de repository de query uit.
+
 \section{Enumwaarden en relaties}
 
-Ticketstatus, categorie en onderwerp zijn enums in de domain-laag. Een enum groepeert vaste, benoemde waarden binnen een eigen type~\autocite{MicrosoftCSharpEnums2026}. In de databank worden deze waarden als tekst opgeslagen. Dat maakt de inhoud leesbaarder tijdens testen en controle. Een rij met status \texttt{Open} is duidelijker dan een numerieke waarde zoals \texttt{1}.
+Ticketstatus, categorie en onderwerp zijn enums in de Domain-laag. Een enum groepeert vaste waarden binnen een eigen type~\autocite{MicrosoftCSharpEnums2026}. In de databank worden deze waarden met \texttt{HasConversion<string>()} als tekst opgeslagen. Een status zoals \texttt{Open} is tijdens controle duidelijker dan een numerieke waarde.
 
-De relatie tussen ticket en klant gebruikt \texttt{DeleteBehavior.Restrict}. Daardoor kan een gebruiker niet zomaar verwijderd worden als tickets nog naar die gebruiker verwijzen. Voor een supportapplicatie is dat logisch, omdat ticketgeschiedenis belangrijk blijft.
-
-\section{Repository pattern}
-
-Repositories schermen querydetails af van de service-laag. \texttt{TicketService} vraagt bijvoorbeeld een ticketdetail op, maar hoeft niet te weten welke relaties mee geladen worden. Dat maakt de service beter leesbaar: de service beschrijft de workflow, de repository beschrijft de databankquery.
+De relatie tussen ticket en klant gebruikt \texttt{DeleteBehavior.Restrict}. Daardoor kan een gebruiker niet zomaar verwijderd worden zolang tickets nog naar die gebruiker verwijzen. Bijlagen worden als metadata bewaard met een pad naar het bestand. Een bijlage kan aan een ticket hangen en optioneel aan een specifiek bericht. Zo blijft de ticketgeschiedenis controleerbaar.

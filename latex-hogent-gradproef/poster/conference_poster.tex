@@ -32,9 +32,9 @@
 
 \begin{abstract}
 Forcebit Ticketing is een proof of concept voor een centrale supportworkflow.
-Het project brengt klantvragen, antwoorden, statussen en bijlagen samen in tickets.
-De nadruk ligt op onderhoudbaarheid: een gelaagde backend, duidelijke domeinregels
-en een herbruikbare frontendstructuur.
+De applicatie brengt klantvragen, antwoorden, statussen en bijlagen samen in tickets.
+De focus ligt op een onderhoudbare opbouw: een gelaagde backend, duidelijke
+domeinregels en een frontend met herbruikbare schermlogica.
 \end{abstract}
 
 \begin{multicols}{2}
@@ -43,10 +43,9 @@ en een herbruikbare frontendstructuur.
 \section{Probleem}
 
 Bij Forcebit verliep klantcommunicatie vooral via telefoon en e-mail. Daardoor
-stonden antwoorden, screenshots, bijlagen en statussen verspreid over verschillende
-kanalen. De onderzoeksvraag was daarom hoe een onderhoudbare ticketingapplicatie
-gebouwd kan worden waarin klant en administrator een duidelijke supportworkflow
-volgen.
+raakten antwoorden, screenshots, bijlagen en statussen verspreid over verschillende
+kanalen. De vraag werd daarom hoe ik een onderhoudbare ticketingapplicatie kon
+bouwen waarin klant en administrator dezelfde duidelijke supportworkflow volgen.
 
 \begin{center}
   \includegraphics[width=0.25\linewidth]{forcebit_logo}
@@ -56,7 +55,7 @@ volgen.
 
 Elke supportvraag wordt centraal bewaard als ticket. De eerste beschrijving van de
 klant wordt meteen het eerste bericht in de conversatie. Daarna kunnen klant en
-administrator antwoorden en bijlagen toevoegen zolang het ticket niet gesloten is.
+administrator antwoorden en bijlagen toevoegen zolang het ticket open blijft.
 
 \textbf{Workflow}
 \begin{itemize}
@@ -70,7 +69,7 @@ geschiedenis heeft.
 
 \section{Gelaagde backend}
 
-De backend is gebouwd met ASP.NET Core en opgesplitst in vier projecten:
+De backend is gebouwd met ASP.NET Core en opgesplitst in vier lagen:
 
 \begin{itemize}
   \item \textbf{API}: HTTP-verzoeken, JWT-claims en requestdata.
@@ -80,7 +79,8 @@ De backend is gebouwd met ASP.NET Core en opgesplitst in vier projecten:
 \end{itemize}
 
 Deze verdeling houdt controllers dun. Toegang, statusovergangen en antwoorden op
-gesloten tickets worden centraal bewaakt door services en domeinregels.
+gesloten tickets worden niet in schermen of controllers beslist, maar centraal
+bewaakt door services en domeinregels.
 
 \begin{center}
   \captionsetup{type=figure}
@@ -90,9 +90,9 @@ gesloten tickets worden centraal bewaakt door services en domeinregels.
 
 \section{Frontend en gebruiksgemak}
 
-De frontend is gebouwd met Expo React Native. Screens tonen pagina's, hooks beheren
-gedrag, API-modules communiceren met de backend en componenten houden UI
-herbruikbaar. Dezelfde paginatiehook wordt gebruikt voor gesprekken, klanten en
+De frontend is gebouwd met Expo React Native. Schermen tonen de pagina's, hooks
+beheren gedrag, API-modules communiceren met de backend en componenten houden de
+UI herbruikbaar. Dezelfde paginatiehook wordt gebruikt voor gesprekken, klanten en
 ticketgroepen.
 
 \textbf{Belangrijke UI-keuzes}
@@ -100,7 +100,7 @@ ticketgroepen.
   \item zoeken, filters, statusgroepen en paginatie;
   \item chatbubbels met onderscheid tussen klant en admin;
   \item preview voor PNG/JPG-afbeeldingen;
-  \item uploadfeedback voor de 20 MB selectiegrens;
+  \item uploadfeedback voor de 20 MB selectielimiet;
   \item e-mailnotificaties via Brevo bij adminacties.
 \end{itemize}
 
@@ -114,19 +114,19 @@ ticketgroepen.
 
 De belangrijkste technische keuze is Single Responsibility. Controllers behandelen
 HTTP, services voeren workflows uit, repositories halen data op en domeinregels
-bewaken businessregels. In de frontend geldt hetzelfde principe: schermen, hooks,
+bewaken businessregels. In de frontend geldt dezelfde gedachte: schermen, hooks,
 API-modules, validatie en componenten blijven gescheiden.
 
 \section{Resultaat en vervolg}
 
-Het resultaat is een werkend proof of concept voor een realistische supportflow:
+Het resultaat is een werkend proof of concept voor een realistische supportworkflow:
 registreren, inloggen, tickets aanmaken, antwoorden, bijlagen toevoegen, zoeken,
 filteren, pagineren, sluiten, heropenen en notificeren.
 
 \textbf{Logische vervolgstappen}
 \begin{itemize}
   \item productiegerichte opslag voor bijlagen, zoals object storage;
-  \item admins koppelen aan categorieën, onderwerpen of tickets;
+  \item administrators koppelen aan categorieën, onderwerpen of tickets;
   \item server-side paginatie en automatische tests;
   \item verdere uitwerking richting mobiele app.
 \end{itemize}

@@ -13,7 +13,7 @@ De applicatie heeft twee rollen: klant en administrator. Een klant gebruikt de a
 
 \subsection{Klant}
 
-Een klant kan zich registreren, inloggen en een profiel beheren. Daarna kan de klant tickets aanmaken. Bij een ticket kiest de klant een categorie, onderwerp en titel. De beschrijving die de klant invult, wordt opgeslagen als eerste bericht in de conversatie. De klant kan later antwoorden en bijlagen toevoegen zolang het ticket niet gesloten is.
+Een klant kan zich registreren, inloggen en een profiel beheren. Daarna kan de klant tickets aanmaken. Bij een ticket kiest de klant een categorie, onderwerp en titel. De beschrijving die de klant invult, wordt opgeslagen als eerste bericht in de conversatie. Later kan de klant antwoorden en bijlagen toevoegen zolang het ticket niet gesloten is.
 
 Een klant kan een eigen ticket sluiten wanneer het probleem opgelost is. Als het probleem toch terugkomt, kan de klant het ticket opnieuw openen. Het ticket krijgt dan de status \texttt{Open}, niet \texttt{New}, omdat het geen nieuw ticket meer is.
 
@@ -32,11 +32,11 @@ De ticketstatussen zijn bewust beperkt tot drie waarden:
   \item \texttt{Closed}: het ticket is afgehandeld en er kan niet meer geantwoord worden.
 \end{itemize}
 
-Deze namen zijn gekozen omdat ze duidelijker zijn voor de gebruiker. \texttt{New} toont dat een ticket nog wacht op de eerste supportreactie. \texttt{Open} toont dat er een actieve conversatie loopt. \texttt{Closed} toont dat het probleem als opgelost beschouwd wordt.
+Deze namen zijn gekozen omdat ze duidelijker zijn voor de gebruiker. \texttt{New} toont dat een ticket nog wacht op de eerste supportreactie. \texttt{Open} toont dat er een actieve conversatie loopt of dat een gesloten ticket opnieuw behandeld wordt. \texttt{Closed} toont dat het probleem als opgelost beschouwd wordt.
 
 \section{Bijlagen}
 
-In de gebruikersflow kunnen bijlagen toegevoegd worden bij ticketcreatie en bij antwoorden. De toegelaten extensies zijn PNG, JPG, JPEG, PDF en ZIP. De frontend toont hoeveel van de 20~MB selectiegrens al gebruikt is. De backend controleert het bestandstype en hanteert 20~MB als harde limiet per bestand.
+Bijlagen kunnen toegevoegd worden bij ticketcreatie en bij antwoorden. Toegestane bestandstypes zijn PNG, JPG, JPEG, PDF en ZIP. De gebruiker ziet tijdens het selecteren hoeveel van de 20~MB uploadlimiet al gebruikt is. De backend controleert bestandstype en grootte opnieuw, zodat de frontend niet de enige controlelaag is.
 
 Afbeeldingen krijgen een preview in de conversatie. Screenshots komen vaak voor bij supportvragen. De gebruiker hoeft een afbeelding dan niet eerst te downloaden om te zien wat erin staat.
 
@@ -47,7 +47,7 @@ Wanneer een administrator antwoordt of de status wijzigt, krijgt de klant een e-
 \vfill
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.78\linewidth]{Client_list.png}
-  \caption[Klantenlijst in het adminoverzicht]{Klantenlijst in het adminoverzicht met een zoekveld en paginatie.}
+  \includegraphics[width=0.72\linewidth]{Client_list.png}
+  \caption[Klantenlijst in het adminoverzicht]{Klantenlijst in het adminoverzicht met zoekveld en paginatie.}
   \label{fig:client-list}
 \end{figure}

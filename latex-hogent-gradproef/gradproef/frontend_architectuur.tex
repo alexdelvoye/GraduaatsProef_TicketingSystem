@@ -5,36 +5,24 @@
 \chapter{Frontendarchitectuur en gebruikersinterface}%
 \label{ch:frontendarchitectuur}
 
-Dit hoofdstuk bespreekt de frontend. De applicatie is gebouwd met Expo React Native. De frontend is opgesplitst in screens, hooks, components, API-modules, utilities, validation en styles. Die structuur maakt het makkelijker om gedrag te hergebruiken en schermen overzichtelijk te houden.
+De frontend is gebouwd met Expo React Native en opgesplitst in schermen, hooks, componenten, API-modules, validatie, stijlen en hulpfuncties.
 
 \section{Schermen, hooks en componenten}
 
-Screens bepalen welke onderdelen op het scherm verschijnen. Hooks beheren gedrag zoals data laden, zoeken, filteren en pagineren. Components zijn herbruikbare UI-blokken. API-modules bevatten de communicatie met de backend.
+Schermen bepalen wat zichtbaar is. Hooks beheren gedrag zoals laden, zoeken, filteren en pagineren. Componenten vormen herbruikbare UI-blokken. API-modules communiceren met de backend.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{Frontend_architecture.png}
-  \caption[Frontendarchitectuur]{Schema van de frontendstructuur met navigation, screens, hooks, herbruikbare componenten en ondersteunende modules.}
+  \caption[Frontendarchitectuur]{Schema van de frontendstructuur met navigatie, schermen, hooks, herbruikbare componenten en ondersteunende modules.}
   \label{fig:frontend-architecture}
 \end{figure}
-
-\clearpage
 
 \section{Dashboardlogica}
 
 De dashboards bewaren de ruwe tickets als bron van waarheid. Daarna worden zoekresultaten, filters, statusgroepen, tellingen en pagina's afgeleid. Dit vermindert de kans op inconsistente lijsten. Als de ruwe ticketlijst verandert, worden de afgeleide resultaten opnieuw berekend.
 
-Voor de adminpagina ziet de pipeline er conceptueel zo uit:
-
-\begin{quote}
-klanten en tickets $\rightarrow$ zoeken $\rightarrow$ filters $\rightarrow$ statusgroepen $\rightarrow$ paginatie
-\end{quote}
-
-Voor de klantpagina is de pipeline eenvoudiger:
-
-\begin{quote}
-tickets $\rightarrow$ zoeken en filteren $\rightarrow$ statusgroepen $\rightarrow$ paginatie
-\end{quote}
+Conceptueel vertrekt de dashboardlogica van ruwe data en loopt ze daarna via zoeken, filters, statusgroepen en paginatie.
 
 \begin{figure}[H]
   \centering
@@ -45,7 +33,7 @@ tickets $\rightarrow$ zoeken en filteren $\rightarrow$ statusgroepen $\rightarro
 
 \section{Paginatie en hergebruik}
 
-Paginatie is gecentraliseerd in \texttt{usePagination}. De hook is generiek gemaakt, zodat hij niet alleen voor tickets werkt, maar ook voor gesprekken en klantenlijsten. Daardoor hoeft dezelfde paginalogica niet op meerdere plaatsen opnieuw geschreven te worden.
+Paginatie is gecentraliseerd in \texttt{usePagination}. De generieke hook werkt voor tickets, gesprekken en klantenlijsten, zodat dezelfde logica niet op meerdere plaatsen terugkomt.
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.9]{typescript}
@@ -68,13 +56,11 @@ export function usePagination<T>(
 \label{lst:usepagination}
 \end{listing}
 
-\section{Ticketgroepen}
+\section{Ticketgroepen en conversatie}
 
-De klant- en adminpagina gebruiken statusgroepen voor \texttt{New}, \texttt{Open} en \texttt{Closed}. \texttt{TicketGroupSection} toont een groep tickets en gebruikt intern dezelfde paginatiehook. Elke groep heeft eigen paginatie. Bladeren in gesloten tickets verandert dus niet de pagina van nieuwe tickets.
+De klant- en adminpagina's gebruiken statusgroepen voor \texttt{New}, \texttt{Open} en \texttt{Closed}. \texttt{TicketGroupSection} toont een groep tickets en gebruikt intern dezelfde paginatiehook. Elke groep heeft eigen paginatie.
 
-\section{Conversatieweergave}
-
-In het ticketdetail wordt de conversatie weergegeven met berichten aan verschillende kanten. Adminberichten en klantberichten krijgen ook een andere achtergrondkleur. Dit lijkt meer op chatapplicaties zoals WhatsApp of Messenger en maakt een lange conversatie sneller scanbaar.
+In het ticketdetail staan adminberichten en klantberichten aan verschillende kanten met een andere achtergrondkleur. Daardoor blijft een lange conversatie overzichtelijker.
 
 \begin{figure}[H]
   \centering

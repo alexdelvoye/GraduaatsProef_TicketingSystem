@@ -17,42 +17,32 @@
 % naar je bronnen. In LaTeX kan dat met \texttt{\textbackslash textcite\{\}}
 % of \texttt{\textbackslash autocite\{\}}.
 
-Dit hoofdstuk bespreekt de belangrijkste concepten achter Forcebit Ticketing. De focus ligt niet op een volledige theoretische bespreking van elk framework. De nadruk ligt op de onderdelen die nodig zijn om de gemaakte keuzes te plaatsen: ticketing, web API's, gelaagde architectuur, frontend state en beveiliging. Die concepten keren later terug in de functionele analyse en in de technische implementatie.
+Dit hoofdstuk vat de concepten samen die nodig zijn om de gemaakte keuzes te plaatsen: ticketing, web API's, lagen, frontendstate en beveiliging.
 
 \Needspace{4\baselineskip}
 \section{Ticketing als ondersteuning van supportprocessen}
 
-Een ticketingsysteem heeft als doel om vragen, problemen, antwoorden en bijlagen centraal bij te houden. In plaats van losse communicatie bevat elk ticket de context van een vraag. Binnen IT service management sluiten zulke tickets aan bij het opvolgen van incidenten en service requests, waarbij structuur en traceerbaarheid belangrijk zijn~\autocite{Axelos2019ITIL4Foundation,ISOIEC20000One2018}. Voor dit project betekent dat: een klant maakt een ticket aan, support reageert, de status evolueert en alle berichten blijven gekoppeld aan hetzelfde ticket.
-
-Een belangrijk voordeel is traceerbaarheid. Een ticketingtool brengt aanvragen samen op een centrale plaats, zodat opvolging en communicatie niet over losse kanalen verspreid blijven~\autocite{AtlassianTicketingSystem2026}. Wanneer een ticket later opnieuw bekeken wordt, staat de geschiedenis op een plaats. Dat is vooral nuttig wanneer een probleem meerdere antwoorden of bijlagen bevat. In Forcebit Ticketing wordt daarom de eerste beschrijving van de klant niet als apart tekstveld op het ticket bewaard, maar als eerste bericht in de conversatie. Zo volgt elk ticket hetzelfde conversatiemodel vanaf het begin.
+Een ticketingsysteem houdt vragen, antwoorden en bijlagen centraal bij. Binnen IT service management sluit dat aan bij het opvolgen van incidenten en service requests, waarbij structuur en traceerbaarheid belangrijk zijn~\autocite{Axelos2019ITIL4Foundation,ISOIEC20000One2018}. Ook Atlassian benadrukt dat tickets aanvragen samenbrengen, zodat opvolging niet over losse kanalen verspreid raakt~\autocite{AtlassianTicketingSystem2026}. Voor Forcebit Ticketing betekent dit dat de eerste beschrijving als eerste bericht in de conversatie wordt bewaard. Zo heeft elk ticket vanaf het begin dezelfde structuur.
 
 \Needspace{4\baselineskip}
 \section{Web API en backendstructuur}
 
-ASP.NET Core is een framework om webapplicaties en API's te bouwen. De documentatie beschrijft onder meer controllers, dependency injection, middleware en configuratie als vaste onderdelen van de applicatiestructuur~\autocite{MicrosoftASPNetCore2026}. Die onderdelen passen bij dit project omdat de backend verschillende verantwoordelijkheden heeft: HTTP requests verwerken, authenticatie controleren, services aanroepen en foutafhandeling centraliseren.
-
-Entity Framework Core wordt gebruikt als object-relational mapper. Het laat toe om met C\# entiteiten te werken en die via configuraties en migraties aan een relationele databank te koppelen~\autocite{MicrosoftEFCore2026}. Voor Forcebit Ticketing is dat nuttig omdat tickets, berichten, bijlagen en gebruikers duidelijke relaties hebben. De databankstructuur kan daardoor aansluiten bij de domeinobjecten in de code.
+ASP.NET Core biedt controllers, dependency injection, middleware en configuratie voor web API's~\autocite{MicrosoftASPNetCore2026}. Die onderdelen passen bij een backend die HTTP-verzoeken verwerkt, authenticatie controleert en services aanroept. Entity Framework Core wordt gebruikt als Object-Relational Mapper: C\#-entiteiten worden via configuraties en migraties gekoppeld aan een relationele databank~\autocite{MicrosoftEFCore2026}. Dat is bruikbaar voor tickets, berichten, bijlagen en gebruikers omdat deze duidelijke relaties hebben.
 
 \Needspace{4\baselineskip}
 \section{Single Responsibility en lagen}
 
-Single Responsibility betekent dat een klasse of module een duidelijke hoofdreden heeft om te veranderen. Robert C. Martin, auteur van \textit{Clean Architecture}, koppelt dit principe aan onderhoudbare softwarestructuur: code blijft beter aanpasbaar wanneer verantwoordelijkheden niet door elkaar lopen~\autocite{Martin2017CleanArchitecture}. In een ticketingapplicatie is dit belangrijk omdat dezelfde workflow meerdere technische onderdelen raakt. Een antwoord toevoegen betekent bijvoorbeeld: rechten controleren, statusregels toepassen, het bericht bewaren, bijlagen koppelen en eventueel een e-mail sturen.
-
-Als al die logica rechtstreeks in een controller zou staan, wordt de code moeilijk te onderhouden. Daarom verdeelt een gelaagde structuur de verantwoordelijkheden: controllers behandelen HTTP en geven de nodige gegevens door via Data Transfer Objects (DTO's), objecten die volgens Fowler data over een grens transporteren~\autocite{Fowler2003DataTransferObject}. Services voeren use cases uit: afgebakende gebruikersdoelen of systeemgedrag dat door de applicatie wordt ondersteund~\autocite{Jacobson1992UseCaseDriven}. Repositories verzorgen databanktoegang. Domeinregels bevatten businessregels zoals toegang en statusovergangen. De lagen maken de applicatie niet automatisch correct, maar ze geven wel een duidelijke plaats aan elke soort logica.
+Single Responsibility betekent dat een klasse of module een duidelijke hoofdreden heeft om te veranderen. Robert C. Martin koppelt dit principe aan onderhoudbare software: code blijft beter aanpasbaar wanneer verantwoordelijkheden niet door elkaar lopen~\autocite{Martin2017CleanArchitecture}. Daarom verdeelt een gelaagde structuur de logica. Controllers behandelen HTTP en geven gegevens door via Data Transfer Objects (DTO's), objecten die data over een grens transporteren~\autocite{Fowler2003DataTransferObject}. Services voeren use cases uit: afgebakende gebruikersdoelen of systeemgedrag~\autocite{Jacobson1992UseCaseDriven}. Repositories verzorgen databanktoegang en domeinregels bevatten businessregels zoals toegang en statusovergangen.
 
 \Needspace{4\baselineskip}
 \section{Frontend state en herbruikbaarheid}
 
-De frontend is gebouwd met Expo React Native. React Native is bedoeld om interfaces te bouwen met componenten, terwijl Expo extra tooling aanbiedt om sneller te ontwikkelen en ook web te ondersteunen~\autocite{ReactNative2026,ExpoDocs2026}. React Navigation wordt gebruikt voor schermnavigatie en webroutes~\autocite{ReactNavigation2026}.
-
-In moderne frontendapplicaties is state management een belangrijk aandachtspunt. In Forcebit Ticketing worden ruwe API-resultaten bewaard als bron van waarheid. Zoekresultaten, filters, tellingen, groepen en paginatie worden daarvan afgeleid. Dit wordt derived state genoemd. Het voorkomt dat meerdere lijsten apart bijgehouden moeten worden en niet synchroon kunnen raken. Herbruikbare hooks, componenten en utility-functies zorgen er daarnaast voor dat dezelfde logica niet opnieuw in elk scherm geschreven moet worden.
+De frontend is gebouwd met Expo React Native. React Native werkt met componenten, terwijl Expo extra tooling aanbiedt voor ontwikkeling en webondersteuning~\autocite{ReactNative2026,ExpoDocs2026}. React Navigation verzorgt schermnavigatie en webroutes~\autocite{ReactNavigation2026}. In Forcebit Ticketing blijven ruwe API-resultaten de bron van waarheid. Zoekresultaten, filters, tellingen, groepen en paginatie worden daarvan afgeleid, zodat schermen niet elk hun eigen versie van dezelfde data bijhouden.
 
 \Needspace{4\baselineskip}
 \section{Beveiliging en validatie}
 
-Omdat tickets klantgegevens en bijlagen kunnen bevatten, mag de frontend niet de enige beveiligingslaag zijn. De backend moet opnieuw controleren of de gebruiker een ticket mag zien, beantwoorden of wijzigen. OWASP benadrukt dat toegangscontrole aan serverzijde moet worden afgedwongen en niet mag afhangen van client-side controles~\autocite{OWASPAccessControl2026}.
-
-Forcebit Ticketing gebruikt JWT-authenticatie en rolgebaseerde autorisatie. Een JSON Web Token is een compact tokenformaat waarmee claims tussen partijen kunnen worden doorgegeven~\autocite{JwtRFC7519}. In dit project bevat het token onder andere de gebruikersidentiteit en rol. Frontendvalidatie met Yup helpt de gebruiker sneller fouten te zien, maar backendvalidatie blijft noodzakelijk voor betrouwbaarheid en veiligheid.
+Omdat tickets klantgegevens en bijlagen kunnen bevatten, mag de frontend niet de enige beveiligingslaag zijn. OWASP benadrukt dat toegangscontrole aan serverzijde moet worden afgedwongen~\autocite{OWASPAccessControl2026}. Forcebit Ticketing gebruikt daarom JWT-authenticatie en rolgebaseerde autorisatie. Een JSON Web Token is een compact tokenformaat waarmee claims, zoals gebruikersidentiteit en rol, worden doorgegeven~\autocite{JwtRFC7519}. Frontendvalidatie helpt de gebruiker, maar backendvalidatie blijft noodzakelijk.
 
 \vspace*{\fill}
 
